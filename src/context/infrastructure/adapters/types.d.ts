@@ -63,5 +63,106 @@ declare global {
                 Sort: Sort;
             }
         }
+
+        namespace Recipient {
+            type Filters = {
+                id?: StringFilterDTO;
+                account?: LinkFilterDTO;
+                createdAt?: OrdinalFilterDTO<Date>;
+                updatedAt?: OrdinalFilterDTO<Date>;
+            };
+
+            type Sort = {
+                createdAt?: QueryOrder;
+                updatedAt?: QueryOrder;
+            };
+
+            interface Types {
+                Filters: Filters;
+                Sort: Sort;
+            }
+        }
+
+        namespace Channel {
+            type Filters = {
+                id?: StringFilterDTO;
+                recipient?: LinkFilterDTO;
+                type?: StringFilterDTO;
+                isVerified?: boolean;
+                createdAt?: OrdinalFilterDTO<Date>;
+                updatedAt?: OrdinalFilterDTO<Date>;
+            };
+
+            type Sort = {
+                createdAt?: QueryOrder;
+                updatedAt?: QueryOrder;
+            };
+
+            interface Types {
+                Filters: Filters;
+                Sort: Sort;
+            }
+        }
+
+        namespace Notification {
+            type Filters = {
+                id?: StringFilterDTO;
+                recipient?: LinkFilterDTO;
+                category?: StringFilterDTO;
+                realm?: LinkFilterDTO;
+                sourceService?: StringFilterDTO;
+                createdAt?: OrdinalFilterDTO<Date>;
+            };
+
+            type Sort = {
+                createdAt?: QueryOrder;
+            };
+
+            interface Types {
+                Filters: Filters;
+                Sort: Sort;
+            }
+        }
+
+        namespace Message {
+            type Filters = {
+                id?: StringFilterDTO;
+                notification?: LinkFilterDTO;
+                channel?: LinkFilterDTO;
+                channelType?: StringFilterDTO;
+                status?: StringFilterDTO;
+                failureReason?: StringFilterDTO;
+                createdAt?: OrdinalFilterDTO<Date>;
+            };
+
+            type Sort = {
+                createdAt?: QueryOrder;
+            };
+
+            interface Types {
+                Filters: Filters;
+                Sort: Sort;
+            }
+        }
+
+        namespace Preference {
+            type Filters = {
+                id?: StringFilterDTO;
+                recipient?: LinkFilterDTO;
+                channelType?: StringFilterDTO;
+                category?: StringFilterDTO;
+                isEnabled?: boolean;
+                createdAt?: OrdinalFilterDTO<Date>;
+            };
+
+            type Sort = {
+                createdAt?: QueryOrder;
+            };
+
+            interface Types {
+                Filters: Filters;
+                Sort: Sort;
+            }
+        }
     }
 }
