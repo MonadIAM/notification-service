@@ -210,7 +210,7 @@ services:
     networks:
       monitoring_net:
         aliases:
-          - template-service
+          - notification-service
       kafka_net:
       internal:
     stop_grace_period: 1s
@@ -218,7 +218,7 @@ services:
       driver: loki
       options:
         loki-url: "http://host.docker.internal:3100/loki/api/v${API_VERSION}/push"
-        loki-external-labels: "job=template-service,container_name={{.Name}}"
+        loki-external-labels: "job=notification-service,container_name={{.Name}}"
         loki-batch-size: "100"
         loki-retries: "3"
         loki-timeout: "1s"

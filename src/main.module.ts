@@ -1,14 +1,14 @@
 import { APP_FILTER } from "@nestjs/core";
 import { Module } from "@nestjs/common";
 
-import { ExceptionFilter } from "~common/exceptions";
+import { NotificationModule } from "~context/notification.module";
 import { InfrastructureModule } from "~infrastructure";
-import { TemplateModule } from "~context/template.module";
 import { ObservabilityModule } from "~observability";
 import { SystemModule } from "~common/system.module";
+import { ExceptionFilter } from "~common/exceptions";
 
 @Module({
-    imports: [SystemModule, InfrastructureModule, ObservabilityModule, TemplateModule],
+    imports: [SystemModule, InfrastructureModule, ObservabilityModule, NotificationModule],
     providers: [
         {
             provide: APP_FILTER,

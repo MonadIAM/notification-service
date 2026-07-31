@@ -30,10 +30,10 @@ sed \
     -e "s|{{replication_path}}|$VAULT_KV_REPLICATION_PATH|g" \
     /secrets-policy.hcl > /tmp/secrets-policy.hcl
 
-vault policy write template-service-secrets /tmp/secrets-policy.hcl
+vault policy write notification-service-secrets /tmp/secrets-policy.hcl
 vault token create \
     -field=token \
-    -policy=template-service-secrets \
+    -policy=notification-service-secrets \
     -no-default-policy \
     -ttl=15m \
     -explicit-max-ttl=15m \

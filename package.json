@@ -1,6 +1,6 @@
 {
-  "name": "@monadiam/template-service",
-  "description": "Universal NestJS service boilerplate for MonadIAM — authn/permission guards wired against identity-service and access-control-service, audit/change-log capture with outbox-based ClickHouse archival, and BullMQ retention cleanup, ready to grow a real domain on top.",
+  "name": "@monadiam/notification-service",
+  "description": "Notification Service handling multi-channel (email, SMS, in-app) delivery of platform notifications, recipient channel/category preferences, and delivery tracking, with Audit and Change Log support.",
   "author": "Daniil Egorov (https://github.com/Lambdius)",
   "license": "SEE LICENSE IN LICENSE",
   "version": "0.0.1",
@@ -23,12 +23,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MonadIAM/template-service.git"
+    "url": "git+https://github.com/MonadIAM/notification-service.git"
   },
   "bugs": {
-    "url": "https://github.com/MonadIAM/template-service/issues"
+    "url": "https://github.com/MonadIAM/notification-service/issues"
   },
-  "homepage": "https://github.com/MonadIAM/template-service#readme",
+  "homepage": "https://github.com/MonadIAM/notification-service#readme",
   "mikro-orm": {
     "useTsNode": true,
     "configPaths": [
