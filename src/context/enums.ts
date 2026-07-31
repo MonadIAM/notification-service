@@ -1,5 +1,41 @@
 export * from "@monadiam/shared";
 
+export enum ChannelType {
+    /* eslint-disable prettier/prettier */
+    IN_APP = "IN_APP",
+    EMAIL  = "EMAIL",
+    SMS    = "SMS",
+    /* eslint-enable prettier/prettier */
+}
+
+export enum NotificationCategory {
+    /* eslint-disable prettier/prettier */
+    SECURITY = "SECURITY",
+    SYSTEM   = "SYSTEM",
+    INVITES  = "INVITES",
+    OTHER    = "OTHER",
+    /* eslint-enable prettier/prettier */
+}
+
+export enum MessageStatus {
+    /* eslint-disable prettier/prettier */
+    QUEUED    = "QUEUED",
+    SENT      = "SENT",
+    DELIVERED = "DELIVERED",
+    FAILED    = "FAILED",
+    /* eslint-enable prettier/prettier */
+}
+
+export enum FailureReason {
+    /* eslint-disable prettier/prettier */
+    SUPPRESSED = "SUPPRESSED",
+    COMPLAINT  = "COMPLAINT",
+    PROVIDER   = "PROVIDER",
+    INTERNAL   = "INTERNAL",
+    BOUNCE     = "BOUNCE",
+    /* eslint-enable prettier/prettier */
+}
+
 export enum ResponseViewType {
     /* eslint-disable prettier/prettier */
     DETAILED = "DETAILED",
@@ -16,7 +52,13 @@ export enum QueryMode {
 }
 
 export enum EntityType {
-    EXAMPLE = "EXAMPLE",
+    /* eslint-disable prettier/prettier */
+    NOTIFICATION = "NOTIFICATION",
+    PREFERENCE   = "PREFERENCE",
+    RECIPIENT    = "RECIPIENT",
+    CHANNEL      = "CHANNEL",
+    MESSAGE      = "MESSAGE",
+    /* eslint-enable prettier/prettier */
 }
 
 export enum ActionType {
