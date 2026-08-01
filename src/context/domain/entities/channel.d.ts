@@ -20,6 +20,9 @@ declare global {
                 isVerified: boolean;
 
                 recipient: Entities.Recipient;
+
+                markVerified(): void;
+                toggleSound(): void;
             }
 
             type ConstructorProps = {

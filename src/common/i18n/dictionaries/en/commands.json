@@ -1,1 +1,19 @@
-{}
+{
+  "channel": {
+    "SOUND_TOGGLED": "Sound notification setting successfully updated.",
+    "IN_APP_CHANNEL_NOT_FOUND": "In-app channel not found for this recipient."
+  },
+  "recipient": {
+    "UPDATED": "Recipient successfully updated.",
+    "OTP_CHANNEL_SELECTED": "OTP delivery channel successfully selected."
+  },
+  "preference": {
+    "TOGGLED": "Notification preference successfully updated.",
+    "CATEGORY_NOT_CONFIGURABLE": "Security notifications cannot be reconfigured.",
+    "CHANNEL_NOT_CONFIGURABLE": "This channel does not support per-category notification preferences."
+  },
+  "message": {
+    "READ": "Message successfully marked as read.",
+    "NOT_FOUND": "Message not found."
+  }
+}

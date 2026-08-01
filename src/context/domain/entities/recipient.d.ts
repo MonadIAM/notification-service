@@ -17,12 +17,22 @@ declare namespace Entities {
             channels: ORM.Collection<Entities.Channel>;
             notifications: ORM.Collection<Entities.Notification>;
             preferences: ORM.Collection<Entities.Preference>;
+
+            selectOtpChannel(channel: Entities.Channel): void;
+            update(props: ChangeDataProps): void;
+            clearOtpChannel(): void;
         }
 
+        type MutableFields = Pick<Contract, "timezone" | "locale">;
+
         type ConstructorProps = {
-            account: string;
             timezone: string;
+            account: string;
             locale: string;
+        };
+
+        type ChangeDataProps = {
+            patch: Partial<MutableFields>;
         };
     }
 }

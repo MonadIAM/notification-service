@@ -14,16 +14,18 @@ declare global {
                 channelType: ChannelType;
                 category: NotificationCategory;
 
-                isEnabled: boolean;
+                isDuplicationEnabled: boolean;
 
                 recipient: Entities.Recipient;
+
+                toggle(): void;
             }
 
             type ConstructorProps = {
                 category: NotificationCategory;
                 channelType: ChannelType;
 
-                isEnabled?: boolean;
+                isDuplicationEnabled?: boolean;
 
                 recipient: Entities.Recipient;
             };

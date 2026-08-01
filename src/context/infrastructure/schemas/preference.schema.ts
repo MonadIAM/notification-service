@@ -21,7 +21,7 @@ export const PreferenceSchema = new EntitySchema<Preference>({
         category: { enum: true, items: () => NotificationCategory, nativeEnumName: "notification_category" },
         channelType: { enum: true, items: () => ChannelType, nativeEnumName: "channel_type" },
 
-        isEnabled: { type: "boolean" },
+        isDuplicationEnabled: { type: "boolean" },
 
         recipient: {
             kind: "m:1",

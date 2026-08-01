@@ -11,7 +11,7 @@ export class Preference implements Entities.Preference.Contract {
     public channelType: ChannelType;
     public category: NotificationCategory;
 
-    public isEnabled: boolean;
+    public isDuplicationEnabled: boolean;
 
     public recipient: Entities.Recipient;
 
@@ -22,8 +22,13 @@ export class Preference implements Entities.Preference.Contract {
         this.channelType = props.channelType;
         this.category = props.category;
 
-        this.isEnabled = props.isEnabled ?? true;
+        this.isDuplicationEnabled = props.isDuplicationEnabled ?? true;
 
         this.recipient = props.recipient;
+    }
+
+    public toggle(): void {
+        this.isDuplicationEnabled = !this.isDuplicationEnabled;
+        this.updatedAt = new Date();
     }
 }

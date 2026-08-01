@@ -1,8 +1,13 @@
 import { randomUUID } from "node:crypto";
 
+import { Exception } from "~common/exceptions";
 import { ChannelType } from "~context/enums";
 
 export class Channel implements Entities.Channel.Contract {
+    private get dictionaryPath(): string {
+        return "entities.channel";
+    }
+
     public id: string;
     public verifiedAt?: Date;
     public updatedAt?: Date;
@@ -27,7 +32,27 @@ export class Channel implements Entities.Channel.Contract {
         this.type = props.type;
 
         this.isVerified = props.isVerified ?? false;
+        this.verifiedAt = this.isVerified ? this.createdAt : undefined;
+        this.soundEnabled = props.type === ChannelType.IN_APP ? true : undefined;
 
         this.recipient = props.recipient;
+    }
+
+    public markVerified(): void {
+        if (this.isVerified) {
+            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.ALREADY_VERIFIED` });
+        } else {
+            this.verifiedAt = new Date();
+            this.isVerified = true;
+        }
+    }
+
+    public toggleSound(): void {
+        if (this.type === ChannelType.IN_APP) {
+            this.soundEnabled = !this.soundEnabled;
+            this.updatedAt = new Date();
+        } else {
+            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.SOUND_NOT_APPLICABLE` });
+        }
     }
 }

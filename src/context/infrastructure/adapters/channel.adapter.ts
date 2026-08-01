@@ -1,15 +1,14 @@
 import { QueryOrder } from "@mikro-orm/postgresql";
 
 import { ORMAdapter } from "~infrastructure/database/utils";
-import { Channel } from "~context/domain/entities";
 import { ChannelType } from "~context/enums";
 
-export class ChannelAdapter implements Adapters.Contract<Channel, Adapters.Channel.Types> {
+export class ChannelAdapter implements Adapters.Contract<Entities.Channel, Adapters.Channel.Types> {
     public buildWhereORM(
         filters: Adapters.Channel.Filters,
-        basic: ORM.ObjectQuery<Channel> = {},
-    ): ORM.ObjectQuery<Channel> {
-        const where: ORM.ObjectQuery<Channel> = basic;
+        basic: ORM.ObjectQuery<Entities.Channel> = {},
+    ): ORM.ObjectQuery<Entities.Channel> {
+        const where: ORM.ObjectQuery<Entities.Channel> = basic;
 
         if (filters.id) {
             where.id = ORMAdapter.applyStringFilter(filters.id);
@@ -36,11 +35,11 @@ export class ChannelAdapter implements Adapters.Contract<Channel, Adapters.Chann
     public buildOptionsORM<P extends string = never, F extends string = "*">(
         sort: Adapters.Channel.Sort,
         pagination: Pagination,
-        basic: ORM.FindOptions<Channel, P, F> = {},
-    ): ORM.FindOptions<Channel, P, F> {
+        basic: ORM.FindOptions<Entities.Channel, P, F> = {},
+    ): ORM.FindOptions<Entities.Channel, P, F> {
         return {
             ...basic,
-            orderBy: ORMAdapter.orderBy<Channel>(sort, { createdAt: QueryOrder.ASC }),
+            orderBy: ORMAdapter.orderBy<Entities.Channel>(sort, { createdAt: QueryOrder.ASC }),
             ...ORMAdapter.pagination(pagination),
         };
     }

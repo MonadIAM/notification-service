@@ -151,7 +151,7 @@ declare global {
                 recipient?: LinkFilterDTO;
                 channelType?: StringFilterDTO;
                 category?: StringFilterDTO;
-                isEnabled?: boolean;
+                isDuplicationEnabled?: boolean;
                 createdAt?: OrdinalFilterDTO<Date>;
             };
 

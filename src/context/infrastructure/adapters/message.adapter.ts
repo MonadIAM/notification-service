@@ -2,14 +2,13 @@ import { QueryOrder } from "@mikro-orm/postgresql";
 
 import { FailureReason, MessageStatus, ChannelType } from "~context/enums";
 import { ORMAdapter } from "~infrastructure/database/utils";
-import { Message } from "~context/domain/entities";
 
-export class MessageAdapter implements Adapters.Contract<Message, Adapters.Message.Types> {
+export class MessageAdapter implements Adapters.Contract<Entities.Message, Adapters.Message.Types> {
     public buildWhereORM(
         filters: Adapters.Message.Filters,
-        basic: ORM.ObjectQuery<Message> = {},
-    ): ORM.ObjectQuery<Message> {
-        const where: ORM.ObjectQuery<Message> = basic;
+        basic: ORM.ObjectQuery<Entities.Message> = {},
+    ): ORM.ObjectQuery<Entities.Message> {
+        const where: ORM.ObjectQuery<Entities.Message> = basic;
 
         if (filters.id) {
             where.id = ORMAdapter.applyStringFilter(filters.id);
@@ -39,11 +38,11 @@ export class MessageAdapter implements Adapters.Contract<Message, Adapters.Messa
     public buildOptionsORM<P extends string = never, F extends string = "*">(
         sort: Adapters.Message.Sort,
         pagination: Pagination,
-        basic: ORM.FindOptions<Message, P, F> = {},
-    ): ORM.FindOptions<Message, P, F> {
+        basic: ORM.FindOptions<Entities.Message, P, F> = {},
+    ): ORM.FindOptions<Entities.Message, P, F> {
         return {
             ...basic,
-            orderBy: ORMAdapter.orderBy<Message>(sort, { createdAt: QueryOrder.ASC }),
+            orderBy: ORMAdapter.orderBy<Entities.Message>(sort, { createdAt: QueryOrder.ASC }),
             ...ORMAdapter.pagination(pagination),
         };
     }

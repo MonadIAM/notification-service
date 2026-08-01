@@ -1,14 +1,13 @@
 import { QueryOrder } from "@mikro-orm/postgresql";
 
 import { ORMAdapter } from "~infrastructure/database/utils";
-import { Recipient } from "~context/domain/entities";
 
-export class RecipientAdapter implements Adapters.Contract<Recipient, Adapters.Recipient.Types> {
+export class RecipientAdapter implements Adapters.Contract<Entities.Recipient, Adapters.Recipient.Types> {
     public buildWhereORM(
         filters: Adapters.Recipient.Filters,
-        basic: ORM.ObjectQuery<Recipient> = {},
-    ): ORM.ObjectQuery<Recipient> {
-        const where: ORM.ObjectQuery<Recipient> = basic;
+        basic: ORM.ObjectQuery<Entities.Recipient> = {},
+    ): ORM.ObjectQuery<Entities.Recipient> {
+        const where: ORM.ObjectQuery<Entities.Recipient> = basic;
 
         if (filters.id) {
             where.id = ORMAdapter.applyStringFilter(filters.id);
@@ -29,11 +28,11 @@ export class RecipientAdapter implements Adapters.Contract<Recipient, Adapters.R
     public buildOptionsORM<P extends string = never, F extends string = "*">(
         sort: Adapters.Recipient.Sort,
         pagination: Pagination,
-        basic: ORM.FindOptions<Recipient, P, F> = {},
-    ): ORM.FindOptions<Recipient, P, F> {
+        basic: ORM.FindOptions<Entities.Recipient, P, F> = {},
+    ): ORM.FindOptions<Entities.Recipient, P, F> {
         return {
             ...basic,
-            orderBy: ORMAdapter.orderBy<Recipient>(sort, { createdAt: QueryOrder.ASC }),
+            orderBy: ORMAdapter.orderBy<Entities.Recipient>(sort, { createdAt: QueryOrder.ASC }),
             ...ORMAdapter.pagination(pagination),
         };
     }

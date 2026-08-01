@@ -2,14 +2,13 @@ import { QueryOrder } from "@mikro-orm/postgresql";
 
 import { NotificationCategory, PlatformService } from "~context/enums";
 import { ORMAdapter } from "~infrastructure/database/utils";
-import { Notification } from "~context/domain/entities";
 
-export class NotificationAdapter implements Adapters.Contract<Notification, Adapters.Notification.Types> {
+export class NotificationAdapter implements Adapters.Contract<Entities.Notification, Adapters.Notification.Types> {
     public buildWhereORM(
         filters: Adapters.Notification.Filters,
-        basic: ORM.ObjectQuery<Notification> = {},
-    ): ORM.ObjectQuery<Notification> {
-        const where: ORM.ObjectQuery<Notification> = basic;
+        basic: ORM.ObjectQuery<Entities.Notification> = {},
+    ): ORM.ObjectQuery<Entities.Notification> {
+        const where: ORM.ObjectQuery<Entities.Notification> = basic;
 
         if (filters.id) {
             where.id = ORMAdapter.applyStringFilter(filters.id);
@@ -36,11 +35,11 @@ export class NotificationAdapter implements Adapters.Contract<Notification, Adap
     public buildOptionsORM<P extends string = never, F extends string = "*">(
         sort: Adapters.Notification.Sort,
         pagination: Pagination,
-        basic: ORM.FindOptions<Notification, P, F> = {},
-    ): ORM.FindOptions<Notification, P, F> {
+        basic: ORM.FindOptions<Entities.Notification, P, F> = {},
+    ): ORM.FindOptions<Entities.Notification, P, F> {
         return {
             ...basic,
-            orderBy: ORMAdapter.orderBy<Notification>(sort, { createdAt: QueryOrder.ASC }),
+            orderBy: ORMAdapter.orderBy<Entities.Notification>(sort, { createdAt: QueryOrder.ASC }),
             ...ORMAdapter.pagination(pagination),
         };
     }

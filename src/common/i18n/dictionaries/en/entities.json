@@ -1,1 +1,20 @@
-{}
+{
+  "channel": {
+    "ALREADY_VERIFIED": "The channel is already verified.",
+    "SOUND_NOT_APPLICABLE": "Sound notifications are only available for the in-app channel."
+  },
+  "recipient": {
+    "NO_CHANGES_DETECTED": "The recipient state already matches the provided changes.",
+    "EMPTY_UPDATE_PATCH": "The list of changes for the recipient is empty.",
+    "NOT_OWN_CHANNEL": "The channel does not belong to this recipient.",
+    "CHANNEL_NOT_VERIFIED": "The channel must be verified before it can be selected for OTP delivery.",
+    "UNSUPPORTED_OTP_CHANNEL_TYPE": "The in-app channel cannot be used for OTP delivery."
+  },
+  "message": {
+    "CANNOT_SEND_FROM_STATE": "The message cannot be sent from its current state.",
+    "CANNOT_DELIVER_FROM_STATE": "The message cannot be marked as delivered from its current state.",
+    "CANNOT_FAIL_DELIVERED": "A delivered message cannot be marked as failed.",
+    "READ_STATE_IN_APP_ONLY": "Only in-app messages can be marked as read.",
+    "ALREADY_READ": "The message is already marked as read."
+  }
+}

@@ -24,6 +24,18 @@ declare global {
 
                 notification: Entities.Notification;
                 channel?: Entities.Channel;
+
+                markFailed(props: MarkFailed.Props): void;
+                markDelivered(): void;
+                markSent(): void;
+                markRead(): void;
+            }
+
+            namespace MarkFailed {
+                type Props = {
+                    reason: FailureReason;
+                    error?: string;
+                };
             }
 
             type ConstructorProps = {
