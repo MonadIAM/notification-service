@@ -24,23 +24,29 @@ export class NotificationService implements Services.Notification.Contract {
 
         const channelTypes = this.resolveChannelTypes({ recipient: input.recipient, category: input.category });
         const channels = input.recipient.channels.getItems();
+        const messages: Entities.Message[] = [];
 
         for (const channelType of channelTypes) {
             const channel = channels.find((item) => item.type === channelType);
 
             if (channel) {
-                transaction.persist(
-                    new Message({
-                        address: channel.address ?? input.recipient.account,
-                        notification,
-                        channelType,
-                        channel,
-                    }),
-                );
+                const message = new Message({
+                    address: channel.address ?? input.recipient.account,
+                    notification,
+                    channelType,
+                    channel,
+                });
+
+                if (channelType === ChannelType.IN_APP) {
+                    message.markSent();
+                }
+
+                transaction.persist(message);
+                messages.push(message);
             }
         }
 
-        return notification;
+        return { notification, messages };
     }
 
     public resolveChannelTypes(

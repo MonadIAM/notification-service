@@ -1,0 +1,18 @@
+{
+  "IDENTIFIER_VERIFICATION_OTP": {
+    "subject": "Verify your identifier",
+    "body": "Your verification code: {otp}"
+  },
+  "ACCOUNT_VERIFICATION_OTP": {
+    "subject": "Verify your account",
+    "body": "Your account verification code: {otp}"
+  },
+  "RESET_PASSWORD_OTP": {
+    "subject": "Reset your password",
+    "body": "Your password reset code: {otp}"
+  },
+  "LOGIN_OTP": {
+    "subject": "Your login code",
+    "body": "Your login code: {otp}"
+  }
+}

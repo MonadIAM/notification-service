@@ -23,7 +23,10 @@ declare global {
                     };
                 };
 
-                type Result = Entities.Notification;
+                type Result = {
+                    notification: Entities.Notification;
+                    messages: Entities.Message[];
+                };
             }
 
             namespace ResolveChannelTypes {

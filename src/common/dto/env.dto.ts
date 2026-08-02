@@ -293,4 +293,20 @@ export class EnvironmentVariablesDTO {
 
     @Validator.IsMsString()
     declare public REAUTHENTICATION_TTL: StringValue;
+
+    // ---------------------------------------------------------------------------
+    // AWS (SES/SNS)
+    // ---------------------------------------------------------------------------
+
+    @Validator.IsString()
+    declare public AWS_REGION: string;
+
+    @Validator.IsString()
+    declare public AWS_ACCESS_KEY_ID: string;
+
+    @Validator.IsString()
+    declare public AWS_SECRET_ACCESS_KEY: string;
+
+    @Validator.IsString()
+    declare public EMAIL_FROM: string;
 }

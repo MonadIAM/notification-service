@@ -6,9 +6,12 @@ import { KAFKA_RETRY_QUEUE } from "~context/infrastructure/queues";
 import { KafkaUtils, KAFKA_SERVICE } from "~infrastructure/kafka";
 import { KafkaTopic } from "~context/enums";
 
-const RETRY_TOPICS: KafkaTopic[] = [];
+const RETRY_TOPICS: KafkaTopic[] = [KafkaTopic.NOTIFICATION_RETRY, KafkaTopic.MESSAGE_DISPATCH_RETRY];
 
-const DEAD_TOPIC_MAP: Partial<Record<string, string>> = {};
+const DEAD_TOPIC_MAP: Partial<Record<string, string>> = {
+    [KafkaTopic.MESSAGE_DISPATCH]: KafkaTopic.MESSAGE_DISPATCH_DEAD,
+    [KafkaTopic.NOTIFICATION]: KafkaTopic.NOTIFICATION_DEAD,
+};
 
 @Controller()
 export class RetryConsumer implements OnModuleInit {

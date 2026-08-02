@@ -1,0 +1,18 @@
+{
+  "IDENTIFIER_VERIFICATION_OTP": {
+    "subject": "Подтверждение идентификатора",
+    "body": "Код подтверждения: {otp}"
+  },
+  "ACCOUNT_VERIFICATION_OTP": {
+    "subject": "Подтверждение учётной записи",
+    "body": "Код подтверждения учётной записи: {otp}"
+  },
+  "RESET_PASSWORD_OTP": {
+    "subject": "Сброс пароля",
+    "body": "Код для сброса пароля: {otp}"
+  },
+  "LOGIN_OTP": {
+    "subject": "Код для входа",
+    "body": "Код для входа: {otp}"
+  }
+}

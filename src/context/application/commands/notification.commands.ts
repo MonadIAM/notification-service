@@ -1,5 +1,6 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
+import { MessageDispatchAction, ChannelType, KafkaTopic } from "~context/enums";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
 import { RECIPIENT_REPOSITORY } from "~context/domain/repositories";
 
@@ -24,10 +25,15 @@ export class NotificationCommands implements Commands.Notification.Contract {
             where: { account: props.account },
         });
 
-        await this.transactionalService.run({
+        await this.transactionalService.run<Entities.Message[]>({
             resource: this.resource,
+            outbox: {
+                payloadMapper: this.messageDispatchPayloadMapper.bind(this),
+                destinationTopic: KafkaTopic.MESSAGE_DISPATCH,
+                actionType: MessageDispatchAction.DISPATCH,
+            },
             execute: (transaction) => {
-                this.notificationService.create({
+                const { messages } = this.notificationService.create({
                     input: {
                         sourceService: props.sourceService,
                         dedupKey: props.dedupKey,
@@ -40,7 +46,15 @@ export class NotificationCommands implements Commands.Notification.Contract {
                     },
                     transaction,
                 });
+
+                return messages;
             },
         });
+    }
+
+    public messageDispatchPayloadMapper(
+        props: Commands.Notification.MessageDispatchPayloadMapper.Props,
+    ): Commands.Notification.MessageDispatchPayloadMapper.Result {
+        return props.filter(({ channelType }) => channelType !== ChannelType.IN_APP).map(({ id }) => ({ message: id }));
     }
 }

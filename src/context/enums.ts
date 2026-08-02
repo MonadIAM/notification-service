@@ -8,15 +8,6 @@ export enum ChannelType {
     /* eslint-enable prettier/prettier */
 }
 
-export enum NotificationCategory {
-    /* eslint-disable prettier/prettier */
-    SECURITY = "SECURITY",
-    SYSTEM   = "SYSTEM",
-    INVITES  = "INVITES",
-    OTHER    = "OTHER",
-    /* eslint-enable prettier/prettier */
-}
-
 export enum MessageStatus {
     /* eslint-disable prettier/prettier */
     QUEUED    = "QUEUED",
@@ -65,6 +56,10 @@ export enum ActionType {
     CREATE = "CREATE",
     UPDATE = "UPDATE",
     DELETE = "DELETE",
+}
+
+export enum MessageDispatchAction {
+    DISPATCH = "DISPATCH",
 }
 
 export enum CleanupJob {
