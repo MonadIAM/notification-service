@@ -1,16 +1,15 @@
 import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/microservices";
+import { NotificationTopicAction, NotificationContentKind } from "@monadiam/shared";
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
-import { NotificationContentKind } from "@monadiam/shared";
 import { I18nService } from "nestjs-i18n";
 import { lastValueFrom } from "rxjs";
 
 import { KafkaUtils, KAFKA_SERVICE } from "~infrastructure/kafka";
+import { CUSTOM_TEMPLATE } from "~context/constants";
 import { Exception } from "~common/exceptions";
 import { KafkaTopic } from "~context/enums";
 
 import { NOTIFICATION_COMMANDS } from "../commands";
-
-const CUSTOM_TEMPLATE = "CUSTOM";
 
 @Controller()
 export class NotificationConsumer implements Consumers.Notification.Contract, OnModuleInit {
@@ -31,32 +30,17 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
     @EventPattern(KafkaTopic.NOTIFICATION)
     public async handle(@Payload() message: Consumers.Notification.Message, @Ctx() context: KafkaContext): Promise<void> {
         try {
-            const { payload } = message;
+            if (message.actionType === NotificationTopicAction.CANCEL) {
+                const { alreadyDispatched } = await this.notificationCommands.cancel({
+                    dedupKey: message.payload.dedupKey,
+                });
 
-            const [title, body] =
-                payload.kind === NotificationContentKind.TEMPLATE
-                    ? await Promise.all<[string, string]>([
-                          this.i18nService.translate(`templates.${payload.template}.subject`, {
-                              args: payload.params,
-                              lang: payload.language,
-                          }),
-                          this.i18nService.translate(`templates.${payload.template}.body`, {
-                              args: payload.params,
-                              lang: payload.language,
-                          }),
-                      ])
-                    : [payload.title, payload.text];
-
-            await this.notificationCommands.create({
-                template: payload.kind === NotificationContentKind.TEMPLATE ? payload.template : CUSTOM_TEMPLATE,
-                sourceService: payload.sourceService,
-                account: payload.recipient,
-                category: payload.category,
-                dedupKey: payload.dedupKey,
-                realm: payload.realm,
-                title,
-                body,
-            });
+                if (alreadyDispatched) {
+                    await this.publish({ payload: message.payload.override });
+                }
+            } else {
+                await this.publish({ payload: message.payload });
+            }
         } catch (error) {
             if (Exception.isRetryable(error)) {
                 await lastValueFrom(
@@ -84,5 +68,34 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
                 );
             }
         }
+    }
+
+    public async publish(props: Consumers.Notification.Publish.Props): Promise<void> {
+        const { payload } = props;
+
+        const [title, body] =
+            payload.kind === NotificationContentKind.TEMPLATE
+                ? await Promise.all<[string, string]>([
+                      this.i18nService.translate(`templates.${payload.template}.subject`, {
+                          args: payload.params,
+                          lang: payload.language,
+                      }),
+                      this.i18nService.translate(`templates.${payload.template}.body`, {
+                          args: payload.params,
+                          lang: payload.language,
+                      }),
+                  ])
+                : [payload.title, payload.text];
+
+        await this.notificationCommands.create({
+            template: payload.kind === NotificationContentKind.TEMPLATE ? payload.template : CUSTOM_TEMPLATE,
+            sourceService: payload.sourceService,
+            account: payload.recipient,
+            category: payload.category,
+            dedupKey: payload.dedupKey,
+            realm: payload.realm,
+            title,
+            body,
+        });
     }
 }

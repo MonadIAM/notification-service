@@ -1,7 +1,7 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
+import { ChannelType, MessageStatus, QueryMode } from "~context/enums";
 import { NOTIFICATION_REPOSITORY } from "~context/domain/repositories";
-import { QueryMode } from "~context/enums";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class NotificationQueries implements Queries.Notification.Contract {
@@ -15,6 +15,7 @@ export class NotificationQueries implements Queries.Notification.Contract {
 
         if (props.mode === QueryMode.DEFAULT) {
             where.recipient = { account: props.actor };
+            where.messages = { channelType: ChannelType.IN_APP, status: MessageStatus.DELIVERED };
         }
 
         return this.notificationRepository.findUniqueOrThrow({ where });
@@ -25,6 +26,7 @@ export class NotificationQueries implements Queries.Notification.Contract {
 
         if (props.mode === QueryMode.DEFAULT) {
             prefilter.recipient = { account: props.actor };
+            prefilter.messages = { channelType: ChannelType.IN_APP, status: MessageStatus.DELIVERED };
         }
 
         return this.notificationRepository.findMany({

@@ -241,6 +241,15 @@ export class EnvironmentVariablesDTO {
     @Validator.IsPositiveInt()
     declare public CLEANUP_BATCH_ATTEMPTS: number;
 
+    @Validator.IsMsString()
+    declare public DISPATCH_DEBOUNCE_DELAY: StringValue;
+
+    @Validator.IsMsString()
+    declare public DISPATCH_DEBOUNCE_BACKOFF_DELAY: StringValue;
+
+    @Validator.IsPositiveInt()
+    declare public DISPATCH_DEBOUNCE_ATTEMPTS: number;
+
     // ---------------------------------------------------------------------------
     // Network
     // ---------------------------------------------------------------------------

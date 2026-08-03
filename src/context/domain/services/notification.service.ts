@@ -39,6 +39,7 @@ export class NotificationService implements Services.Notification.Contract {
 
                 if (channelType === ChannelType.IN_APP) {
                     message.markSent();
+                    message.markDelivered();
                 }
 
                 transaction.persist(message);

@@ -55,6 +55,7 @@ export const MessageSchema = new EntitySchema<Message>({
             deleteRule: "set null",
         },
 
+        cancelledAt: { type: "timestamptz", length: 3, nullable: true },
         deliveredAt: { type: "timestamptz", length: 3, nullable: true },
         failedAt: { type: "timestamptz", length: 3, nullable: true },
         readAt: { type: "timestamptz", length: 3, nullable: true },

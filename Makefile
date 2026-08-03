@@ -29,6 +29,8 @@ lint:
 	npm run lint
 knip:
 	npm run knip
+aws:
+	npm run aws -- $(file)
 swagger:
 	npm run swagger
 postman:

@@ -35,21 +35,18 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# dotenv environment variable files
+# Environment variables and secrets
+*.csv
 .env
 .vault.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+
+# CLI generated artifacts
+*.swagger.json
+*.postman.json
 
 # temp directory
 .temp
 .tmp
-
-# Generated API docs
-/access-control.swagger.json
-/access-control.postman.json
 
 # Runtime data
 pids

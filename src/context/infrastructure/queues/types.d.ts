@@ -4,6 +4,29 @@ import { CleanupJob } from "~context/enums";
 
 declare global {
     namespace Queues {
+        namespace DispatchDelay {
+            interface Contract {
+                cancel(props: Cancel.Props): Promise<boolean>;
+                schedule(props: Schedule.Props): Promise<void>;
+            }
+
+            type JobData = {
+                message: string;
+            };
+
+            namespace Schedule {
+                type Props = {
+                    message: string;
+                };
+            }
+
+            namespace Cancel {
+                type Props = {
+                    message: string;
+                };
+            }
+        }
+
         namespace KafkaRetry {
             interface Contract {
                 readonly maxRetryCount: number;

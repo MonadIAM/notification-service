@@ -6,7 +6,8 @@ import { Validator } from "~common/validator";
 import { PaginationDTO } from "~common/dto";
 import { QueryMode } from "~context/enums";
 
-import { DefaultFiltersDTO, ManageFiltersDTO, SortDTO } from "../index";
+import { DefaultFiltersDTO, ManageFiltersDTO } from "../utils/filters.dto";
+import { SortDTO } from "../utils/sort.dto";
 
 @ApiSchema({ name: "ChannelListBody" })
 export class GetListBodyDTO {

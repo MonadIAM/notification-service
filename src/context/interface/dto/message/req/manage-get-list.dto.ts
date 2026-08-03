@@ -6,7 +6,8 @@ import { PaginationDTO } from "~common/dto";
 import { Validator } from "~common/validator";
 import { QueryMode } from "~context/enums";
 
-import { ManageFiltersDTO, SortDTO } from "../index";
+import { ManageFiltersDTO } from "../utils/filters.dto";
+import { SortDTO } from "../utils/sort.dto";
 
 @ApiSchema({ name: "MessageManageListQuery" })
 export class ManageGetListQueryDTO {

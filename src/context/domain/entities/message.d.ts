@@ -7,6 +7,7 @@ declare global {
         namespace Message {
             interface Contract {
                 id: string;
+                cancelledAt?: Date;
                 deliveredAt?: Date;
                 createdAt: Date;
                 failedAt?: Date;
@@ -26,6 +27,7 @@ declare global {
                 channel?: Entities.Channel;
 
                 markFailed(props: MarkFailed.Props): void;
+                markCancelled(): void;
                 markDelivered(): void;
                 markSent(): void;
                 markRead(): void;

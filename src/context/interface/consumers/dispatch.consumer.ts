@@ -2,10 +2,12 @@ import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/m
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
 import { lastValueFrom } from "rxjs";
 
-import { FailureReason, ChannelType, KafkaTopic } from "~context/enums";
+import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
 import { KafkaUtils, KAFKA_SERVICE } from "~infrastructure/kafka";
 import { MESSAGE_REPOSITORY } from "~context/domain/repositories";
-import { EMAIL_SERVICE, SMS_SERVICE } from "~common/services";
+import { DISPATCH_SERVICE } from "~context/application/services";
+import { FailureReason, KafkaTopic } from "~context/enums";
+import { DEBOUNCED_CATEGORIES } from "~context/constants";
 import { Exception } from "~common/exceptions";
 
 import { MESSAGE_COMMANDS } from "../commands";
@@ -19,10 +21,10 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
         private readonly messageRepository: Repositories.Message.QueryContract,
         @Inject(MESSAGE_COMMANDS)
         private readonly messageCommands: Commands.Message.ConsumerContract,
-        @Inject(EMAIL_SERVICE)
-        private readonly emailService: CommonServices.Email.Contract,
-        @Inject(SMS_SERVICE)
-        private readonly smsService: CommonServices.SMS.Contract,
+        @Inject(DISPATCH_DELAY_QUEUE)
+        private readonly dispatchDelayQueue: Queues.DispatchDelay.Contract,
+        @Inject(DISPATCH_SERVICE)
+        private readonly dispatchService: Services.Dispatch.Contract,
         @Inject(KAFKA_SERVICE)
         private readonly kafkaClient: ClientKafka,
     ) {}
@@ -42,19 +44,12 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
                 where: { id: message.payload.message },
             });
 
-            if (dispatch.channelType === ChannelType.EMAIL) {
-                await this.emailService.send({
-                    subject: dispatch.notification.title ?? "",
-                    html: dispatch.notification.body ?? "",
-                    to: dispatch.address,
-                });
-            } else {
-                await this.smsService.send({
-                    body: dispatch.notification.body ?? "",
-                    to: dispatch.address,
-                });
+            if (DEBOUNCED_CATEGORIES.includes(dispatch.notification.category)) {
+                await this.dispatchDelayQueue.schedule({ message: dispatch.id });
+                return;
             }
 
+            await this.dispatchService.send({ message: dispatch });
             await this.messageCommands.markSent({ message: dispatch.id });
         } catch (error) {
             if (Exception.isRetryable(error)) {

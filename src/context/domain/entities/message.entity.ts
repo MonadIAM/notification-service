@@ -9,6 +9,7 @@ export class Message implements Entities.Message.Contract {
     }
 
     public id: string;
+    public cancelledAt?: Date;
     public deliveredAt?: Date;
     public createdAt: Date;
     public failedAt?: Date;
@@ -57,6 +58,11 @@ export class Message implements Entities.Message.Contract {
         } else {
             throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.CANNOT_DELIVER_FROM_STATE` });
         }
+    }
+
+    public markCancelled(): void {
+        this.status = MessageStatus.CANCELLED;
+        this.cancelledAt = new Date();
     }
 
     public markFailed({ reason, error }: Entities.Message.MarkFailed.Props): void {

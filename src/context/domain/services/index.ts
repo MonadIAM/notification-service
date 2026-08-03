@@ -6,6 +6,7 @@ import {
     PREFERENCE_SERVICE,
     RECIPIENT_SERVICE,
     AUDIT_LOG_SERVICE,
+    DISPATCH_SERVICE,
     CHANNEL_SERVICE,
     MESSAGE_SERVICE,
 } from "~context/application/services";
@@ -15,6 +16,7 @@ import { PreferenceService } from "./preference.service";
 import { ChangeLogService } from "./change-log.service";
 import { RecipientService } from "./recipient.service";
 import { AuditLogService } from "./audit-log.service";
+import { DispatchService } from "./dispatch.service";
 import { ChannelService } from "./channel.service";
 import { MessageService } from "./message.service";
 
@@ -38,6 +40,10 @@ export const DOMAIN_SERVICES: ClassProvider[] = [
     {
         provide: AUDIT_LOG_SERVICE,
         useClass: AuditLogService,
+    },
+    {
+        provide: DISPATCH_SERVICE,
+        useClass: DispatchService,
     },
     {
         provide: CHANNEL_SERVICE,

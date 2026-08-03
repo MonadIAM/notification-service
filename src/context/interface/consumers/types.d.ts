@@ -29,11 +29,21 @@ declare global {
         }
 
         namespace Notification {
-            interface Contract {
+            interface InternalContract {
+                publish(props: Publish.Props): Promise<void>;
+            }
+
+            interface Contract extends InternalContract {
                 handle(message: Message, ctx: KafkaContext): Promise<void>;
             }
 
             type Message = Topics.Notification.Message;
+
+            namespace Publish {
+                type Props = {
+                    payload: Topics.Notification.ContentPayload | Topics.Notification.TemplatePayload;
+                };
+            }
         }
 
         namespace MessageDispatch {

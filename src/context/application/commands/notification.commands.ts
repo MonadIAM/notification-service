@@ -1,8 +1,9 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
-import { MessageDispatchAction, ChannelType, KafkaTopic } from "~context/enums";
+import { MessageDispatchAction, MessageStatus, ChannelType, KafkaTopic } from "~context/enums";
+import { NOTIFICATION_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/domain/repositories";
+import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
-import { RECIPIENT_REPOSITORY } from "~context/domain/repositories";
 
 import { NOTIFICATION_SERVICE } from "../services";
 
@@ -13,8 +14,12 @@ export class NotificationCommands implements Commands.Notification.Contract {
     public constructor(
         @Inject(TRANSACTIONAL_SERVICE)
         private readonly transactionalService: TransactionManager.Service.PublicContract,
+        @Inject(NOTIFICATION_REPOSITORY)
+        private readonly notificationRepository: Repositories.Notification.Contract,
         @Inject(RECIPIENT_REPOSITORY)
         private readonly recipientRepository: Repositories.Recipient.Contract,
+        @Inject(DISPATCH_DELAY_QUEUE)
+        private readonly dispatchDelayQueue: Queues.DispatchDelay.Contract,
         @Inject(NOTIFICATION_SERVICE)
         private readonly notificationService: Services.Notification.Contract,
     ) {}
@@ -50,6 +55,46 @@ export class NotificationCommands implements Commands.Notification.Contract {
                 return messages;
             },
         });
+    }
+
+    public async cancel(props: Commands.Notification.Cancel.Props): Commands.Notification.Cancel.Result {
+        const notification = await this.notificationRepository.findUnique({
+            options: { populate: ["messages"] },
+            where: { dedupKey: props.dedupKey },
+        });
+
+        if (notification) {
+            const toCancel: Entities.Message[] = [];
+            const pending: Entities.Message[] = [];
+
+            for (const message of notification.messages.getItems()) {
+                if (message.channelType === ChannelType.IN_APP) {
+                    toCancel.push(message);
+                } else if (message.status === MessageStatus.QUEUED) {
+                    pending.push(message);
+                }
+            }
+
+            const cancelled = await Promise.all(pending.map(({ id }) => this.dispatchDelayQueue.cancel({ message: id })));
+
+            if (cancelled.includes(false)) {
+                return { alreadyDispatched: true };
+            }
+
+            toCancel.push(...pending);
+
+            await this.transactionalService.run({
+                resource: this.resource,
+                execute: (transaction) => {
+                    for (const message of toCancel) {
+                        message.markCancelled();
+                        transaction.merge(message);
+                    }
+                },
+            });
+        }
+
+        return { alreadyDispatched: false };
     }
 
     public messageDispatchPayloadMapper(

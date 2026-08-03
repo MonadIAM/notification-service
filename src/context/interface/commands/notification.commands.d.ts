@@ -11,6 +11,7 @@ declare global {
 
             interface ConsumerContract {
                 create(props: Create.Props): Create.Result;
+                cancel(props: Cancel.Props): Cancel.Result;
             }
 
             interface Contract extends InternalContract, ConsumerContract {}
@@ -28,6 +29,14 @@ declare global {
                 };
 
                 type Result = Promise<void>;
+            }
+
+            namespace Cancel {
+                type Props = {
+                    dedupKey: string;
+                };
+
+                type Result = Promise<{ alreadyDispatched: boolean }>;
             }
 
             namespace MessageDispatchPayloadMapper {

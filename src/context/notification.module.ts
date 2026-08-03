@@ -20,7 +20,11 @@ import { QUERIES } from "./application/queries";
 @Module({
     imports: [
         TransactionManagerModule,
-        BullModule.registerQueue({ name: BullQueue.KAFKA_RETRY }, { name: BullQueue.CLEANUP }),
+        BullModule.registerQueue(
+            { name: BullQueue.DISPATCH_DELAY },
+            { name: BullQueue.KAFKA_RETRY },
+            { name: BullQueue.CLEANUP },
+        ),
     ],
     providers: [
         ...INFRASTRUCTURE_SERVICES,

@@ -109,6 +109,10 @@ declare global {
             CLEANUP_BATCH_BACKOFF_DELAY: StringValue;
             CLEANUP_BATCH_ATTEMPTS: `${number}`;
 
+            DISPATCH_DEBOUNCE_DELAY: StringValue;
+            DISPATCH_DEBOUNCE_BACKOFF_DELAY: StringValue;
+            DISPATCH_DEBOUNCE_ATTEMPTS: `${number}`;
+
             // ---------------------------------------------------------------------------
             // Network
             // ---------------------------------------------------------------------------
@@ -140,6 +144,15 @@ declare global {
 
             ACCESS_CACHE_TTL: StringValue;
             REAUTHENTICATION_TTL: StringValue;
+
+            // ---------------------------------------------------------------------------
+            // AWS (SES/SNS)
+            // ---------------------------------------------------------------------------
+
+            AWS_REGION: string;
+            AWS_ACCESS_KEY_ID: string;
+            AWS_SECRET_ACCESS_KEY: string;
+            EMAIL_FROM: string;
         }
     }
 }

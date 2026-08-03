@@ -9,6 +9,7 @@ const config: KnipConfig = {
         // CLI tools - run directly via npm scripts
         "cli/postman/patch.ts",
         "cli/postman/main.ts",
+        "cli/aws/main.ts",
         // Standalone scripts - run directly, not via import
         "src/infrastructure/database/migrations/*.ts",
         "src/infrastructure/database/seeder.ts",

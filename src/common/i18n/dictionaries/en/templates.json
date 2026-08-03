@@ -14,5 +14,57 @@
   "LOGIN_OTP": {
     "subject": "Your login code",
     "body": "Your login code: {otp}"
+  },
+  "LOGIN_ALERT": {
+    "subject": "New sign-in to your account",
+    "body": "Your account was just signed in to. If this wasn't you, please contact support."
+  },
+  "PASSWORD_CHANGED": {
+    "subject": "Your password was changed",
+    "body": "Your account password was changed from your current session. If this wasn't you, please contact support immediately."
+  },
+  "PASSWORD_CHANGED_VIA_OTP": {
+    "subject": "Your password was reset",
+    "body": "Your account password was reset using a one-time code. If this wasn't you, please contact support."
+  },
+  "PASSWORD_CHANGED_VIA_RECOVERY_CODE": {
+    "subject": "Your password was reset",
+    "body": "Your account password was reset using a recovery code. If this wasn't you, please contact support."
+  },
+  "IDENTIFIER_PURGED": {
+    "subject": "An identifier was removed",
+    "body": "One of your account's identifiers was removed. If this wasn't you, please contact support."
+  },
+  "SECOND_FACTOR_ENABLED": {
+    "subject": "Two-factor authentication enabled",
+    "body": "Two-factor authentication was enabled on your account. If this wasn't you, please contact support."
+  },
+  "SECOND_FACTOR_RESET": {
+    "subject": "Two-factor authentication reset",
+    "body": "Two-factor authentication was reset on your account. If this wasn't you, please contact support."
+  },
+  "RECOVERY_CODES_REGENERATED": {
+    "subject": "Recovery codes regenerated",
+    "body": "Your account's recovery codes were regenerated. If this wasn't you, please contact support."
+  },
+  "INVITE_RECEIVED": {
+    "subject": "You've been invited",
+    "body": "{inviter} invited you to join {realm}."
+  },
+  "INVITE_CANCELLED": {
+    "subject": "Invite cancelled",
+    "body": "{inviter} cancelled the invite to {realm}."
+  },
+  "ASSIGNMENT_GRANTED": {
+    "subject": "A role was assigned to you",
+    "body": "You were granted the \"{role}\" role in {realm}."
+  },
+  "ASSIGNMENT_REVOKED": {
+    "subject": "A role was revoked",
+    "body": "Your \"{role}\" role in {realm} was revoked."
+  },
+  "REALM_EXCLUDED": {
+    "subject": "You were removed from a realm",
+    "body": "You were removed from {realm}."
   }
 }

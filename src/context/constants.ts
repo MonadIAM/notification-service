@@ -9,3 +9,7 @@ export const CONFIGURABLE_NOTIFICATION_CATEGORIES: readonly NotificationCategory
     NotificationCategory.SYSTEM,
     NotificationCategory.OTHER,
 ];
+
+export const CUSTOM_TEMPLATE = "CUSTOM";
+
+export const DEBOUNCED_CATEGORIES: readonly NotificationCategory[] = [NotificationCategory.INVITES];

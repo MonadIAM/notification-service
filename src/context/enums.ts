@@ -14,6 +14,7 @@ export enum MessageStatus {
     SENT      = "SENT",
     DELIVERED = "DELIVERED",
     FAILED    = "FAILED",
+    CANCELLED = "CANCELLED",
     /* eslint-enable prettier/prettier */
 }
 

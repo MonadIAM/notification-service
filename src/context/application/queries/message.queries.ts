@@ -1,7 +1,7 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
+import { ChannelType, MessageStatus, QueryMode } from "~context/enums";
 import { MESSAGE_REPOSITORY } from "~context/domain/repositories";
-import { QueryMode } from "~context/enums";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class MessageQueries implements Queries.Message.Contract {
@@ -17,7 +17,11 @@ export class MessageQueries implements Queries.Message.Contract {
     public findMany(props: Queries.Message.FindMany.Props): Queries.Message.FindMany.Result {
         if (props.mode === QueryMode.DEFAULT) {
             return this.messageRepository.findMany({
-                prefilter: { notification: { id: props.notification, recipient: { account: props.actor } } },
+                prefilter: {
+                    notification: { id: props.notification, recipient: { account: props.actor } },
+                    channelType: ChannelType.IN_APP,
+                    status: MessageStatus.DELIVERED,
+                },
                 pagination: props.pagination,
                 sort: props.sort,
                 filters: {},
