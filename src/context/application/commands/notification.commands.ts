@@ -21,7 +21,7 @@ export class NotificationCommands implements Commands.Notification.Contract {
         @Inject(DISPATCH_DELAY_QUEUE)
         private readonly dispatchDelayQueue: Queues.DispatchDelay.Contract,
         @Inject(NOTIFICATION_SERVICE)
-        private readonly notificationService: Services.Notification.Contract,
+        private readonly notificationService: Services.Notification.CommandContract,
     ) {}
 
     public async create(props: Commands.Notification.Create.Props): Commands.Notification.Create.Result {

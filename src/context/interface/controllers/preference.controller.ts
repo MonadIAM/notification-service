@@ -30,7 +30,7 @@ const {
 export class PreferenceController {
     public constructor(
         @Inject(PREFERENCE_COMMANDS)
-        private readonly preferenceCommands: Commands.Preference.Contract,
+        private readonly preferenceCommands: Commands.Preference.ControllerContract,
         @Inject(PREFERENCE_QUERIES)
         private readonly preferenceQueries: Queries.Preference.ControllerContract,
     ) {}

@@ -28,7 +28,12 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
     }
 
     @EventPattern(KafkaTopic.NOTIFICATION)
-    public async handle(@Payload() message: Consumers.Notification.Message, @Ctx() context: KafkaContext): Promise<void> {
+    public async handle(
+        @Payload()
+        message: Consumers.Notification.Message,
+        @Ctx()
+        context: KafkaContext,
+    ): Consumers.Notification.Handle.Result {
         try {
             if (message.actionType === NotificationTopicAction.CANCEL) {
                 const { alreadyDispatched } = await this.notificationCommands.cancel({
@@ -70,7 +75,7 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         }
     }
 
-    public async publish(props: Consumers.Notification.Publish.Props): Promise<void> {
+    public async publish(props: Consumers.Notification.Publish.Props): Consumers.Notification.Publish.Result {
         const { payload } = props;
 
         const [title, body] =

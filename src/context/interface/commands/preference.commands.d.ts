@@ -3,8 +3,10 @@ import { NotificationCategory, ChannelType } from "~context/enums";
 declare global {
     namespace Commands {
         namespace Preference {
-            interface Contract {
-                toggle(props: Toggle.Props): Toggle.Result;
+            interface Contract extends ControllerContract {}
+
+            interface ControllerContract {
+                toggle: Toggle.Signature;
             }
 
             namespace Toggle {
@@ -18,6 +20,8 @@ declare global {
                 };
 
                 type Result = Promise<MessageResult>;
+
+                type Signature = (props: Props) => Result;
             }
         }
     }

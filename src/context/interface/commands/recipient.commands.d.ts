@@ -1,28 +1,37 @@
 declare namespace Commands {
     namespace Recipient {
-        interface ControllerContract {
-            update(props: Update.Props): Update.Result;
-            selectOtpChannel(props: SelectOtpChannel.Props): SelectOtpChannel.Result;
-        }
+        interface Contract extends ControllerContract, ConsumerContract {}
 
         interface ConsumerContract {
             create(props: Create.Props): Create.Result;
             purge(props: Purge.Props): Purge.Result;
         }
 
-        interface Contract extends ControllerContract, ConsumerContract {}
-
-        namespace Update {
+        namespace Create {
             type Props = {
-                context: Extract.Meta;
-                actor: string;
-                input: {
-                    timezone?: string;
-                    locale?: string;
-                };
+                account: string;
+                timezone: string;
+                locale: string;
             };
 
-            type Result = Promise<MessageResult>;
+            type Result = Promise<void>;
+
+            type Signature = (props: Props) => Result;
+        }
+
+        namespace Purge {
+            type Props = {
+                account: string;
+            };
+
+            type Result = Promise<void>;
+
+            type Signature = (props: Props) => Result;
+        }
+
+        interface ControllerContract {
+            selectOtpChannel: SelectOtpChannel.Signature;
+            update: Update.Signature;
         }
 
         namespace SelectOtpChannel {
@@ -35,24 +44,23 @@ declare namespace Commands {
             };
 
             type Result = Promise<MessageResult>;
+
+            type Signature = (props: Props) => Result;
         }
 
-        namespace Create {
+        namespace Update {
             type Props = {
-                account: string;
-                timezone: string;
-                locale: string;
+                context: Extract.Meta;
+                actor: string;
+                input: {
+                    timezone?: string;
+                    locale?: string;
+                };
             };
 
-            type Result = Promise<void>;
-        }
+            type Result = Promise<MessageResult>;
 
-        namespace Purge {
-            type Props = {
-                account: string;
-            };
-
-            type Result = Promise<void>;
+            type Signature = (props: Props) => Result;
         }
     }
 }

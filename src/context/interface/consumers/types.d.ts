@@ -5,58 +5,118 @@ import { MessageDispatchAction } from "~context/enums";
 declare global {
     namespace Consumers {
         namespace AccessCache {
-            interface Contract {
-                handle(message: Message, ctx: KafkaContext): Promise<void>;
+            type Message = Topics.AccessCache.Message;
+
+            interface Contract extends PublicContract {}
+
+            interface PublicContract {
+                handle: Handle.Signature;
             }
 
-            type Message = Topics.AccessCache.Message;
+            namespace Handle {
+                type Result = Promise<void>;
+
+                type Signature = (message: Message, ctx: KafkaContext) => Result;
+            }
         }
 
         namespace Blacklist {
-            interface Contract {
-                handle(message: Message): Promise<void>;
+            type Message = Topics.Blacklist.Message;
+
+            interface Contract extends PublicContract {}
+
+            interface PublicContract {
+                handle: Handle.Signature;
             }
 
-            type Message = Topics.Blacklist.Message;
+            namespace Handle {
+                type Result = Promise<void>;
+
+                type Signature = (message: Message) => Result;
+            }
         }
 
         namespace Reauthentication {
-            interface Contract {
-                handle(message: Message): Promise<void>;
+            type Message = Topics.Reauthentication.Message;
+
+            interface Contract extends PublicContract {}
+
+            interface PublicContract {
+                handle: Handle.Signature;
             }
 
-            type Message = Topics.Reauthentication.Message;
+            namespace Handle {
+                type Result = Promise<void>;
+
+                type Signature = (message: Message) => Result;
+            }
         }
 
         namespace Notification {
-            interface InternalContract {
-                publish(props: Publish.Props): Promise<void>;
-            }
-
-            interface Contract extends InternalContract {
-                handle(message: Message, ctx: KafkaContext): Promise<void>;
-            }
-
             type Message = Topics.Notification.Message;
+
+            interface Contract extends InternalContract, PublicContract {}
+
+            interface InternalContract {
+                publish: Publish.Signature;
+            }
 
             namespace Publish {
                 type Props = {
                     payload: Topics.Notification.ContentPayload | Topics.Notification.TemplatePayload;
                 };
+
+                type Result = Promise<void>;
+
+                type Signature = (props: Props) => Result;
+            }
+
+            interface PublicContract {
+                handle: Handle.Signature;
+            }
+
+            namespace Handle {
+                type Result = Promise<void>;
+
+                type Signature = (message: Message, ctx: KafkaContext) => Result;
             }
         }
 
         namespace MessageDispatch {
-            interface Contract {
-                handle(message: Message, ctx: KafkaContext): Promise<void>;
-            }
-
             type Message = {
                 actionType: MessageDispatchAction;
                 payload: {
                     message: string;
                 };
             };
+
+            interface Contract extends PublicContract {}
+
+            interface PublicContract {
+                handle: Handle.Signature;
+            }
+
+            namespace Handle {
+                type Result = Promise<void>;
+
+                type Signature = (message: Message, ctx: KafkaContext) => Result;
+            }
+        }
+
+        namespace Retry {
+            type Message = Consumers.DLQ.Message;
+
+            interface Contract extends PublicContract {}
+
+            interface PublicContract {
+                handle: Handle.Signature;
+            }
+
+            namespace Handle {
+                type Result = Promise<void>;
+
+                type Signature = (message: Message, ctx: KafkaContext) => Result;
+            }
         }
     }
 }

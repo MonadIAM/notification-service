@@ -7,9 +7,9 @@ import { ChannelType } from "~context/enums";
 export class DispatchService implements Services.Dispatch.Contract {
     public constructor(
         @Inject(EMAIL_SERVICE)
-        private readonly emailService: CommonServices.Email.Contract,
+        private readonly emailService: CommonServices.Email.PublicContract,
         @Inject(SMS_SERVICE)
-        private readonly smsService: CommonServices.SMS.Contract,
+        private readonly smsService: CommonServices.SMS.PublicContract,
     ) {}
 
     public async send(props: Services.Dispatch.Send.Props): Services.Dispatch.Send.Result {

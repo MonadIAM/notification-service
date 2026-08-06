@@ -3,22 +3,13 @@ import { FailureReason } from "~context/enums";
 declare global {
     namespace Services {
         namespace Message {
-            interface Contract {
-                markDelivered(props: MarkDelivered.Props): MarkDelivered.Result;
-                markFailed(props: MarkFailed.Props): MarkFailed.Result;
-                markSent(props: MarkSent.Props): MarkSent.Result;
-                markRead(props: MarkRead.Props): MarkRead.Result;
-            }
+            interface Contract extends CommandContract {}
 
-            namespace MarkSent {
-                type Props = {
-                    transaction: ORM.EntityManager;
-                    input: {
-                        message: Entities.Message;
-                    };
-                };
-
-                type Result = void;
+            interface CommandContract {
+                markDelivered: MarkDelivered.Signature;
+                markFailed: MarkFailed.Signature;
+                markSent: MarkSent.Signature;
+                markRead: MarkRead.Signature;
             }
 
             namespace MarkDelivered {
@@ -30,6 +21,8 @@ declare global {
                 };
 
                 type Result = void;
+
+                type Signature = (props: Props) => Result;
             }
 
             namespace MarkFailed {
@@ -43,6 +36,21 @@ declare global {
                 };
 
                 type Result = void;
+
+                type Signature = (props: Props) => Result;
+            }
+
+            namespace MarkSent {
+                type Props = {
+                    transaction: ORM.EntityManager;
+                    input: {
+                        message: Entities.Message;
+                    };
+                };
+
+                type Result = void;
+
+                type Signature = (props: Props) => Result;
             }
 
             namespace MarkRead {
@@ -54,6 +62,8 @@ declare global {
                 };
 
                 type Result = void;
+
+                type Signature = (props: Props) => Result;
             }
         }
     }

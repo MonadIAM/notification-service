@@ -19,7 +19,8 @@ export class EmailService implements CommonServices.Email.Contract {
         });
     }
 
-    public async send({ subject, html, to }: CommonServices.Email.Send): Promise<void> {
+    public async send(props: CommonServices.Email.Send.Props): CommonServices.Email.Send.Result {
+        const { subject, html, to } = props;
         await this.client.send(
             new SendEmailCommand({
                 Source: this.from,

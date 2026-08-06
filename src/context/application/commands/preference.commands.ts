@@ -21,7 +21,7 @@ export class PreferenceCommands implements Commands.Preference.Contract {
         @Inject(RECIPIENT_REPOSITORY)
         private readonly recipientRepository: Repositories.Recipient.Contract,
         @Inject(PREFERENCE_SERVICE)
-        private readonly preferenceService: Services.Preference.Contract,
+        private readonly preferenceService: Services.Preference.CommandContract,
     ) {}
 
     public async toggle(props: Commands.Preference.Toggle.Props): Commands.Preference.Toggle.Result {

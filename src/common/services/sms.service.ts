@@ -16,7 +16,8 @@ export class SMSService implements CommonServices.SMS.Contract {
         });
     }
 
-    public async send({ body, to }: CommonServices.SMS.Send): Promise<void> {
+    public async send(props: CommonServices.SMS.Send.Props): CommonServices.SMS.Send.Result {
+        const { body, to } = props;
         await this.client.send(
             new PublishCommand({
                 PhoneNumber: to,

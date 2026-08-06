@@ -3,9 +3,22 @@ import { NotificationCategory, PlatformService, ChannelType } from "~context/enu
 declare global {
     namespace Services {
         namespace Notification {
-            interface Contract {
-                resolveChannelTypes(props: ResolveChannelTypes.Props): ResolveChannelTypes.Result;
-                create(props: Create.Props): Create.Result;
+            interface Contract extends CommandContract {}
+
+            interface CommandContract {
+                resolveChannelTypes: ResolveChannelTypes.Signature;
+                create: Create.Signature;
+            }
+
+            namespace ResolveChannelTypes {
+                type Props = {
+                    category: NotificationCategory;
+                    recipient: Entities.Recipient;
+                };
+
+                type Result = ChannelType[];
+
+                type Signature = (props: Props) => Result;
             }
 
             namespace Create {
@@ -27,15 +40,8 @@ declare global {
                     notification: Entities.Notification;
                     messages: Entities.Message[];
                 };
-            }
 
-            namespace ResolveChannelTypes {
-                type Props = {
-                    category: NotificationCategory;
-                    recipient: Entities.Recipient;
-                };
-
-                type Result = ChannelType[];
+                type Signature = (props: Props) => Result;
             }
         }
     }

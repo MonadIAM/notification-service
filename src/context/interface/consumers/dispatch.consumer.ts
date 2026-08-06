@@ -37,7 +37,7 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
     public async handle(
         @Payload() message: Consumers.MessageDispatch.Message,
         @Ctx() context: KafkaContext,
-    ): Promise<void> {
+    ): Consumers.MessageDispatch.Handle.Result {
         try {
             const dispatch = await this.messageRepository.findUniqueOrThrow({
                 options: { populate: ["notification"] },

@@ -20,9 +20,9 @@ export class ChannelCommands implements Commands.Channel.Contract {
         @Inject(CHANNEL_REPOSITORY)
         private readonly channelRepository: Repositories.Channel.Contract,
         @Inject(RECIPIENT_SERVICE)
-        private readonly recipientService: Services.Recipient.Contract,
+        private readonly recipientService: Services.Recipient.CommandContract,
         @Inject(CHANNEL_SERVICE)
-        private readonly channelService: Services.Channel.Contract,
+        private readonly channelService: Services.Channel.CommandContract,
     ) {}
 
     public async toggleSound(props: Commands.Channel.ToggleSound.Props): Commands.Channel.ToggleSound.Result {

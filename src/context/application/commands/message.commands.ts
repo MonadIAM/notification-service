@@ -18,7 +18,7 @@ export class MessageCommands implements Commands.Message.Contract {
         @Inject(MESSAGE_REPOSITORY)
         private readonly messageRepository: Repositories.Message.Contract,
         @Inject(MESSAGE_SERVICE)
-        private readonly messageService: Services.Message.Contract,
+        private readonly messageService: Services.Message.CommandContract,
     ) {}
 
     public async markRead(props: Commands.Message.MarkRead.Props): Commands.Message.MarkRead.Result {

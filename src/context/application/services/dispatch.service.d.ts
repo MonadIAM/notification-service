@@ -1,7 +1,9 @@
 declare namespace Services {
     namespace Dispatch {
-        interface Contract {
-            send(props: Send.Props): Send.Result;
+        interface Contract extends CommandContract {}
+
+        interface CommandContract {
+            send: Send.Signature;
         }
 
         namespace Send {
@@ -10,6 +12,8 @@ declare namespace Services {
             };
 
             type Result = Promise<void>;
+
+            type Signature = (props: Props) => Result;
         }
     }
 }

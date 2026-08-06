@@ -1,11 +1,40 @@
 declare namespace Services {
     namespace Recipient {
-        interface Contract {
-            selectOtpChannel(props: SelectOtpChannel.Props): SelectOtpChannel.Result;
-            clearOtpChannel(props: ClearOtpChannel.Props): ClearOtpChannel.Result;
-            create(props: Create.Props): Create.Result;
-            update(props: Update.Props): Update.Result;
-            purge(props: Purge.Props): Purge.Result;
+        interface Contract extends CommandContract {}
+
+        interface CommandContract {
+            selectOtpChannel: SelectOtpChannel.Signature;
+            clearOtpChannel: ClearOtpChannel.Signature;
+            create: Create.Signature;
+            update: Update.Signature;
+            purge: Purge.Signature;
+        }
+
+        namespace SelectOtpChannel {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: {
+                    recipient: Entities.Recipient;
+                    channel: Entities.Channel;
+                };
+            };
+
+            type Result = void;
+
+            type Signature = (props: Props) => Result;
+        }
+
+        namespace ClearOtpChannel {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: {
+                    recipient: Entities.Recipient;
+                };
+            };
+
+            type Result = void;
+
+            type Signature = (props: Props) => Result;
         }
 
         namespace Create {
@@ -19,6 +48,8 @@ declare namespace Services {
             };
 
             type Result = Entities.Recipient;
+
+            type Signature = (props: Props) => Result;
         }
 
         namespace Update {
@@ -31,29 +62,8 @@ declare namespace Services {
             };
 
             type Result = void;
-        }
 
-        namespace SelectOtpChannel {
-            type Props = {
-                transaction: ORM.EntityManager;
-                input: {
-                    recipient: Entities.Recipient;
-                    channel: Entities.Channel;
-                };
-            };
-
-            type Result = void;
-        }
-
-        namespace ClearOtpChannel {
-            type Props = {
-                transaction: ORM.EntityManager;
-                input: {
-                    recipient: Entities.Recipient;
-                };
-            };
-
-            type Result = void;
+            type Signature = (props: Props) => Result;
         }
 
         namespace Purge {
@@ -65,6 +75,8 @@ declare namespace Services {
             };
 
             type Result = void;
+
+            type Signature = (props: Props) => Result;
         }
     }
 }

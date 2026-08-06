@@ -3,17 +3,11 @@ import { ChannelType } from "~context/enums";
 declare global {
     namespace Commands {
         namespace Channel {
-            interface ControllerContract {
-                toggleSound(props: ToggleSound.Props): ToggleSound.Result;
-            }
-
-            interface ConsumerContract {
-                create(props: Create.Props): Create.Result;
-                markVerified(props: MarkVerified.Props): MarkVerified.Result;
-                purge(props: Purge.Props): Purge.Result;
-            }
-
             interface Contract extends ControllerContract, ConsumerContract {}
+
+            interface ControllerContract {
+                toggleSound: ToggleSound.Signature;
+            }
 
             namespace ToggleSound {
                 type Props = {
@@ -22,6 +16,24 @@ declare global {
                 };
 
                 type Result = Promise<MessageResult>;
+
+                type Signature = (props: Props) => Result;
+            }
+
+            interface ConsumerContract {
+                markVerified: MarkVerified.Signature;
+                create: Create.Signature;
+                purge: Purge.Signature;
+            }
+
+            namespace MarkVerified {
+                type Props = {
+                    sourceIdentifier: string;
+                };
+
+                type Result = Promise<void>;
+
+                type Signature = (props: Props) => Result;
             }
 
             namespace Create {
@@ -33,14 +45,8 @@ declare global {
                 };
 
                 type Result = Promise<void>;
-            }
 
-            namespace MarkVerified {
-                type Props = {
-                    sourceIdentifier: string;
-                };
-
-                type Result = Promise<void>;
+                type Signature = (props: Props) => Result;
             }
 
             namespace Purge {
@@ -49,6 +55,8 @@ declare global {
                 };
 
                 type Result = Promise<void>;
+
+                type Signature = (props: Props) => Result;
             }
         }
     }

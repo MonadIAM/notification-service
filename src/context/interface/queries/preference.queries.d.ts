@@ -3,12 +3,11 @@ import { QueryMode } from "~context/enums";
 declare global {
     namespace Queries {
         namespace Preference {
-            interface ControllerContract {
-                findMany(props: FindMany.DefaultProps): FindMany.Result;
-                findMany(props: FindMany.ManageProps): FindMany.Result;
-            }
-
             interface Contract extends ControllerContract {}
+
+            interface ControllerContract {
+                findMany: FindMany.Signature;
+            }
 
             namespace FindMany {
                 type DefaultProps = {
@@ -27,7 +26,10 @@ declare global {
                 };
 
                 type Props = DefaultProps | ManageProps;
+
                 type Result = Promise<[Entities.Preference[], number]>;
+
+                type Signature = (props: Props) => Result;
             }
         }
     }

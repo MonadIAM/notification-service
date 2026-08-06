@@ -3,18 +3,24 @@ import { NotificationCategory, PlatformService } from "~context/enums";
 declare global {
     namespace Commands {
         namespace Notification {
+            interface Contract extends InternalContract, ConsumerContract {}
+
             interface InternalContract {
-                messageDispatchPayloadMapper(
-                    props: MessageDispatchPayloadMapper.Props,
-                ): MessageDispatchPayloadMapper.Result;
+                messageDispatchPayloadMapper: MessageDispatchPayloadMapper.Signature;
+            }
+
+            namespace MessageDispatchPayloadMapper {
+                type Props = Entities.Message[];
+
+                type Result = Consumers.MessageDispatch.Message["payload"][];
+
+                type Signature = (props: Props) => Result;
             }
 
             interface ConsumerContract {
-                create(props: Create.Props): Create.Result;
-                cancel(props: Cancel.Props): Cancel.Result;
+                create: Create.Signature;
+                cancel: Cancel.Signature;
             }
-
-            interface Contract extends InternalContract, ConsumerContract {}
 
             namespace Create {
                 type Props = {
@@ -29,6 +35,8 @@ declare global {
                 };
 
                 type Result = Promise<void>;
+
+                type Signature = (props: Props) => Result;
             }
 
             namespace Cancel {
@@ -37,11 +45,8 @@ declare global {
                 };
 
                 type Result = Promise<{ alreadyDispatched: boolean }>;
-            }
 
-            namespace MessageDispatchPayloadMapper {
-                type Props = Entities.Message[];
-                type Result = Consumers.MessageDispatch.Message["payload"][];
+                type Signature = (props: Props) => Result;
             }
         }
     }

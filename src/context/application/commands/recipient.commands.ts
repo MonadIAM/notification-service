@@ -19,7 +19,7 @@ export class RecipientCommands implements Commands.Recipient.Contract {
         @Inject(CHANNEL_REPOSITORY)
         private readonly channelRepository: Repositories.Channel.Contract,
         @Inject(RECIPIENT_SERVICE)
-        private readonly recipientService: Services.Recipient.Contract,
+        private readonly recipientService: Services.Recipient.CommandContract,
     ) {}
 
     public async update(props: Commands.Recipient.Update.Props): Commands.Recipient.Update.Result {
