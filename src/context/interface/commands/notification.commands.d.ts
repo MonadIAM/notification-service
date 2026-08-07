@@ -3,19 +3,7 @@ import { NotificationCategory, PlatformService } from "~context/enums";
 declare global {
     namespace Commands {
         namespace Notification {
-            interface Contract extends InternalContract, ConsumerContract {}
-
-            interface InternalContract {
-                messageDispatchPayloadMapper: MessageDispatchPayloadMapper.Signature;
-            }
-
-            namespace MessageDispatchPayloadMapper {
-                type Props = Entities.Message[];
-
-                type Result = Consumers.MessageDispatch.Message["payload"][];
-
-                type Signature = (props: Props) => Result;
-            }
+            interface Contract extends ConsumerContract {}
 
             interface ConsumerContract {
                 create: Create.Signature;

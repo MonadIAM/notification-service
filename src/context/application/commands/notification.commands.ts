@@ -6,9 +6,11 @@ import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
 
 import { NOTIFICATION_SERVICE } from "../services";
+import { NotificationMapper } from "../mappers";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class NotificationCommands implements Commands.Notification.Contract {
+    private readonly mapper = new NotificationMapper();
     private readonly resource = "Notification";
 
     public constructor(
@@ -30,10 +32,10 @@ export class NotificationCommands implements Commands.Notification.Contract {
             where: { account: props.account },
         });
 
-        await this.transactionalService.run<Entities.Message[]>({
+        await this.transactionalService.run({
             resource: this.resource,
             outbox: {
-                payloadMapper: this.messageDispatchPayloadMapper.bind(this),
+                payloadMapper: this.mapper.messageDispatchPayload,
                 destinationTopic: KafkaTopic.MESSAGE_DISPATCH,
                 actionType: MessageDispatchAction.DISPATCH,
             },
@@ -52,7 +54,7 @@ export class NotificationCommands implements Commands.Notification.Contract {
                     transaction,
                 });
 
-                return messages;
+                return { messages };
             },
         });
     }
@@ -95,11 +97,5 @@ export class NotificationCommands implements Commands.Notification.Contract {
         }
 
         return { alreadyDispatched: false };
-    }
-
-    public messageDispatchPayloadMapper(
-        props: Commands.Notification.MessageDispatchPayloadMapper.Props,
-    ): Commands.Notification.MessageDispatchPayloadMapper.Result {
-        return props.filter(({ channelType }) => channelType !== ChannelType.IN_APP).map(({ id }) => ({ message: id }));
     }
 }
