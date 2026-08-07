@@ -4,12 +4,12 @@ import { Injectable, Scope } from "@nestjs/common";
 import { Notification } from "~context/domain/entities";
 import { BaseRepository } from "~common/mixins";
 
-import { NotificationAdapter } from "../adapters";
+import { NotificationMapper } from "../mappers";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class NotificationRepository
-    extends BaseRepository<Entities.Notification, Adapters.Notification.Types>({
-        Adapter: NotificationAdapter,
+    extends BaseRepository<Entities.Notification, Repositories.Mappers.Notification.Types>({
+        Mapper: NotificationMapper,
         Entity: Notification,
     })
     implements Repositories.Notification.Contract

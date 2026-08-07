@@ -3,9 +3,9 @@ import { QueryOrder } from "@mikro-orm/postgresql";
 import { ORMAdapter } from "~infrastructure/database/utils";
 import { ChannelType } from "~context/enums";
 
-export class ChannelAdapter implements Adapters.Contract<Entities.Channel, Adapters.Channel.Types> {
+export class ChannelMapper implements Repositories.Mappers.Contract<Entities.Channel, Repositories.Mappers.Channel.Types> {
     public buildWhereORM(
-        filters: Adapters.Channel.Filters,
+        filters: Repositories.Mappers.Channel.Filters,
         basic: ORM.ObjectQuery<Entities.Channel> = {},
     ): ORM.ObjectQuery<Entities.Channel> {
         const where: ORM.ObjectQuery<Entities.Channel> = basic;
@@ -33,7 +33,7 @@ export class ChannelAdapter implements Adapters.Contract<Entities.Channel, Adapt
     }
 
     public buildOptionsORM<P extends string = never, F extends string = "*">(
-        sort: Adapters.Channel.Sort,
+        sort: Repositories.Mappers.Channel.Sort,
         pagination: Pagination,
         basic: ORM.FindOptions<Entities.Channel, P, F> = {},
     ): ORM.FindOptions<Entities.Channel, P, F> {

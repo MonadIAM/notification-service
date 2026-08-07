@@ -12,16 +12,16 @@ declare global {
             namespace FindMany {
                 type DefaultProps = {
                     mode: QueryMode.DEFAULT;
-                    filters: Adapters.Preference.Filters;
-                    sort: Adapters.Preference.Sort;
+                    filters: Repositories.Mappers.Preference.Filters;
+                    sort: Repositories.Mappers.Preference.Sort;
                     pagination: Pagination;
                     actor: string;
                 };
 
                 type ManageProps = {
                     mode: QueryMode.MANAGE;
-                    filters: Adapters.Preference.Filters;
-                    sort: Adapters.Preference.Sort;
+                    filters: Repositories.Mappers.Preference.Filters;
+                    sort: Repositories.Mappers.Preference.Sort;
                     pagination: Pagination;
                 };
 

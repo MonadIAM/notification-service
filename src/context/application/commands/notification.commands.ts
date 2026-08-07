@@ -10,7 +10,7 @@ import { NotificationMapper } from "../mappers";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class NotificationCommands implements Commands.Notification.Contract {
-    private readonly mapper = new NotificationMapper();
+    private readonly mapper: Commands.Mappers.Notification.Contract;
     private readonly resource = "Notification";
 
     public constructor(
@@ -24,7 +24,9 @@ export class NotificationCommands implements Commands.Notification.Contract {
         private readonly dispatchDelayQueue: Queues.DispatchDelay.Contract,
         @Inject(NOTIFICATION_SERVICE)
         private readonly notificationService: Services.Notification.CommandContract,
-    ) {}
+    ) {
+        this.mapper = new NotificationMapper();
+    }
 
     public async create(props: Commands.Notification.Create.Props): Commands.Notification.Create.Result {
         const recipient = await this.recipientRepository.findUniqueOrThrow({

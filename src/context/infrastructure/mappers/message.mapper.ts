@@ -3,9 +3,9 @@ import { QueryOrder } from "@mikro-orm/postgresql";
 import { FailureReason, MessageStatus, ChannelType } from "~context/enums";
 import { ORMAdapter } from "~infrastructure/database/utils";
 
-export class MessageAdapter implements Adapters.Contract<Entities.Message, Adapters.Message.Types> {
+export class MessageMapper implements Repositories.Mappers.Contract<Entities.Message, Repositories.Mappers.Message.Types> {
     public buildWhereORM(
-        filters: Adapters.Message.Filters,
+        filters: Repositories.Mappers.Message.Filters,
         basic: ORM.ObjectQuery<Entities.Message> = {},
     ): ORM.ObjectQuery<Entities.Message> {
         const where: ORM.ObjectQuery<Entities.Message> = basic;
@@ -36,7 +36,7 @@ export class MessageAdapter implements Adapters.Contract<Entities.Message, Adapt
     }
 
     public buildOptionsORM<P extends string = never, F extends string = "*">(
-        sort: Adapters.Message.Sort,
+        sort: Repositories.Mappers.Message.Sort,
         pagination: Pagination,
         basic: ORM.FindOptions<Entities.Message, P, F> = {},
     ): ORM.FindOptions<Entities.Message, P, F> {

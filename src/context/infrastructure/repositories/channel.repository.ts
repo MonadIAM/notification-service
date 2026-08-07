@@ -4,12 +4,12 @@ import { Injectable, Scope } from "@nestjs/common";
 import { Channel } from "~context/domain/entities";
 import { BaseRepository } from "~common/mixins";
 
-import { ChannelAdapter } from "../adapters";
+import { ChannelMapper } from "../mappers";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class ChannelRepository
-    extends BaseRepository<Entities.Channel, Adapters.Channel.Types>({
-        Adapter: ChannelAdapter,
+    extends BaseRepository<Entities.Channel, Repositories.Mappers.Channel.Types>({
+        Mapper: ChannelMapper,
         Entity: Channel,
     })
     implements Repositories.Channel.Contract

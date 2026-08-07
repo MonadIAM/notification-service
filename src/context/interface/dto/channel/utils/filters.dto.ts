@@ -5,7 +5,7 @@ import { OrdinalFilterDTO, StringFilterDTO, LinkFilterDTO } from "~common/dto";
 import { Validator } from "~common/validator";
 
 @ApiSchema({ name: "ChannelFilters" })
-export class DefaultFiltersDTO implements Omit<Adapters.Channel.Filters, "recipient"> {
+export class DefaultFiltersDTO implements Omit<Repositories.Mappers.Channel.Filters, "recipient"> {
     @Expose()
     @Validator.IsOptional()
     @Validator.ValidateNested()
@@ -42,7 +42,7 @@ export class DefaultFiltersDTO implements Omit<Adapters.Channel.Filters, "recipi
 }
 
 @ApiSchema({ name: "ChannelManageFilters" })
-export class ManageFiltersDTO extends DefaultFiltersDTO implements Adapters.Channel.Filters {
+export class ManageFiltersDTO extends DefaultFiltersDTO implements Repositories.Mappers.Channel.Filters {
     @Expose()
     @Validator.IsOptional()
     @Validator.ValidateNested()

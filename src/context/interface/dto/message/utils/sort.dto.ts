@@ -5,7 +5,7 @@ import { Expose } from "class-transformer";
 import { Validator } from "~common/validator";
 
 @ApiSchema({ name: "MessageSort" })
-export class SortDTO implements Adapters.Message.Sort {
+export class SortDTO implements Repositories.Mappers.Message.Sort {
     @Expose()
     @Validator.IsOptional()
     @Validator.IsEnum(QueryOrder)

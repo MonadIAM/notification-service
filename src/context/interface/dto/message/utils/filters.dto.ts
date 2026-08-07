@@ -5,7 +5,7 @@ import { OrdinalFilterDTO, StringFilterDTO, LinkFilterDTO } from "~common/dto";
 import { Validator } from "~common/validator";
 
 @ApiSchema({ name: "MessageFilters" })
-export class ManageFiltersDTO implements Adapters.Message.Filters {
+export class ManageFiltersDTO implements Repositories.Mappers.Message.Filters {
     @Expose()
     @Validator.IsOptional()
     @Validator.ValidateNested()

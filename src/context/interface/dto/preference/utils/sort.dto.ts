@@ -5,7 +5,7 @@ import { Expose } from "class-transformer";
 import { Validator } from "~common/validator";
 
 @ApiSchema({ name: "PreferenceSort" })
-export class SortDTO implements Adapters.Preference.Sort {
+export class SortDTO implements Repositories.Mappers.Preference.Sort {
     @Expose()
     @Validator.IsOptional()
     @Validator.IsEnum(QueryOrder)

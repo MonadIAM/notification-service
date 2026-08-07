@@ -5,7 +5,7 @@ import { Expose } from "class-transformer";
 import { Validator } from "~common/validator";
 
 @ApiSchema({ name: "ChannelSort" })
-export class SortDTO implements Adapters.Channel.Sort {
+export class SortDTO implements Repositories.Mappers.Channel.Sort {
     @Expose()
     @Validator.IsOptional()
     @Validator.IsEnum(QueryOrder)

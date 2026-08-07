@@ -3,9 +3,12 @@ import { QueryOrder } from "@mikro-orm/postgresql";
 import { NotificationCategory, ChannelType } from "~context/enums";
 import { ORMAdapter } from "~infrastructure/database/utils";
 
-export class PreferenceAdapter implements Adapters.Contract<Entities.Preference, Adapters.Preference.Types> {
+export class PreferenceMapper implements Repositories.Mappers.Contract<
+    Entities.Preference,
+    Repositories.Mappers.Preference.Types
+> {
     public buildWhereORM(
-        filters: Adapters.Preference.Filters,
+        filters: Repositories.Mappers.Preference.Filters,
         basic: ORM.ObjectQuery<Entities.Preference> = {},
     ): ORM.ObjectQuery<Entities.Preference> {
         const where: ORM.ObjectQuery<Entities.Preference> = basic;
@@ -33,7 +36,7 @@ export class PreferenceAdapter implements Adapters.Contract<Entities.Preference,
     }
 
     public buildOptionsORM<P extends string = never, F extends string = "*">(
-        sort: Adapters.Preference.Sort,
+        sort: Repositories.Mappers.Preference.Sort,
         pagination: Pagination,
         basic: ORM.FindOptions<Entities.Preference, P, F> = {},
     ): ORM.FindOptions<Entities.Preference, P, F> {

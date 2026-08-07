@@ -24,7 +24,7 @@ declare global {
             namespace FindMany {
                 type DefaultProps = {
                     mode: QueryMode.DEFAULT;
-                    sort: Adapters.Message.Sort;
+                    sort: Repositories.Mappers.Message.Sort;
                     pagination: Pagination;
                     notification: string;
                     actor: string;
@@ -32,8 +32,8 @@ declare global {
 
                 type ManageProps = {
                     mode: QueryMode.MANAGE;
-                    filters: Adapters.Message.Filters;
-                    sort: Adapters.Message.Sort;
+                    filters: Repositories.Mappers.Message.Filters;
+                    sort: Repositories.Mappers.Message.Sort;
                     pagination: Pagination;
                 };
 

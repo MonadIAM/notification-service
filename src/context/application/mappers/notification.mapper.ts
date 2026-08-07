@@ -1,9 +1,9 @@
 import { ChannelType } from "~context/enums";
 
-export class NotificationMapper implements Mappers.Notification.Contract {
+export class NotificationMapper implements Commands.Mappers.Notification.Contract {
     public messageDispatchPayload(
-        props: Mappers.Notification.MessageDispatchPayload.Props,
-    ): Mappers.Notification.MessageDispatchPayload.Result {
+        props: Commands.Mappers.Notification.MessageDispatchPayload.Props,
+    ): Commands.Mappers.Notification.MessageDispatchPayload.Result {
         return props.messages
             .filter(({ channelType }) => channelType !== ChannelType.IN_APP)
             .map(({ id }) => ({ message: id }));

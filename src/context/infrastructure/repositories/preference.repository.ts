@@ -4,12 +4,12 @@ import { Injectable, Scope } from "@nestjs/common";
 import { Preference } from "~context/domain/entities";
 import { BaseRepository } from "~common/mixins";
 
-import { PreferenceAdapter } from "../adapters";
+import { PreferenceMapper } from "../mappers";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class PreferenceRepository
-    extends BaseRepository<Entities.Preference, Adapters.Preference.Types>({
-        Adapter: PreferenceAdapter,
+    extends BaseRepository<Entities.Preference, Repositories.Mappers.Preference.Types>({
+        Mapper: PreferenceMapper,
         Entity: Preference,
     })
     implements Repositories.Preference.Contract

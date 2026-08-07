@@ -4,12 +4,12 @@ import { Injectable, Scope } from "@nestjs/common";
 import { Recipient } from "~context/domain/entities";
 import { BaseRepository } from "~common/mixins";
 
-import { RecipientAdapter } from "../adapters";
+import { RecipientMapper } from "../mappers";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class RecipientRepository
-    extends BaseRepository<Entities.Recipient, Adapters.Recipient.Types>({
-        Adapter: RecipientAdapter,
+    extends BaseRepository<Entities.Recipient, Repositories.Mappers.Recipient.Types>({
+        Mapper: RecipientMapper,
         Entity: Recipient,
     })
     implements Repositories.Recipient.Contract

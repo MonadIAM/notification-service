@@ -5,7 +5,7 @@ import { OrdinalFilterDTO, StringFilterDTO, LinkFilterDTO } from "~common/dto";
 import { Validator } from "~common/validator";
 
 @ApiSchema({ name: "NotificationFilters" })
-export class DefaultFiltersDTO implements Omit<Adapters.Notification.Filters, "recipient"> {
+export class DefaultFiltersDTO implements Omit<Repositories.Mappers.Notification.Filters, "recipient"> {
     @Expose()
     @Validator.IsOptional()
     @Validator.ValidateNested()
@@ -43,7 +43,7 @@ export class DefaultFiltersDTO implements Omit<Adapters.Notification.Filters, "r
 }
 
 @ApiSchema({ name: "NotificationManageFilters" })
-export class ManageFiltersDTO extends DefaultFiltersDTO implements Adapters.Notification.Filters {
+export class ManageFiltersDTO extends DefaultFiltersDTO implements Repositories.Mappers.Notification.Filters {
     @Expose()
     @Validator.IsOptional()
     @Validator.ValidateNested()
