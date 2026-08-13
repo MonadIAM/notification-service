@@ -55,18 +55,25 @@ export class ChannelCommands implements Commands.Channel.Contract {
     }
 
     public async create(props: Commands.Channel.Create.Props): Commands.Channel.Create.Result {
-        const recipient = await this.recipientRepository.findUniqueOrThrow({
-            where: { account: props.account },
-        });
-
+        const { input } = props;
         await this.transactionalService.run({
             resource: this.resource,
-            execute: (transaction) => {
+            audit: {
+                entityType: EntityType.CHANNEL,
+                actionType: ActionType.CREATE,
+                ...props,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                const recipient = await this.recipientRepository.findUniqueOrThrow({
+                    where: { account: input.account },
+                });
+
                 this.channelService.create({
                     input: {
-                        sourceIdentifier: props.sourceIdentifier,
-                        address: props.address,
-                        type: props.type,
+                        sourceIdentifier: input.sourceIdentifier,
+                        address: input.address,
+                        type: input.type,
                         recipient,
                     },
                     transaction,
@@ -76,32 +83,46 @@ export class ChannelCommands implements Commands.Channel.Contract {
     }
 
     public async markVerified(props: Commands.Channel.MarkVerified.Props): Commands.Channel.MarkVerified.Result {
-        const channel = await this.channelRepository.findUniqueOrThrow({
-            where: { sourceIdentifier: props.sourceIdentifier },
-        });
-
+        const { input } = props;
         await this.transactionalService.run({
             resource: this.resource,
-            execute: (transaction) => {
+            audit: {
+                entityType: EntityType.CHANNEL,
+                actionType: ActionType.UPDATE,
+                ...props,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                const channel = await this.channelRepository.findUniqueOrThrow({
+                    where: { sourceIdentifier: input.sourceIdentifier },
+                });
+
                 this.channelService.markVerified({ input: { channel }, transaction });
             },
         });
     }
 
     public async purge(props: Commands.Channel.Purge.Props): Commands.Channel.Purge.Result {
-        const channel = await this.channelRepository.findUniqueOrThrow({
-            options: { populate: ["recipient", "recipient.defaultOtpChannel"] },
-            where: { sourceIdentifier: props.sourceIdentifier },
-        });
-
+        const { input } = props;
         await this.transactionalService.run({
             resource: this.resource,
-            execute: (transaction) => {
+            audit: {
+                entityType: EntityType.CHANNEL,
+                actionType: ActionType.DELETE,
+                ...props,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                const channel = await this.channelRepository.findUniqueOrThrow({
+                    options: { populate: ["recipient", "recipient.defaultOtpChannel"] },
+                    where: { sourceIdentifier: input.sourceIdentifier },
+                });
+
                 if (channel.recipient.defaultOtpChannel?.id === channel.id) {
                     this.recipientService.clearOtpChannel({ input: { recipient: channel.recipient }, transaction });
+                } else {
+                    this.channelService.purge({ input: { channels: [channel] }, transaction });
                 }
-
-                this.channelService.purge({ input: { channels: [channel] }, transaction });
             },
         });
     }

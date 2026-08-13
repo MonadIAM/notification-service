@@ -6,6 +6,7 @@ import { MESSAGE_REPOSITORY } from "~context/domain/repositories";
 import { FailureReason, MessageStatus } from "~context/enums";
 import { DISPATCH_SERVICE } from "~context/application/services";
 import { MESSAGE_COMMANDS } from "~context/interface/commands";
+import { CONSUMER_META } from "~context/constants";
 
 import { BullQueue } from "../enums";
 
@@ -36,7 +37,7 @@ export class DispatchDelayProcessor extends WorkerHost {
         }
 
         await this.dispatchService.send({ message: dispatch });
-        await this.messageCommands.markSent({ message: dispatch.id });
+        await this.messageCommands.markSent({ context: CONSUMER_META, input: { message: dispatch.id } });
     }
 
     @OnWorkerEvent("failed")
@@ -50,9 +51,12 @@ export class DispatchDelayProcessor extends WorkerHost {
         );
 
         await this.messageCommands.markFailed({
-            message: job.data.message,
-            reason: FailureReason.PROVIDER,
-            error: job.failedReason,
+            context: CONSUMER_META,
+            input: {
+                message: job.data.message,
+                reason: FailureReason.PROVIDER,
+                error: job.failedReason,
+            },
         });
     }
 }

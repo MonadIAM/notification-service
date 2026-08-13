@@ -9,9 +9,12 @@ declare namespace Commands {
 
         namespace Create {
             type Props = {
-                account: string;
-                timezone: string;
-                locale: string;
+                context: Extract.Meta;
+                input: {
+                    account: string;
+                    timezone: string;
+                    locale: string;
+                };
             };
 
             type Result = Promise<void>;
@@ -21,7 +24,10 @@ declare namespace Commands {
 
         namespace Purge {
             type Props = {
-                account: string;
+                context: Extract.Meta;
+                input: {
+                    account: string;
+                };
             };
 
             type Result = Promise<void>;

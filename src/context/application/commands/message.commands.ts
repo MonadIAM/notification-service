@@ -22,15 +22,7 @@ export class MessageCommands implements Commands.Message.Contract {
     ) {}
 
     public async markRead(props: Commands.Message.MarkRead.Props): Commands.Message.MarkRead.Result {
-        const message = await this.messageRepository.findUniqueOrThrow({
-            options: { populate: ["notification", "notification.recipient"] },
-            where: { id: props.input.message },
-        });
-
-        if (message.notification.recipient.account !== props.actor) {
-            throw Exception.notFound({ messageKey: `${this.dictionaryPath}.NOT_FOUND` });
-        }
-
+        const { input, actor } = props;
         await this.transactionalService.run({
             resource: this.resource,
             audit: {
@@ -39,9 +31,17 @@ export class MessageCommands implements Commands.Message.Contract {
                 ...props,
             },
             changeLog: true,
-            execute: (transaction) => {
+            execute: async (transaction) => {
+                const message = await this.messageRepository.findUniqueOrThrow({
+                    options: { populate: ["notification", "notification.recipient"] },
+                    where: { id: input.message },
+                });
+
+                if (message.notification.recipient.account !== actor) {
+                    throw Exception.notFound({ messageKey: `${this.dictionaryPath}.NOT_FOUND` });
+                }
+
                 this.messageService.markRead({ input: { message }, transaction });
-                return message;
             },
         });
 
@@ -49,35 +49,56 @@ export class MessageCommands implements Commands.Message.Contract {
     }
 
     public async markSent(props: Commands.Message.MarkSent.Props): Commands.Message.MarkSent.Result {
-        const message = await this.messageRepository.findUniqueOrThrow({ where: { id: props.message } });
-
+        const { input } = props;
         await this.transactionalService.run({
             resource: this.resource,
-            execute: (transaction) => {
+            audit: {
+                entityType: EntityType.MESSAGE,
+                actionType: ActionType.UPDATE,
+                ...props,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                const message = await this.messageRepository.findUniqueOrThrow({ where: { id: input.message } });
+
                 this.messageService.markSent({ input: { message }, transaction });
             },
         });
     }
 
     public async markDelivered(props: Commands.Message.MarkDelivered.Props): Commands.Message.MarkDelivered.Result {
-        const message = await this.messageRepository.findUniqueOrThrow({ where: { id: props.message } });
-
+        const { input } = props;
         await this.transactionalService.run({
             resource: this.resource,
-            execute: (transaction) => {
+            audit: {
+                entityType: EntityType.MESSAGE,
+                actionType: ActionType.UPDATE,
+                ...props,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                const message = await this.messageRepository.findUniqueOrThrow({ where: { id: input.message } });
+
                 this.messageService.markDelivered({ input: { message }, transaction });
             },
         });
     }
 
     public async markFailed(props: Commands.Message.MarkFailed.Props): Commands.Message.MarkFailed.Result {
-        const message = await this.messageRepository.findUniqueOrThrow({ where: { id: props.message } });
-
+        const { input } = props;
         await this.transactionalService.run({
             resource: this.resource,
-            execute: (transaction) => {
+            audit: {
+                entityType: EntityType.MESSAGE,
+                actionType: ActionType.UPDATE,
+                ...props,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                const message = await this.messageRepository.findUniqueOrThrow({ where: { id: input.message } });
+
                 this.messageService.markFailed({
-                    input: { message, reason: props.reason, error: props.error },
+                    input: { message, reason: input.reason, error: input.error },
                     transaction,
                 });
             },

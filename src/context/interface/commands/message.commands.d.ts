@@ -31,7 +31,10 @@ declare global {
 
             namespace MarkDelivered {
                 type Props = {
-                    message: string;
+                    context: Extract.Meta;
+                    input: {
+                        message: string;
+                    };
                 };
 
                 type Result = Promise<void>;
@@ -41,9 +44,12 @@ declare global {
 
             namespace MarkFailed {
                 type Props = {
-                    message: string;
-                    reason: FailureReason;
-                    error?: string;
+                    context: Extract.Meta;
+                    input: {
+                        message: string;
+                        reason: FailureReason;
+                        error?: string;
+                    };
                 };
 
                 type Result = Promise<void>;
@@ -53,7 +59,10 @@ declare global {
 
             namespace MarkSent {
                 type Props = {
-                    message: string;
+                    context: Extract.Meta;
+                    input: {
+                        message: string;
+                    };
                 };
 
                 type Result = Promise<void>;

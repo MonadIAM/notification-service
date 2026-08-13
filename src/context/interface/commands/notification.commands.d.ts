@@ -12,14 +12,17 @@ declare global {
 
             namespace Create {
                 type Props = {
-                    account: string;
-                    category: NotificationCategory;
-                    sourceService: PlatformService;
-                    dedupKey?: string;
-                    template: string;
-                    realm?: string;
-                    title?: string;
-                    body?: string;
+                    context: Extract.Meta;
+                    input: {
+                        account: string;
+                        category: NotificationCategory;
+                        sourceService: PlatformService;
+                        dedupKey?: string;
+                        template: string;
+                        realm?: string;
+                        title?: string;
+                        body?: string;
+                    };
                 };
 
                 type Result = Promise<void>;
@@ -29,7 +32,10 @@ declare global {
 
             namespace Cancel {
                 type Props = {
-                    dedupKey: string;
+                    context: Extract.Meta;
+                    input: {
+                        dedupKey: string;
+                    };
                 };
 
                 type Result = Promise<{ alreadyDispatched: boolean }>;

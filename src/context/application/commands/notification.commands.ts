@@ -1,6 +1,6 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
-import { MessageDispatchAction, MessageStatus, ChannelType, KafkaTopic } from "~context/enums";
+import { MessageDispatchAction, MessageStatus, ChannelType, ActionType, EntityType, KafkaTopic } from "~context/enums";
 import { NOTIFICATION_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/domain/repositories";
 import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
@@ -29,11 +29,7 @@ export class NotificationCommands implements Commands.Notification.Contract {
     }
 
     public async create(props: Commands.Notification.Create.Props): Commands.Notification.Create.Result {
-        const recipient = await this.recipientRepository.findUniqueOrThrow({
-            options: { populate: ["channels", "preferences", "defaultOtpChannel"] },
-            where: { account: props.account },
-        });
-
+        const { input } = props;
         await this.transactionalService.run({
             resource: this.resource,
             outbox: {
@@ -41,16 +37,26 @@ export class NotificationCommands implements Commands.Notification.Contract {
                 destinationTopic: KafkaTopic.MESSAGE_DISPATCH,
                 actionType: MessageDispatchAction.DISPATCH,
             },
-            execute: (transaction) => {
+            audit: {
+                entityType: EntityType.NOTIFICATION,
+                actionType: ActionType.CREATE,
+                ...props,
+            },
+            execute: async (transaction) => {
+                const recipient = await this.recipientRepository.findUniqueOrThrow({
+                    options: { populate: ["channels", "preferences", "defaultOtpChannel"] },
+                    where: { account: input.account },
+                });
+
                 const { messages } = this.notificationService.create({
                     input: {
-                        sourceService: props.sourceService,
-                        dedupKey: props.dedupKey,
-                        category: props.category,
-                        template: props.template,
-                        realm: props.realm,
-                        title: props.title,
-                        body: props.body,
+                        sourceService: input.sourceService,
+                        dedupKey: input.dedupKey,
+                        category: input.category,
+                        template: input.template,
+                        realm: input.realm,
+                        title: input.title,
+                        body: input.body,
                         recipient,
                     },
                     transaction,
@@ -62,9 +68,10 @@ export class NotificationCommands implements Commands.Notification.Contract {
     }
 
     public async cancel(props: Commands.Notification.Cancel.Props): Commands.Notification.Cancel.Result {
+        const { input } = props;
         const notification = await this.notificationRepository.findUnique({
             options: { populate: ["messages"] },
-            where: { dedupKey: props.dedupKey },
+            where: { dedupKey: input.dedupKey },
         });
 
         if (notification) {
@@ -87,15 +94,22 @@ export class NotificationCommands implements Commands.Notification.Contract {
 
             toCancel.push(...pending);
 
-            await this.transactionalService.run({
-                resource: this.resource,
-                execute: (transaction) => {
-                    for (const message of toCancel) {
-                        message.markCancelled();
-                        transaction.merge(message);
-                    }
-                },
-            });
+            if (toCancel.length) {
+                await this.transactionalService.run({
+                    resource: this.resource,
+                    audit: {
+                        entityType: EntityType.MESSAGE,
+                        actionType: ActionType.UPDATE,
+                        ...props,
+                    },
+                    execute: (transaction) => {
+                        for (const message of toCancel) {
+                            message.markCancelled();
+                            transaction.merge(message);
+                        }
+                    },
+                });
+            }
         }
 
         return { alreadyDispatched: false };

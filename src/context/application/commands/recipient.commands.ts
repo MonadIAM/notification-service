@@ -73,11 +73,22 @@ export class RecipientCommands implements Commands.Recipient.Contract {
     }
 
     public async create(props: Commands.Recipient.Create.Props): Commands.Recipient.Create.Result {
+        const { input } = props;
         await this.transactionalService.run({
             resource: this.resource,
+            audit: {
+                entityType: EntityType.RECIPIENT,
+                actionType: ActionType.CREATE,
+                ...props,
+            },
+            changeLog: true,
             execute: (transaction) => {
                 this.recipientService.create({
-                    input: { account: props.account, timezone: props.timezone, locale: props.locale },
+                    input: {
+                        timezone: input.timezone,
+                        account: input.account,
+                        locale: input.locale,
+                    },
                     transaction,
                 });
             },
@@ -85,13 +96,20 @@ export class RecipientCommands implements Commands.Recipient.Contract {
     }
 
     public async purge(props: Commands.Recipient.Purge.Props): Commands.Recipient.Purge.Result {
-        const recipient = await this.recipientRepository.findUniqueOrThrow({
-            where: { account: props.account },
-        });
-
+        const { input } = props;
         await this.transactionalService.run({
             resource: this.resource,
-            execute: (transaction) => {
+            audit: {
+                entityType: EntityType.RECIPIENT,
+                actionType: ActionType.DELETE,
+                ...props,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                const recipient = await this.recipientRepository.findUniqueOrThrow({
+                    where: { account: input.account },
+                });
+
                 this.recipientService.purge({ input: { recipient }, transaction });
             },
         });

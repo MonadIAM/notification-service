@@ -7,7 +7,7 @@ import { KafkaUtils, KAFKA_SERVICE } from "~infrastructure/kafka";
 import { MESSAGE_REPOSITORY } from "~context/domain/repositories";
 import { DISPATCH_SERVICE } from "~context/application/services";
 import { FailureReason, KafkaTopic } from "~context/enums";
-import { DEBOUNCED_CATEGORIES } from "~context/constants";
+import { CONSUMER_META, DEBOUNCED_CATEGORIES } from "~context/constants";
 import { Exception } from "~common/exceptions";
 
 import { MESSAGE_COMMANDS } from "../commands";
@@ -50,7 +50,7 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
             }
 
             await this.dispatchService.send({ message: dispatch });
-            await this.messageCommands.markSent({ message: dispatch.id });
+            await this.messageCommands.markSent({ context: CONSUMER_META, input: { message: dispatch.id } });
         } catch (error) {
             if (Exception.isRetryable(error)) {
                 await lastValueFrom(
@@ -68,9 +68,12 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
             } else {
                 this.logger.warn(`Non-retryable error in message dispatch consumer: ${String(error)}`);
                 await this.messageCommands.markFailed({
-                    message: message.payload.message,
-                    reason: FailureReason.PROVIDER,
-                    error: String(error),
+                    context: CONSUMER_META,
+                    input: {
+                        message: message.payload.message,
+                        reason: FailureReason.PROVIDER,
+                        error: String(error),
+                    },
                 });
                 await lastValueFrom(
                     this.kafkaClient.emit(KafkaTopic.MESSAGE_DISPATCH_DEAD, {

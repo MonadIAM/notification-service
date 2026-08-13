@@ -28,7 +28,10 @@ declare global {
 
             namespace MarkVerified {
                 type Props = {
-                    sourceIdentifier: string;
+                    context: Extract.Meta;
+                    input: {
+                        sourceIdentifier: string;
+                    };
                 };
 
                 type Result = Promise<void>;
@@ -38,10 +41,13 @@ declare global {
 
             namespace Create {
                 type Props = {
-                    account: string;
-                    sourceIdentifier: string;
-                    type: ChannelType;
-                    address?: string;
+                    context: Extract.Meta;
+                    input: {
+                        account: string;
+                        sourceIdentifier: string;
+                        type: ChannelType;
+                        address?: string;
+                    };
                 };
 
                 type Result = Promise<void>;
@@ -51,7 +57,10 @@ declare global {
 
             namespace Purge {
                 type Props = {
-                    sourceIdentifier: string;
+                    context: Extract.Meta;
+                    input: {
+                        sourceIdentifier: string;
+                    };
                 };
 
                 type Result = Promise<void>;

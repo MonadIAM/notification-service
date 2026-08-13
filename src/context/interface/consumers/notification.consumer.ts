@@ -5,7 +5,7 @@ import { I18nService } from "nestjs-i18n";
 import { lastValueFrom } from "rxjs";
 
 import { KafkaUtils, KAFKA_SERVICE } from "~infrastructure/kafka";
-import { CUSTOM_TEMPLATE } from "~context/constants";
+import { CONSUMER_META, CUSTOM_TEMPLATE } from "~context/constants";
 import { Exception } from "~common/exceptions";
 import { KafkaTopic } from "~context/enums";
 
@@ -37,7 +37,10 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         try {
             if (message.actionType === NotificationTopicAction.CANCEL) {
                 const { alreadyDispatched } = await this.notificationCommands.cancel({
-                    dedupKey: message.payload.dedupKey,
+                    context: CONSUMER_META,
+                    input: {
+                        dedupKey: message.payload.dedupKey,
+                    },
                 });
 
                 if (alreadyDispatched) {
@@ -93,14 +96,17 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
                 : [payload.title, payload.text];
 
         await this.notificationCommands.create({
-            template: payload.kind === NotificationContentKind.TEMPLATE ? payload.template : CUSTOM_TEMPLATE,
-            sourceService: payload.sourceService,
-            account: payload.recipient,
-            category: payload.category,
-            dedupKey: payload.dedupKey,
-            realm: payload.realm,
-            title,
-            body,
+            context: CONSUMER_META,
+            input: {
+                template: payload.kind === NotificationContentKind.TEMPLATE ? payload.template : CUSTOM_TEMPLATE,
+                sourceService: payload.sourceService,
+                account: payload.recipient,
+                category: payload.category,
+                dedupKey: payload.dedupKey,
+                realm: payload.realm,
+                title,
+                body,
+            },
         });
     }
 }
