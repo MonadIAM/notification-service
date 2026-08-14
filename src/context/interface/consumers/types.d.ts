@@ -63,7 +63,7 @@ declare global {
 
             namespace Publish {
                 type Props = {
-                    payload: Topics.Notification.ContentPayload | Topics.Notification.TemplatePayload;
+                    payload: Topics.Notification.NotificationSpec;
                 };
 
                 type Result = Promise<void>;

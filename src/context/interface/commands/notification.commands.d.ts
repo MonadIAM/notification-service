@@ -13,6 +13,8 @@ declare global {
             namespace Create {
                 type Props = {
                     context: Extract.Meta;
+                    actor?: string;
+                    realm?: string;
                     input: {
                         account: string;
                         category: NotificationCategory;
@@ -33,6 +35,8 @@ declare global {
             namespace Cancel {
                 type Props = {
                     context: Extract.Meta;
+                    actor?: string;
+                    realm?: string;
                     input: {
                         dedupKey: string;
                     };
