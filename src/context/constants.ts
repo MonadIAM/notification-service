@@ -2,6 +2,8 @@ import { NotificationCategory, ChannelType } from "./enums";
 
 export { SYSTEM_REALM_ID } from "@monadiam/shared";
 
+export const DEFAULT_OAUTH_SCOPE = "";
+
 export const DUPLICATABLE_CHANNEL_TYPES: readonly ChannelType[] = [ChannelType.EMAIL];
 
 export const CONFIGURABLE_NOTIFICATION_CATEGORIES: readonly NotificationCategory[] = [
