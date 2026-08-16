@@ -53,7 +53,7 @@ docker exec -it notification-service-postgres-replica psql -U user -d notificati
 | Command                                              | Makefile                  | Description                                                        |
 |:-----------------------------------------------------|:--------------------------|:-------------------------------------------------------------------|
 | **Infrastructure**                                   |                           |                                                                    |
-| `[ -f .env.example ] && cp -f .env.example .env ...` | `make env`                | Generate `.env` and `.vault.env` from their examples (if present). |
+| `[ -f .env.example ] && cp -f .env.example .env ...` | `make env`                | Generate `.env` from its example (if present).                     |
 | `docker-compose up -d`                               | `make up`                 | Start all services in detached mode.                               |
 | `docker-compose stop`                                | `make stop`               | Stop containers without removing them.                             |
 | `docker-compose down`                                | `make down`               | Stop and remove containers and networks.                           |

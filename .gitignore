@@ -36,9 +36,12 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # Environment variables and secrets
-*.csv
 .env
-.vault.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+*.csv
 
 # CLI generated artifacts
 *.swagger.json
