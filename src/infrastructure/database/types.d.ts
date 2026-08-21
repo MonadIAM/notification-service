@@ -92,22 +92,6 @@ declare global {
         namespace Config {
             interface Contract extends PublicContract, InternalContract {}
 
-            interface InternalContract {
-                resolveHost: ResolveHost.Signature;
-            }
-
-            namespace ResolveHost {
-                type Props = {
-                    kind: ORM.ConnectionKind;
-                    config: ConfigService;
-                    cqrsEnabled: boolean;
-                };
-
-                type Result = string;
-
-                type Signature = (props: Props) => Result;
-            }
-
             interface PublicContract {
                 buildOptions: BuildOptions.Signature;
             }
@@ -119,6 +103,33 @@ declare global {
                 };
 
                 type Result = ORM.Options;
+
+                type Signature = (props: Props) => Result;
+            }
+
+            interface InternalContract {
+                resolveHost: ResolveHost.Signature;
+                resolvePort: ResolvePort.Signature;
+            }
+
+            namespace ResolveHost {
+                type Props = {
+                    kind: ORM.ConnectionKind;
+                    config: ConfigService;
+                };
+
+                type Result = string;
+
+                type Signature = (props: Props) => Result;
+            }
+
+            namespace ResolvePort {
+                type Props = {
+                    kind: ORM.ConnectionKind;
+                    config: ConfigService;
+                };
+
+                type Result = number;
 
                 type Signature = (props: Props) => Result;
             }
