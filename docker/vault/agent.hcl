@@ -42,6 +42,12 @@ template {
 }
 
 template {
+    contents    = "{{ with secret \"kv/data/notification-service/runtime\" }}{{ .Data.data.kafka_sasl_password }}{{ end }}"
+    destination = "/secrets/application/kafka_sasl_password"
+    perms       = "0440"
+}
+
+template {
     contents    = "{{ with secret \"aws/creds/notification-service-ses\" }}{{ .Data.access_key }}{{ end }}"
     destination = "/secrets/application/aws_access_key_id"
     perms       = "0440"
