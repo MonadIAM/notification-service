@@ -1,11 +1,10 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
-import { CHANNEL_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/domain/repositories";
+import { CHANNEL_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/infrastructure/repositories";
+import { RECIPIENT_SERVICE, CHANNEL_SERVICE } from "~context/domain/services";
 import { ActionType, EntityType, ChannelType } from "~context/enums";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
 import { Exception } from "~common/exceptions";
-
-import { RECIPIENT_SERVICE, CHANNEL_SERVICE } from "../services";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class ChannelCommands implements Commands.Channel.Contract {

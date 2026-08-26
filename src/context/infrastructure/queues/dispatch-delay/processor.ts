@@ -2,10 +2,10 @@ import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Job } from "bullmq";
 
-import { MESSAGE_REPOSITORY } from "~context/domain/repositories";
+import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
+import { MESSAGE_COMMANDS } from "~context/application/commands";
 import { FailureReason, MessageStatus } from "~context/enums";
-import { DISPATCH_SERVICE } from "~context/application/services";
-import { MESSAGE_COMMANDS } from "~context/interface/commands";
+import { DISPATCH_SERVICE } from "~context/domain/services";
 import { CONSUMER_META } from "~context/constants";
 
 import { BullQueue } from "../enums";

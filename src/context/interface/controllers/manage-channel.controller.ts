@@ -2,11 +2,11 @@ import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Query, Body,
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { RequireGlobalPermission, FormatResponse, Swagger } from "~common/decorators";
+import { CHANNEL_QUERIES } from "~context/application/queries";
 import { MonitoringInterceptor } from "~common/interceptors";
 import { PermissionCode } from "~context/enums";
 
 import { ManageGetListQueryDTO, ManageGetListBodyDTO, ManageGetByIdQueryDTO, ChannelDTO, ListDTO } from "../dto/channel";
-import { CHANNEL_QUERIES } from "../queries";
 
 const { CHANNEL_READ_ABSOLUTE } = PermissionCode;
 const {

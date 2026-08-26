@@ -1,18 +1,16 @@
 import { ClassProvider } from "@nestjs/common";
 
-import {
-    NOTIFICATION_QUERIES,
-    PREFERENCE_QUERIES,
-    RECIPIENT_QUERIES,
-    CHANNEL_QUERIES,
-    MESSAGE_QUERIES,
-} from "~context/interface/queries";
-
 import { NotificationQueries } from "./notification.queries";
 import { PreferenceQueries } from "./preference.queries";
 import { RecipientQueries } from "./recipient.queries";
 import { ChannelQueries } from "./channel.queries";
 import { MessageQueries } from "./message.queries";
+
+export const NOTIFICATION_QUERIES = Symbol("Queries.Notification.Contract");
+export const PREFERENCE_QUERIES = Symbol("Queries.Preference.Contract");
+export const RECIPIENT_QUERIES = Symbol("Queries.Recipient.Contract");
+export const CHANNEL_QUERIES = Symbol("Queries.Channel.Contract");
+export const MESSAGE_QUERIES = Symbol("Queries.Message.Contract");
 
 export const QUERIES: ClassProvider[] = [
     {

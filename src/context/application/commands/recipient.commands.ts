@@ -1,10 +1,9 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
-import { RECIPIENT_REPOSITORY, CHANNEL_REPOSITORY } from "~context/domain/repositories";
+import { RECIPIENT_REPOSITORY, CHANNEL_REPOSITORY } from "~context/infrastructure/repositories";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
+import { RECIPIENT_SERVICE } from "~context/domain/services";
 import { ActionType, EntityType } from "~context/enums";
-
-import { RECIPIENT_SERVICE } from "../services";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class RecipientCommands implements Commands.Recipient.Contract {

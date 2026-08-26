@@ -1,7 +1,7 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
+import { NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
 import { ChannelType, MessageStatus, QueryMode } from "~context/enums";
-import { NOTIFICATION_REPOSITORY } from "~context/domain/repositories";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class NotificationQueries implements Queries.Notification.Contract {
@@ -30,10 +30,10 @@ export class NotificationQueries implements Queries.Notification.Contract {
         }
 
         return this.notificationRepository.findMany({
-            prefilter,
             pagination: props.pagination,
             filters: props.filters,
             sort: props.sort,
+            prefilter,
         });
     }
 }

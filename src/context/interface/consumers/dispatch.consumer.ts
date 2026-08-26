@@ -2,15 +2,14 @@ import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/m
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
 import { lastValueFrom } from "rxjs";
 
+import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
+import { CONSUMER_META, DEBOUNCED_CATEGORIES } from "~context/constants";
 import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
 import { KafkaUtils, KAFKA_SERVICE } from "~infrastructure/kafka";
-import { MESSAGE_REPOSITORY } from "~context/domain/repositories";
-import { DISPATCH_SERVICE } from "~context/application/services";
+import { MESSAGE_COMMANDS } from "~context/application/commands";
+import { DISPATCH_SERVICE } from "~context/domain/services";
 import { FailureReason, KafkaTopic } from "~context/enums";
-import { CONSUMER_META, DEBOUNCED_CATEGORIES } from "~context/constants";
 import { Exception } from "~common/exceptions";
-
-import { MESSAGE_COMMANDS } from "../commands";
 
 @Controller()
 export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnModuleInit {

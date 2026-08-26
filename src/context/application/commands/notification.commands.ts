@@ -1,11 +1,11 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
 import { MessageDispatchAction, MessageStatus, ChannelType, ActionType, EntityType, KafkaTopic } from "~context/enums";
-import { NOTIFICATION_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/domain/repositories";
+import { NOTIFICATION_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/infrastructure/repositories";
 import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
+import { NOTIFICATION_SERVICE } from "~context/domain/services";
 
-import { NOTIFICATION_SERVICE } from "../services";
 import { NotificationMapper } from "../mappers";
 
 @Injectable({ scope: Scope.DEFAULT })

@@ -1,11 +1,10 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
+import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
-import { MESSAGE_REPOSITORY } from "~context/domain/repositories";
+import { MESSAGE_SERVICE } from "~context/domain/services";
 import { ActionType, EntityType } from "~context/enums";
 import { Exception } from "~common/exceptions";
-
-import { MESSAGE_SERVICE } from "../services";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class MessageCommands implements Commands.Message.Contract {

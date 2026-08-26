@@ -2,13 +2,13 @@ import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Patch, Body,
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { Extract, FormatResponse, RequirePermission, Swagger } from "~common/decorators";
+import { RECIPIENT_COMMANDS } from "~context/application/commands";
+import { RECIPIENT_QUERIES } from "~context/application/queries";
 import { MonitoringInterceptor } from "~common/interceptors";
 import { QueryMode, PermissionCode } from "~context/enums";
 import { SuccessMessageDTO } from "~common/dto";
 
 import { SelectOtpChannelBodyDTO, UpdateBodyDTO, RecipientDTO } from "../dto/recipient";
-import { RECIPIENT_COMMANDS } from "../commands";
-import { RECIPIENT_QUERIES } from "../queries";
 
 const { RECIPIENT_READ_PERSONAL, RECIPIENT_SELECT_OTP_CHANNEL, RECIPIENT_UPDATE } = PermissionCode;
 const {
@@ -56,8 +56,8 @@ export class RecipientController {
         return this.recipientQueries.findUnique({ mode: QueryMode.DEFAULT, actor });
     }
 
-    @HttpCode(OK)
     @Patch()
+    @HttpCode(OK)
     @FormatResponse(SuccessMessageDTO)
     @RequirePermission(RECIPIENT_UPDATE)
     @ApiOperation({

@@ -2,13 +2,13 @@ import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Patch, Query
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { Extract, FormatResponse, RequirePermission, Swagger } from "~common/decorators";
+import { PREFERENCE_COMMANDS } from "~context/application/commands";
+import { PREFERENCE_QUERIES } from "~context/application/queries";
 import { MonitoringInterceptor } from "~common/interceptors";
 import { SuccessMessageDTO } from "~common/dto";
 import { PermissionCode } from "~context/enums";
 
 import { GetListQueryDTO, GetListBodyDTO, ToggleBodyDTO, ListDTO } from "../dto/preference";
-import { PREFERENCE_COMMANDS } from "../commands";
-import { PREFERENCE_QUERIES } from "../queries";
 
 const { PREFERENCE_READ_PERSONAL, PREFERENCE_TOGGLE } = PermissionCode;
 const {

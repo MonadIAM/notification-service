@@ -1,12 +1,11 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
-import { PREFERENCE_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/domain/repositories";
 import { DUPLICATABLE_CHANNEL_TYPES, CONFIGURABLE_NOTIFICATION_CATEGORIES } from "~context/constants";
+import { PREFERENCE_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/infrastructure/repositories";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
+import { PREFERENCE_SERVICE } from "~context/domain/services";
 import { ActionType, EntityType } from "~context/enums";
 import { Exception } from "~common/exceptions";
-
-import { PREFERENCE_SERVICE } from "../services";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class PreferenceCommands implements Commands.Preference.Contract {

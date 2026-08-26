@@ -2,11 +2,11 @@ import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Query, Body,
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { RequireGlobalPermission, FormatResponse, Swagger } from "~common/decorators";
+import { PREFERENCE_QUERIES } from "~context/application/queries";
 import { MonitoringInterceptor } from "~common/interceptors";
 import { PermissionCode } from "~context/enums";
 
 import { ManageGetListQueryDTO, ManageGetListBodyDTO, ListDTO } from "../dto/preference";
-import { PREFERENCE_QUERIES } from "../queries";
 
 const { PREFERENCE_READ_ABSOLUTE } = PermissionCode;
 const { INTERNAL_SERVER_ERROR, UNPROCESSABLE_ENTITY, SERVICE_UNAVAILABLE, REQUEST_TIMEOUT, UNAUTHORIZED, FORBIDDEN, OK } =

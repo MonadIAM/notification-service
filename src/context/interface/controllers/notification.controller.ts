@@ -2,11 +2,11 @@ import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Query, Body,
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { Extract, FormatResponse, RequirePermission, Swagger } from "~common/decorators";
+import { NOTIFICATION_QUERIES } from "~context/application/queries";
 import { MonitoringInterceptor } from "~common/interceptors";
 import { PermissionCode } from "~context/enums";
 
 import { GetByIdQueryDTO, GetListQueryDTO, GetListBodyDTO, NotificationDTO, ListDTO } from "../dto/notification";
-import { NOTIFICATION_QUERIES } from "../queries";
 
 const { NOTIFICATION_READ_PERSONAL } = PermissionCode;
 const {

@@ -1,7 +1,7 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
+import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { ChannelType, MessageStatus, QueryMode } from "~context/enums";
-import { MESSAGE_REPOSITORY } from "~context/domain/repositories";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class MessageQueries implements Queries.Message.Contract {
