@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Job } from "bullmq";
 
 import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
-import { MESSAGE_COMMANDS } from "~context/application/commands";
+import { MESSAGE_COMMANDS } from "~context/application/commands/tokens";
 import { FailureReason, MessageStatus } from "~context/enums";
 import { DISPATCH_SERVICE } from "~context/domain/services";
 import { CONSUMER_META } from "~context/constants";

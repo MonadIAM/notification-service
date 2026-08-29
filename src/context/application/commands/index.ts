@@ -5,12 +5,13 @@ import { PreferenceCommands } from "./preference.commands";
 import { RecipientCommands } from "./recipient.commands";
 import { ChannelCommands } from "./channel.commands";
 import { MessageCommands } from "./message.commands";
-
-export const NOTIFICATION_COMMANDS = Symbol("Commands.Notification.Contract");
-export const PREFERENCE_COMMANDS = Symbol("Commands.Preference.Contract");
-export const RECIPIENT_COMMANDS = Symbol("Commands.Recipient.Contract");
-export const CHANNEL_COMMANDS = Symbol("Commands.Channel.Contract");
-export const MESSAGE_COMMANDS = Symbol("Commands.Message.Contract");
+import {
+    NOTIFICATION_COMMANDS,
+    PREFERENCE_COMMANDS,
+    RECIPIENT_COMMANDS,
+    CHANNEL_COMMANDS,
+    MESSAGE_COMMANDS,
+} from "./tokens";
 
 export const COMMANDS: ClassProvider[] = [
     {
@@ -34,3 +35,5 @@ export const COMMANDS: ClassProvider[] = [
         useClass: MessageCommands,
     },
 ];
+
+export { NOTIFICATION_COMMANDS, PREFERENCE_COMMANDS, RECIPIENT_COMMANDS, CHANNEL_COMMANDS, MESSAGE_COMMANDS };

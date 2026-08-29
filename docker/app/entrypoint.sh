@@ -31,26 +31,18 @@ wait_for_tcp() {
 
 wait_for_secret /vault/secrets/postgresql_username
 wait_for_secret /vault/secrets/postgresql_password
-wait_for_secret /tls/ca.crt
-wait_for_secret /tls/client.crt
-wait_for_secret /tls/client.key
+wait_for_secret /vault/secrets/redis_password
+wait_for_secret /vault/secrets/aws_access_key_id
+wait_for_secret /vault/secrets/aws_secret_access_key
 
 export POSTGRES_USER="$(cat /vault/secrets/postgresql_username)"
 export POSTGRES_PASSWORD="$(cat /vault/secrets/postgresql_password)"
 export REDIS_PASSWORD="$(cat /vault/secrets/redis_password)"
-export AWS_ACCESS_KEY_ID="$(cat /vault/secrets/aws_access_key_id 2>/dev/null || echo '')"
-export AWS_SECRET_ACCESS_KEY="$(cat /vault/secrets/aws_secret_access_key 2>/dev/null || echo '')"
+export AWS_ACCESS_KEY_ID="$(cat /vault/secrets/aws_access_key_id)"
+export AWS_SECRET_ACCESS_KEY="$(cat /vault/secrets/aws_secret_access_key)"
 
 wait_for_tcp "$POSTGRES_WRITE_HOST" "$POSTGRES_WRITE_PORT" "PostgreSQL write upstream"
 wait_for_tcp "$POSTGRES_READ_HOST" "$POSTGRES_READ_PORT" "PostgreSQL read upstream"
 wait_for_tcp "$REDIS_HOST" "$REDIS_PORT" "Redis upstream"
-
-TRACING_REQUIRE="--require ./dist/src/observability/tracing/tracing.js"
-if [ -n "${NODE_OPTIONS+x}" ] && [ -n "$NODE_OPTIONS" ]; then
-    export NODE_OPTIONS="$NODE_OPTIONS $TRACING_REQUIRE"
-else
-    export NODE_OPTIONS="$TRACING_REQUIRE"
-fi
-unset TRACING_REQUIRE
 
 exec node dist/src/main.js

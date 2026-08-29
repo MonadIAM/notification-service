@@ -8,15 +8,16 @@ import { AuditLogService } from "./audit-log.service";
 import { DispatchService } from "./dispatch.service";
 import { ChannelService } from "./channel.service";
 import { MessageService } from "./message.service";
-
-export const NOTIFICATION_SERVICE = Symbol("Services.Notification.Contract");
-export const CHANGE_LOG_SERVICE = Symbol("Services.ChangeLog.Contract");
-export const PREFERENCE_SERVICE = Symbol("Services.Preference.Contract");
-export const RECIPIENT_SERVICE = Symbol("Services.Recipient.Contract");
-export const AUDIT_LOG_SERVICE = Symbol("Services.AuditLog.Contract");
-export const DISPATCH_SERVICE = Symbol("Services.Dispatch.Contract");
-export const CHANNEL_SERVICE = Symbol("Services.Channel.Contract");
-export const MESSAGE_SERVICE = Symbol("Services.Message.Contract");
+import {
+    NOTIFICATION_SERVICE,
+    CHANGE_LOG_SERVICE,
+    PREFERENCE_SERVICE,
+    RECIPIENT_SERVICE,
+    AUDIT_LOG_SERVICE,
+    DISPATCH_SERVICE,
+    CHANNEL_SERVICE,
+    MESSAGE_SERVICE,
+} from "./tokens";
 
 export const DOMAIN_SERVICES: ClassProvider[] = [
     {
@@ -28,12 +29,12 @@ export const DOMAIN_SERVICES: ClassProvider[] = [
         useClass: PreferenceService,
     },
     {
-        provide: RECIPIENT_SERVICE,
-        useClass: RecipientService,
-    },
-    {
         provide: CHANGE_LOG_SERVICE,
         useClass: ChangeLogService,
+    },
+    {
+        provide: RECIPIENT_SERVICE,
+        useClass: RecipientService,
     },
     {
         provide: AUDIT_LOG_SERVICE,
@@ -52,3 +53,14 @@ export const DOMAIN_SERVICES: ClassProvider[] = [
         useClass: MessageService,
     },
 ];
+
+export {
+    NOTIFICATION_SERVICE,
+    CHANGE_LOG_SERVICE,
+    PREFERENCE_SERVICE,
+    RECIPIENT_SERVICE,
+    AUDIT_LOG_SERVICE,
+    DISPATCH_SERVICE,
+    CHANNEL_SERVICE,
+    MESSAGE_SERVICE,
+};
