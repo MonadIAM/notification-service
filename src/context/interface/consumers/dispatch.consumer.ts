@@ -1,11 +1,11 @@
-import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/microservices";
+import { EventPattern, Payload, ClientKafka } from "@nestjs/microservices";
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
 import { lastValueFrom } from "rxjs";
 
+import { KafkaTopicBuilder, KAFKA_RETRY_REGISTRY, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE } from "~infrastructure/kafka";
 import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { CONSUMER_META, DEBOUNCED_CATEGORIES } from "~context/constants";
 import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
-import { KafkaUtils, KAFKA_SERVICE } from "~infrastructure/kafka";
 import { MESSAGE_COMMANDS } from "~context/application/commands";
 import { DISPATCH_SERVICE } from "~context/domain/services";
 import { FailureReason, KafkaTopic } from "~context/enums";
@@ -24,66 +24,77 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
         private readonly dispatchDelayQueue: Queues.DispatchDelay.Contract,
         @Inject(DISPATCH_SERVICE)
         private readonly dispatchService: Services.Dispatch.Contract,
+        @Inject(KAFKA_SCHEMA_REGISTRY)
+        private readonly schemaRegistry: Kafka.SchemaRegistry.PublicContract,
+        @Inject(KAFKA_RETRY_REGISTRY)
+        private readonly retryRegistry: Kafka.RetryRegistry.Contract,
         @Inject(KAFKA_SERVICE)
         private readonly kafkaClient: ClientKafka,
     ) {}
 
     public async onModuleInit(): Promise<void> {
         await this.kafkaClient.connect();
+
+        this.retryRegistry.register({
+            topic: KafkaTopic.MESSAGE_DISPATCH,
+            handler: this,
+        });
     }
 
     @EventPattern(KafkaTopic.MESSAGE_DISPATCH)
-    public async handle(
-        @Payload() message: Consumers.MessageDispatch.Message,
-        @Ctx() context: KafkaContext,
-    ): Consumers.MessageDispatch.Handle.Result {
+    public async handle(@Payload() message: Consumers.MessageDispatch.Message): Consumers.MessageDispatch.Handle.Result {
         try {
-            const dispatch = await this.messageRepository.findUniqueOrThrow({
-                options: { populate: ["notification"] },
-                where: { id: message.payload.message },
-            });
-
-            if (DEBOUNCED_CATEGORIES.includes(dispatch.notification.category)) {
-                await this.dispatchDelayQueue.schedule({ message: dispatch.id });
-                return;
-            }
-
-            await this.dispatchService.send({ message: dispatch });
-            await this.messageCommands.markSent({ context: CONSUMER_META, input: { message: dispatch.id } });
+            await this.process({ message });
         } catch (error) {
-            if (Exception.isRetryable(error)) {
-                await lastValueFrom(
-                    this.kafkaClient.emit(KafkaTopic.MESSAGE_DISPATCH_RETRY, {
-                        headers: {
-                            "x-retry-count": String(KafkaUtils.extractRetryCount(context)),
-                        },
-                        value: {
-                            originalTopic: KafkaTopic.MESSAGE_DISPATCH,
-                            payload: message,
-                            error: String(error),
-                        },
-                    }),
-                );
-            } else {
-                this.logger.warn(`Non-retryable error in message dispatch consumer: ${String(error)}`);
-                await this.messageCommands.markFailed({
-                    context: CONSUMER_META,
-                    input: {
-                        message: message.payload.message,
-                        reason: FailureReason.PROVIDER,
-                        error: String(error),
-                    },
-                });
-                await lastValueFrom(
-                    this.kafkaClient.emit(KafkaTopic.MESSAGE_DISPATCH_DEAD, {
-                        value: {
-                            originalTopic: KafkaTopic.MESSAGE_DISPATCH,
-                            payload: message,
-                            error: String(error),
-                        },
-                    }),
-                );
-            }
+            await this.reject({ message, error });
         }
+    }
+
+    public async process(props: Consumers.MessageDispatch.Process.Props): Consumers.MessageDispatch.Process.Result {
+        const { message } = props;
+        this.schemaRegistry.validate({ topic: KafkaTopic.MESSAGE_DISPATCH, value: message });
+        const dispatch = await this.messageRepository.findUniqueOrThrow({
+            options: { populate: ["notification"] },
+            where: { id: message.payload.message },
+        });
+
+        if (DEBOUNCED_CATEGORIES.includes(dispatch.notification.category)) {
+            await this.dispatchDelayQueue.schedule({ message: dispatch.id });
+            return;
+        }
+
+        await this.dispatchService.send({ message: dispatch });
+        await this.messageCommands.markSent({ context: CONSUMER_META, input: { message: dispatch.id } });
+    }
+
+    public async reject(props: Consumers.MessageDispatch.Reject.Props): Consumers.MessageDispatch.Reject.Result {
+        const { message, error } = props;
+        const retryable = Exception.isRetryable(error);
+
+        if (!retryable) {
+            this.logger.warn(`Non-retryable error in message dispatch consumer: ${String(error)}`);
+
+            await this.messageCommands.markFailed({
+                context: CONSUMER_META,
+                input: {
+                    message: message.payload.message,
+                    reason: FailureReason.PROVIDER,
+                    error: String(error),
+                },
+            });
+        }
+
+        await lastValueFrom(
+            this.kafkaClient.emit(
+                retryable ? KafkaTopicBuilder.retry(KafkaTopic.MESSAGE_DISPATCH) : KafkaTopic.MESSAGE_DISPATCH_DEAD,
+                {
+                    value: {
+                        originalTopic: KafkaTopic.MESSAGE_DISPATCH,
+                        error: String(error),
+                        payload: message,
+                    },
+                },
+            ),
+        );
     }
 }

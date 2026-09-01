@@ -1,7 +1,6 @@
 import { ConfigService } from "@nestjs/config";
-import { KafkaContext } from "@nestjs/microservices";
-import { readFileSync } from "fs";
 import { KafkaConfig } from "kafkajs";
+import { readFileSync } from "fs";
 
 export abstract class KafkaUtils {
     private constructor() {}
@@ -24,8 +23,8 @@ export abstract class KafkaUtils {
                 ssl: {
                     rejectUnauthorized: this.toBoolean(config.getOrThrow("KAFKA_SSL_REJECT_UNAUTHORIZED")),
                     servername: broker.split(":")[0],
-                    ca: [readFileSync(config.getOrThrow<string>("KAFKA_SSL_CA_FILE"), "utf8")],
                     cert: readFileSync(config.getOrThrow<string>("KAFKA_SSL_CERT_FILE"), "utf8"),
+                    ca: [readFileSync(config.getOrThrow<string>("KAFKA_SSL_CA_FILE"), "utf8")],
                     key: readFileSync(config.getOrThrow<string>("KAFKA_SSL_KEY_FILE"), "utf8"),
                 },
             };
@@ -48,11 +47,6 @@ export abstract class KafkaUtils {
         } else {
             return {};
         }
-    }
-
-    public static extractRetryCount(context: KafkaContext): number {
-        const raw = context.getMessage().headers?.["x-retry-count"];
-        return Number(Buffer.isBuffer(raw) ? raw.toString() : (raw ?? 0));
     }
 
     private static toBoolean(value: unknown): boolean {
