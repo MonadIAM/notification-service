@@ -4,9 +4,7 @@ import { FailureReason, MessageStatus, ChannelType } from "~context/enums";
 import { Exception } from "~common/exceptions";
 
 export class Message implements Entities.Message.Contract {
-    private get dictionaryPath(): string {
-        return "entities.message";
-    }
+    private static readonly dictionaryPath = "entities.message";
 
     public id: string;
     public cancelledAt?: Date;
@@ -47,7 +45,7 @@ export class Message implements Entities.Message.Contract {
             this.status = MessageStatus.SENT;
             this.sentAt = new Date();
         } else {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.CANNOT_SEND_FROM_STATE` });
+            throw Exception.invariantViolation({ messageKey: `${Message.dictionaryPath}.CANNOT_SEND_FROM_STATE` });
         }
     }
 
@@ -56,7 +54,7 @@ export class Message implements Entities.Message.Contract {
             this.status = MessageStatus.DELIVERED;
             this.deliveredAt = new Date();
         } else {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.CANNOT_DELIVER_FROM_STATE` });
+            throw Exception.invariantViolation({ messageKey: `${Message.dictionaryPath}.CANNOT_DELIVER_FROM_STATE` });
         }
     }
 
@@ -67,7 +65,7 @@ export class Message implements Entities.Message.Contract {
 
     public markFailed({ reason, error }: Entities.Message.MarkFailed.Props): void {
         if (this.status === MessageStatus.DELIVERED) {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.CANNOT_FAIL_DELIVERED` });
+            throw Exception.invariantViolation({ messageKey: `${Message.dictionaryPath}.CANNOT_FAIL_DELIVERED` });
         } else {
             this.status = MessageStatus.FAILED;
             this.failedAt = new Date();
@@ -78,9 +76,9 @@ export class Message implements Entities.Message.Contract {
 
     public markRead(): void {
         if (this.channelType !== ChannelType.IN_APP) {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.READ_STATE_IN_APP_ONLY` });
+            throw Exception.invariantViolation({ messageKey: `${Message.dictionaryPath}.READ_STATE_IN_APP_ONLY` });
         } else if (this.readAt) {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.ALREADY_READ` });
+            throw Exception.invariantViolation({ messageKey: `${Message.dictionaryPath}.ALREADY_READ` });
         } else {
             this.readAt = new Date();
         }

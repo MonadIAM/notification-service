@@ -5,9 +5,7 @@ import { Exception } from "~common/exceptions";
 import { ChannelType } from "~context/enums";
 
 export class Recipient implements Entities.Recipient.Contract {
-    private get dictionaryPath(): string {
-        return "entities.recipient";
-    }
+    private static readonly dictionaryPath = "entities.recipient";
 
     public id: string;
     public createdAt: Date;
@@ -46,19 +44,19 @@ export class Recipient implements Entities.Recipient.Contract {
         if (affected) {
             this.updatedAt = now;
         } else if (Object.keys(patch).length) {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.NO_CHANGES_DETECTED` });
+            throw Exception.invariantViolation({ messageKey: `${Recipient.dictionaryPath}.NO_CHANGES_DETECTED` });
         } else {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.EMPTY_UPDATE_PATCH` });
+            throw Exception.invariantViolation({ messageKey: `${Recipient.dictionaryPath}.EMPTY_UPDATE_PATCH` });
         }
     }
 
     public selectOtpChannel(channel: Entities.Channel): void {
         if (channel.recipient.id !== this.id) {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.NOT_OWN_CHANNEL` });
+            throw Exception.invariantViolation({ messageKey: `${Recipient.dictionaryPath}.NOT_OWN_CHANNEL` });
         } else if (!channel.isVerified) {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.CHANNEL_NOT_VERIFIED` });
+            throw Exception.invariantViolation({ messageKey: `${Recipient.dictionaryPath}.CHANNEL_NOT_VERIFIED` });
         } else if (channel.type === ChannelType.IN_APP) {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.UNSUPPORTED_OTP_CHANNEL_TYPE` });
+            throw Exception.invariantViolation({ messageKey: `${Recipient.dictionaryPath}.UNSUPPORTED_OTP_CHANNEL_TYPE` });
         } else {
             this.defaultOtpChannel = channel;
             this.updatedAt = new Date();

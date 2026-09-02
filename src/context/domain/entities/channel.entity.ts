@@ -4,9 +4,7 @@ import { Exception } from "~common/exceptions";
 import { ChannelType } from "~context/enums";
 
 export class Channel implements Entities.Channel.Contract {
-    private get dictionaryPath(): string {
-        return "entities.channel";
-    }
+    private static readonly dictionaryPath = "entities.channel";
 
     public id: string;
     public verifiedAt?: Date;
@@ -40,7 +38,7 @@ export class Channel implements Entities.Channel.Contract {
 
     public markVerified(): void {
         if (this.isVerified) {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.ALREADY_VERIFIED` });
+            throw Exception.invariantViolation({ messageKey: `${Channel.dictionaryPath}.ALREADY_VERIFIED` });
         } else {
             this.verifiedAt = new Date();
             this.isVerified = true;
@@ -52,7 +50,7 @@ export class Channel implements Entities.Channel.Contract {
             this.soundEnabled = !this.soundEnabled;
             this.updatedAt = new Date();
         } else {
-            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.SOUND_NOT_APPLICABLE` });
+            throw Exception.invariantViolation({ messageKey: `${Channel.dictionaryPath}.SOUND_NOT_APPLICABLE` });
         }
     }
 }
