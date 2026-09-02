@@ -18,10 +18,10 @@ export abstract class KafkaUtils {
     }
 
     private static buildSslConfig(config: ConfigService, broker: string): Pick<KafkaConfig, "ssl"> {
-        if (this.toBoolean(config.getOrThrow("KAFKA_SSL_ENABLED"))) {
+        if (config.get<boolean>("KAFKA_SSL_ENABLED")) {
             return {
                 ssl: {
-                    rejectUnauthorized: this.toBoolean(config.getOrThrow("KAFKA_SSL_REJECT_UNAUTHORIZED")),
+                    rejectUnauthorized: config.getOrThrow<boolean>("KAFKA_SSL_REJECT_UNAUTHORIZED"),
                     servername: broker.split(":")[0],
                     cert: readFileSync(config.getOrThrow<string>("KAFKA_SSL_CERT_FILE"), "utf8"),
                     ca: [readFileSync(config.getOrThrow<string>("KAFKA_SSL_CA_FILE"), "utf8")],
@@ -34,7 +34,7 @@ export abstract class KafkaUtils {
     }
 
     private static buildSaslConfig(config: ConfigService): Pick<KafkaConfig, "sasl"> {
-        if (this.toBoolean(config.getOrThrow("KAFKA_SASL_ENABLED"))) {
+        if (config.get<boolean>("KAFKA_SASL_ENABLED")) {
             const password = readFileSync(config.getOrThrow<string>("KAFKA_SASL_PASSWORD_FILE"), "utf8").trim();
 
             return {
@@ -47,9 +47,5 @@ export abstract class KafkaUtils {
         } else {
             return {};
         }
-    }
-
-    private static toBoolean(value: unknown): boolean {
-        return value === true || value === "true";
     }
 }
