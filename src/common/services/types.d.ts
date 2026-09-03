@@ -199,7 +199,7 @@ declare global {
 
             namespace Sign {
                 type Props = {
-                    version: number;
+                    version?: number;
                     input: string;
                     name: string;
                 };
