@@ -43,10 +43,6 @@ lerna-debug.log*
 .env.local
 *.csv
 
-# CLI generated artifacts
-*.swagger.json
-*.postman.json
-
 # temp directory
 .temp
 .tmp
