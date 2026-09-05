@@ -2,6 +2,7 @@ import { NotificationTopicAction, NotificationContentKind } from "@monadiam/shar
 import { EventPattern, Payload, ClientKafka } from "@nestjs/microservices";
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
 import { I18nService } from "nestjs-i18n";
+import { escapeUTF8 } from "entities";
 import { lastValueFrom } from "rxjs";
 
 import { KafkaTopicBuilder, KAFKA_RETRY_REGISTRY, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE } from "~infrastructure/kafka";
@@ -88,19 +89,26 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
     public async publish(props: Consumers.Notification.Publish.Props): Consumers.Notification.Publish.Result {
         const { actor, realm, input } = props.payload;
 
-        const [title, body] =
-            input.kind === NotificationContentKind.TEMPLATE
-                ? await Promise.all<[string, string]>([
-                      this.i18nService.translate(`templates.${input.template}.subject`, {
-                          lang: input.language,
-                          args: input.params,
-                      }),
-                      this.i18nService.translate(`templates.${input.template}.body`, {
-                          lang: input.language,
-                          args: input.params,
-                      }),
-                  ])
-                : [input.title, input.text];
+        let title: string;
+        let body: string;
+
+        if (input.kind === NotificationContentKind.TEMPLATE) {
+            const args = input.params
+                ? Object.fromEntries(Object.entries(input.params).map(([key, value]) => [key, escapeUTF8(value)]))
+                : undefined;
+            [title, body] = await Promise.all<[string, string]>([
+                this.i18nService.translate(`templates.${input.template}.subject`, {
+                    lang: input.language,
+                    args,
+                }),
+                this.i18nService.translate(`templates.${input.template}.body`, {
+                    lang: input.language,
+                    args,
+                }),
+            ]);
+        } else {
+            [title, body] = [input.title, input.text];
+        }
 
         await this.notificationCommands.create({
             context: CONSUMER_META,
