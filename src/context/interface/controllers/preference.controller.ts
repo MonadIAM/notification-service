@@ -1,10 +1,9 @@
-import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Patch, Query, Body, Post } from "@nestjs/common";
+import { Controller, HttpStatus, HttpCode, Inject, Patch, Query, Body, Post } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { Extract, FormatResponse, RequirePermission, Swagger } from "~common/decorators";
 import { PREFERENCE_COMMANDS } from "~context/application/commands";
 import { PREFERENCE_QUERIES } from "~context/application/queries";
-import { MonitoringInterceptor } from "~common/interceptors";
 import { SuccessMessageDTO } from "~common/dto";
 import { PermissionCode } from "~context/enums";
 
@@ -26,7 +25,6 @@ const {
 
 @ApiTags("Preference")
 @Controller("/preference")
-@UseInterceptors(MonitoringInterceptor)
 export class PreferenceController {
     public constructor(
         @Inject(PREFERENCE_COMMANDS)

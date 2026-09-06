@@ -1,9 +1,8 @@
-import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Query, Body, Post } from "@nestjs/common";
+import { Controller, HttpStatus, HttpCode, Inject, Query, Body, Post } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { RequireGlobalPermission, FormatResponse, Swagger } from "~common/decorators";
 import { PREFERENCE_QUERIES } from "~context/application/queries";
-import { MonitoringInterceptor } from "~common/interceptors";
 import { PermissionCode } from "~context/enums";
 
 import { ManageGetListQueryDTO, ManageGetListBodyDTO, ListDTO } from "../dto/preference";
@@ -14,7 +13,6 @@ const { INTERNAL_SERVER_ERROR, UNPROCESSABLE_ENTITY, SERVICE_UNAVAILABLE, REQUES
 
 @ApiTags("Preference")
 @Controller("/preference/manage")
-@UseInterceptors(MonitoringInterceptor)
 export class PreferenceManageController {
     public constructor(
         @Inject(PREFERENCE_QUERIES)

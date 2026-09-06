@@ -1,10 +1,9 @@
-import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Patch, Query, Body, Post, Get } from "@nestjs/common";
+import { Controller, HttpStatus, HttpCode, Inject, Patch, Query, Body, Post, Get } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { Extract, FormatResponse, RequirePermission, Swagger } from "~common/decorators";
 import { CHANNEL_COMMANDS } from "~context/application/commands";
 import { CHANNEL_QUERIES } from "~context/application/queries";
-import { MonitoringInterceptor } from "~common/interceptors";
 import { SuccessMessageDTO } from "~common/dto";
 import { PermissionCode } from "~context/enums";
 
@@ -26,7 +25,6 @@ const {
 
 @ApiTags("Channel")
 @Controller("/channel")
-@UseInterceptors(MonitoringInterceptor)
 export class ChannelController {
     public constructor(
         @Inject(CHANNEL_COMMANDS)

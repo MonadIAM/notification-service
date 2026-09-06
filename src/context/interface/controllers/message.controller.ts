@@ -1,10 +1,9 @@
-import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Patch, Query, Body, Post } from "@nestjs/common";
+import { Controller, HttpStatus, HttpCode, Inject, Patch, Query, Body, Post } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { Extract, FormatResponse, RequirePermission, Swagger } from "~common/decorators";
 import { MESSAGE_COMMANDS } from "~context/application/commands";
 import { MESSAGE_QUERIES } from "~context/application/queries";
-import { MonitoringInterceptor } from "~common/interceptors";
 import { SuccessMessageDTO } from "~common/dto";
 import { PermissionCode } from "~context/enums";
 
@@ -25,7 +24,6 @@ const {
 
 @ApiTags("Message")
 @Controller("/message")
-@UseInterceptors(MonitoringInterceptor)
 export class MessageController {
     public constructor(
         @Inject(MESSAGE_COMMANDS)

@@ -1,9 +1,8 @@
-import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Query, Body, Post, Get } from "@nestjs/common";
+import { Controller, HttpStatus, HttpCode, Inject, Query, Body, Post, Get } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { Extract, FormatResponse, RequirePermission, Swagger } from "~common/decorators";
 import { NOTIFICATION_QUERIES } from "~context/application/queries";
-import { MonitoringInterceptor } from "~common/interceptors";
 import { PermissionCode } from "~context/enums";
 
 import { GetByIdQueryDTO, GetListQueryDTO, GetListBodyDTO, NotificationDTO, ListDTO } from "../dto/notification";
@@ -22,7 +21,6 @@ const {
 
 @ApiTags("Notification")
 @Controller("/notification")
-@UseInterceptors(MonitoringInterceptor)
 export class NotificationController {
     public constructor(
         @Inject(NOTIFICATION_QUERIES)

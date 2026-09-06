@@ -1,10 +1,9 @@
-import { UseInterceptors, Controller, HttpStatus, HttpCode, Inject, Patch, Body, Get } from "@nestjs/common";
+import { Controller, HttpStatus, HttpCode, Inject, Patch, Body, Get } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { Extract, FormatResponse, RequirePermission, Swagger } from "~common/decorators";
 import { RECIPIENT_COMMANDS } from "~context/application/commands";
 import { RECIPIENT_QUERIES } from "~context/application/queries";
-import { MonitoringInterceptor } from "~common/interceptors";
 import { QueryMode, PermissionCode } from "~context/enums";
 import { SuccessMessageDTO } from "~common/dto";
 
@@ -26,7 +25,6 @@ const {
 
 @ApiTags("Recipient")
 @Controller("/recipient")
-@UseInterceptors(MonitoringInterceptor)
 export class RecipientController {
     public constructor(
         @Inject(RECIPIENT_COMMANDS)
