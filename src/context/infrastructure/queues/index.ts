@@ -1,8 +1,9 @@
-import { ClassProvider } from "@nestjs/common";
+import { Provider } from "@nestjs/common";
 
 import { DispatchDelayProcessor, DispatchDelayQueue } from "./dispatch-delay";
 import { KafkaRetryProcessor, KafkaRetryQueue } from "./kafka-retry";
 import { CleanupProcessor, CleanupQueue } from "./cleanup";
+import { BULLMQ_JOBS_PROVIDER } from "./metrics.provider";
 import {
     DISPATCH_DELAY_PROCESSOR,
     KAFKA_RETRY_PROCESSOR,
@@ -12,7 +13,8 @@ import {
     CLEANUP_QUEUE,
 } from "./tokens";
 
-export const QUEUES: ClassProvider[] = [
+export const QUEUES: Provider[] = [
+    BULLMQ_JOBS_PROVIDER,
     {
         provide: DISPATCH_DELAY_PROCESSOR,
         useClass: DispatchDelayProcessor,

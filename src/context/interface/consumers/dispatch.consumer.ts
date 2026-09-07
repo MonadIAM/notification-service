@@ -3,6 +3,7 @@ import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
 import { lastValueFrom } from "rxjs";
 
 import { KafkaTopicBuilder, KAFKA_RETRY_REGISTRY, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE } from "~infrastructure/kafka";
+import { KafkaMetricsRecorder } from "~observability/metrics/kafka.recorder";
 import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { CONSUMER_META, DEBOUNCED_CATEGORIES } from "~context/constants";
 import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
@@ -24,6 +25,8 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
         private readonly dispatchDelayQueue: Queues.DispatchDelay.Contract,
         @Inject(DISPATCH_SERVICE)
         private readonly dispatchService: Services.Dispatch.Contract,
+        @Inject(KafkaMetricsRecorder)
+        private readonly kafkaMetrics: Observability.Metrics.Kafka.PublicContract,
         @Inject(KAFKA_SCHEMA_REGISTRY)
         private readonly schemaRegistry: Kafka.SchemaRegistry.PublicContract,
         @Inject(KAFKA_RETRY_REGISTRY)
@@ -96,5 +99,11 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
                 },
             ),
         );
+
+        if (retryable) {
+            this.kafkaMetrics.recordRetry({ topic: KafkaTopic.MESSAGE_DISPATCH, error });
+        } else {
+            this.kafkaMetrics.recordDead({ topic: KafkaTopic.MESSAGE_DISPATCH, error });
+        }
     }
 }
