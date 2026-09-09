@@ -1,5 +1,6 @@
-import { Injectable, Scope } from "@nestjs/common";
+import { Inject, Injectable, Scope } from "@nestjs/common";
 
+import { RECIPIENT_REPOSITORY } from "~context/infrastructure/repositories";
 import { NotificationCategory, ChannelType } from "~context/enums";
 import { DUPLICATABLE_CHANNEL_TYPES } from "~context/constants";
 
@@ -7,23 +8,34 @@ import { Notification, Message } from "../entities";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class NotificationService implements Services.Notification.Contract {
-    public create(props: Services.Notification.Create.Props): Services.Notification.Create.Result {
+    public constructor(
+        @Inject(RECIPIENT_REPOSITORY)
+        private readonly recipientRepository: Repositories.Recipient.Contract,
+    ) {}
+
+    public async create(props: Services.Notification.Create.Props): Services.Notification.Create.Result {
         const { transaction, input } = props;
+        const recipient = await this.recipientRepository.findUniqueOrThrow({
+            options: { populate: ["channels", "preferences", "defaultOtpChannel"] },
+            where: { account: input.account },
+            transaction,
+        });
+
         const notification = new Notification({
             sourceService: input.sourceService,
-            recipient: input.recipient,
             dedupKey: input.dedupKey,
             category: input.category,
             template: input.template,
             realm: input.realm,
             title: input.title,
             body: input.body,
+            recipient,
         });
 
         transaction.persist(notification);
 
-        const channelTypes = this.resolveChannelTypes({ recipient: input.recipient, category: input.category });
-        const channels = input.recipient.channels.getItems();
+        const channelTypes = this.resolveChannelTypes({ recipient, category: input.category });
+        const channels = recipient.channels.getItems();
         const messages: Entities.Message[] = [];
 
         for (const channelType of channelTypes) {
@@ -31,7 +43,7 @@ export class NotificationService implements Services.Notification.Contract {
 
             if (channel) {
                 const message = new Message({
-                    address: channel.address ?? input.recipient.account,
+                    address: channel.address ?? recipient.account,
                     notification,
                     channelType,
                     channel,

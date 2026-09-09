@@ -27,19 +27,19 @@ declare global {
                     input: {
                         sourceService: PlatformService;
                         category: NotificationCategory;
-                        recipient: Entities.Recipient;
                         dedupKey?: string;
                         template: string;
+                        account: string;
                         realm?: string;
                         title?: string;
                         body?: string;
                     };
                 };
 
-                type Result = {
+                type Result = Promise<{
                     notification: Entities.Notification;
                     messages: Entities.Message[];
-                };
+                }>;
 
                 type Signature = (props: Props) => Result;
             }

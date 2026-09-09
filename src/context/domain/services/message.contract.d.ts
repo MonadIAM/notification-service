@@ -6,21 +6,35 @@ declare global {
             interface Contract extends CommandContract {}
 
             interface CommandContract {
+                markCancelled: MarkCancelled.Signature;
                 markDelivered: MarkDelivered.Signature;
                 markFailed: MarkFailed.Signature;
                 markSent: MarkSent.Signature;
                 markRead: MarkRead.Signature;
             }
 
-            namespace MarkDelivered {
+            namespace MarkCancelled {
                 type Props = {
                     transaction: ORM.EntityManager;
                     input: {
-                        message: Entities.Message;
+                        messages: Entities.Message[];
                     };
                 };
 
                 type Result = void;
+
+                type Signature = (props: Props) => Result;
+            }
+
+            namespace MarkDelivered {
+                type Props = {
+                    transaction: ORM.EntityManager;
+                    input: {
+                        message: string;
+                    };
+                };
+
+                type Result = Promise<void>;
 
                 type Signature = (props: Props) => Result;
             }
@@ -29,13 +43,13 @@ declare global {
                 type Props = {
                     transaction: ORM.EntityManager;
                     input: {
-                        message: Entities.Message;
                         reason: FailureReason;
+                        message: string;
                         error?: string;
                     };
                 };
 
-                type Result = void;
+                type Result = Promise<void>;
 
                 type Signature = (props: Props) => Result;
             }
@@ -44,11 +58,11 @@ declare global {
                 type Props = {
                     transaction: ORM.EntityManager;
                     input: {
-                        message: Entities.Message;
+                        message: string;
                     };
                 };
 
-                type Result = void;
+                type Result = Promise<void>;
 
                 type Signature = (props: Props) => Result;
             }
@@ -57,11 +71,12 @@ declare global {
                 type Props = {
                     transaction: ORM.EntityManager;
                     input: {
-                        message: Entities.Message;
+                        message: string;
+                        actor: string;
                     };
                 };
 
-                type Result = void;
+                type Result = Promise<void>;
 
                 type Signature = (props: Props) => Result;
             }

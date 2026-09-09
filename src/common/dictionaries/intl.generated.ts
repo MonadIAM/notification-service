@@ -8,7 +8,6 @@ export type I18nTranslations = {
     "commands": {
         "channel": {
             "SOUND_TOGGLED": string;
-            "IN_APP_CHANNEL_NOT_FOUND": string;
         };
         "recipient": {
             "UPDATED": string;
@@ -16,12 +15,9 @@ export type I18nTranslations = {
         };
         "preference": {
             "TOGGLED": string;
-            "CATEGORY_NOT_CONFIGURABLE": string;
-            "CHANNEL_NOT_CONFIGURABLE": string;
         };
         "message": {
             "READ": string;
-            "NOT_FOUND": string;
         };
     };
     "db": {
@@ -77,6 +73,24 @@ export type I18nTranslations = {
         };
     };
     "services": {
+        "channel": {
+            "IN_APP_CHANNEL_NOT_FOUND": string;
+        };
+        "message": {
+            "NOT_FOUND": string;
+        };
+        "preference": {
+            "CATEGORY_NOT_CONFIGURABLE": string;
+            "CHANNEL_NOT_CONFIGURABLE": string;
+        };
+        "kafka-retry": {
+            "HANDLER_NOT_REGISTERED": string;
+        };
+        "schema-registry": {
+            "ENCODE_FAILED": string;
+            "DECODE_FAILED": string;
+            "MESSAGE_INVALID": string;
+        };
         "jwt": {
             "INVALID_ACCESS_TOKEN": string;
         };

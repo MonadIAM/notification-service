@@ -4,7 +4,6 @@ declare namespace Services {
 
         interface CommandContract {
             selectOtpChannel: SelectOtpChannel.Signature;
-            clearOtpChannel: ClearOtpChannel.Signature;
             create: Create.Signature;
             update: Update.Signature;
             purge: Purge.Signature;
@@ -14,25 +13,12 @@ declare namespace Services {
             type Props = {
                 transaction: ORM.EntityManager;
                 input: {
-                    recipient: Entities.Recipient;
-                    channel: Entities.Channel;
+                    account: string;
+                    channel: string;
                 };
             };
 
-            type Result = void;
-
-            type Signature = (props: Props) => Result;
-        }
-
-        namespace ClearOtpChannel {
-            type Props = {
-                transaction: ORM.EntityManager;
-                input: {
-                    recipient: Entities.Recipient;
-                };
-            };
-
-            type Result = void;
+            type Result = Promise<Entities.Recipient>;
 
             type Signature = (props: Props) => Result;
         }
@@ -57,11 +43,11 @@ declare namespace Services {
                 transaction: ORM.EntityManager;
                 input: {
                     patch: Partial<Entities.Recipient.MutableFields>;
-                    recipient: Entities.Recipient;
+                    account: string;
                 };
             };
 
-            type Result = void;
+            type Result = Promise<Entities.Recipient>;
 
             type Signature = (props: Props) => Result;
         }
@@ -70,11 +56,11 @@ declare namespace Services {
             type Props = {
                 transaction: ORM.EntityManager;
                 input: {
-                    recipient: Entities.Recipient;
+                    account: string;
                 };
             };
 
-            type Result = void;
+            type Result = Promise<void>;
 
             type Signature = (props: Props) => Result;
         }

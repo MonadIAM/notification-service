@@ -1,10 +1,10 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
 import { MessageDispatchAction, MessageStatus, ChannelType, ActionType, EntityType, KafkaTopic } from "~context/enums";
-import { NOTIFICATION_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/infrastructure/repositories";
+import { NOTIFICATION_SERVICE, MESSAGE_SERVICE } from "~context/domain/services";
+import { NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
 import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
-import { NOTIFICATION_SERVICE } from "~context/domain/services";
 
 import { NotificationMapper } from "../mappers";
 
@@ -18,12 +18,12 @@ export class NotificationCommands implements Commands.Notification.Contract {
         private readonly transactionalService: TransactionManager.Service.PublicContract,
         @Inject(NOTIFICATION_REPOSITORY)
         private readonly notificationRepository: Repositories.Notification.Contract,
-        @Inject(RECIPIENT_REPOSITORY)
-        private readonly recipientRepository: Repositories.Recipient.Contract,
         @Inject(DISPATCH_DELAY_QUEUE)
         private readonly dispatchDelayQueue: Queues.DispatchDelay.Contract,
         @Inject(NOTIFICATION_SERVICE)
         private readonly notificationService: Services.Notification.CommandContract,
+        @Inject(MESSAGE_SERVICE)
+        private readonly messageService: Services.Message.CommandContract,
     ) {
         this.mapper = new NotificationMapper();
     }
@@ -43,21 +43,16 @@ export class NotificationCommands implements Commands.Notification.Contract {
                 ...props,
             },
             execute: async (transaction) => {
-                const recipient = await this.recipientRepository.findUniqueOrThrow({
-                    options: { populate: ["channels", "preferences", "defaultOtpChannel"] },
-                    where: { account: input.account },
-                });
-
-                const { messages } = this.notificationService.create({
+                const { messages } = await this.notificationService.create({
                     input: {
                         sourceService: input.sourceService,
                         dedupKey: input.dedupKey,
                         category: input.category,
                         template: input.template,
+                        account: input.account,
                         realm: input.realm,
                         title: input.title,
                         body: input.body,
-                        recipient,
                     },
                     transaction,
                 });
@@ -90,25 +85,22 @@ export class NotificationCommands implements Commands.Notification.Contract {
 
             if (cancelled.includes(false)) {
                 return { alreadyDispatched: true };
-            }
+            } else {
+                toCancel.push(...pending);
 
-            toCancel.push(...pending);
-
-            if (toCancel.length) {
-                await this.transactionalService.run({
-                    resource: this.resource,
-                    audit: {
-                        entityType: EntityType.MESSAGE,
-                        actionType: ActionType.UPDATE,
-                        ...props,
-                    },
-                    execute: (transaction) => {
-                        for (const message of toCancel) {
-                            message.markCancelled();
-                            transaction.merge(message);
-                        }
-                    },
-                });
+                if (toCancel.length) {
+                    await this.transactionalService.run({
+                        resource: this.resource,
+                        audit: {
+                            entityType: EntityType.MESSAGE,
+                            actionType: ActionType.UPDATE,
+                            ...props,
+                        },
+                        execute: (transaction) => {
+                            this.messageService.markCancelled({ input: { messages: toCancel }, transaction });
+                        },
+                    });
+                }
             }
         }
 

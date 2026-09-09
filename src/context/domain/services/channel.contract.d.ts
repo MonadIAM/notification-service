@@ -16,11 +16,11 @@ declare global {
                 type Props = {
                     transaction: ORM.EntityManager;
                     input: {
-                        channel: Entities.Channel;
+                        sourceIdentifier: string;
                     };
                 };
 
-                type Result = void;
+                type Result = Promise<void>;
 
                 type Signature = (props: Props) => Result;
             }
@@ -29,11 +29,11 @@ declare global {
                 type Props = {
                     transaction: ORM.EntityManager;
                     input: {
-                        channel: Entities.Channel;
+                        account: string;
                     };
                 };
 
-                type Result = void;
+                type Result = Promise<Entities.Channel>;
 
                 type Signature = (props: Props) => Result;
             }
@@ -42,15 +42,15 @@ declare global {
                 type Props = {
                     transaction: ORM.EntityManager;
                     input: {
-                        recipient: Entities.Recipient;
                         sourceIdentifier?: string;
                         isVerified?: boolean;
                         type: ChannelType;
                         address?: string;
+                        account: string;
                     };
                 };
 
-                type Result = Entities.Channel;
+                type Result = Promise<Entities.Channel>;
 
                 type Signature = (props: Props) => Result;
             }
@@ -59,11 +59,11 @@ declare global {
                 type Props = {
                     transaction: ORM.EntityManager;
                     input: {
-                        channels: Entities.Channel[];
+                        sourceIdentifier: string;
                     };
                 };
 
-                type Result = void;
+                type Result = Promise<void>;
 
                 type Signature = (props: Props) => Result;
             }

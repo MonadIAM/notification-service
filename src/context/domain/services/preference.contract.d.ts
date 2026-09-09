@@ -30,11 +30,13 @@ declare global {
                 type Props = {
                     transaction: ORM.EntityManager;
                     input: {
-                        preference: Entities.Preference;
+                        category: NotificationCategory;
+                        channelType: ChannelType;
+                        account: string;
                     };
                 };
 
-                type Result = void;
+                type Result = Promise<Entities.Preference>;
 
                 type Signature = (props: Props) => Result;
             }

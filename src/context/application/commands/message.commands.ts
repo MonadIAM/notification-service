@@ -1,10 +1,8 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
-import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
 import { MESSAGE_SERVICE } from "~context/domain/services";
 import { ActionType, EntityType } from "~context/enums";
-import { Exception } from "~common/exceptions";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class MessageCommands implements Commands.Message.Contract {
@@ -14,8 +12,6 @@ export class MessageCommands implements Commands.Message.Contract {
     public constructor(
         @Inject(TRANSACTIONAL_SERVICE)
         private readonly transactionalService: TransactionManager.Service.PublicContract,
-        @Inject(MESSAGE_REPOSITORY)
-        private readonly messageRepository: Repositories.Message.Contract,
         @Inject(MESSAGE_SERVICE)
         private readonly messageService: Services.Message.CommandContract,
     ) {}
@@ -31,16 +27,7 @@ export class MessageCommands implements Commands.Message.Contract {
             },
             changeLog: true,
             execute: async (transaction) => {
-                const message = await this.messageRepository.findUniqueOrThrow({
-                    options: { populate: ["notification", "notification.recipient"] },
-                    where: { id: input.message },
-                });
-
-                if (message.notification.recipient.account !== actor) {
-                    throw Exception.notFound({ messageKey: `${this.dictionaryPath}.NOT_FOUND` });
-                }
-
-                this.messageService.markRead({ input: { message }, transaction });
+                await this.messageService.markRead({ input: { message: input.message, actor }, transaction });
             },
         });
 
@@ -58,9 +45,7 @@ export class MessageCommands implements Commands.Message.Contract {
             },
             changeLog: true,
             execute: async (transaction) => {
-                const message = await this.messageRepository.findUniqueOrThrow({ where: { id: input.message } });
-
-                this.messageService.markSent({ input: { message }, transaction });
+                await this.messageService.markSent({ input: { message: input.message }, transaction });
             },
         });
     }
@@ -76,9 +61,7 @@ export class MessageCommands implements Commands.Message.Contract {
             },
             changeLog: true,
             execute: async (transaction) => {
-                const message = await this.messageRepository.findUniqueOrThrow({ where: { id: input.message } });
-
-                this.messageService.markDelivered({ input: { message }, transaction });
+                await this.messageService.markDelivered({ input: { message: input.message }, transaction });
             },
         });
     }
@@ -94,10 +77,8 @@ export class MessageCommands implements Commands.Message.Contract {
             },
             changeLog: true,
             execute: async (transaction) => {
-                const message = await this.messageRepository.findUniqueOrThrow({ where: { id: input.message } });
-
-                this.messageService.markFailed({
-                    input: { message, reason: input.reason, error: input.error },
+                await this.messageService.markFailed({
+                    input: { message: input.message, reason: input.reason, error: input.error },
                     transaction,
                 });
             },
