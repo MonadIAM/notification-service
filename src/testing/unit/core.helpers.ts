@@ -1,4 +1,5 @@
-import { ChangeSetType, Collection } from "@mikro-orm/core";
+import { ChangeSetType, Collection } from "@mikro-orm/postgresql";
+import { ConfigService } from "@nestjs/config";
 import { jest } from "@jest/globals";
 
 import { Notification, Preference, Recipient, Channel, Message } from "~context/domain/entities";
@@ -21,6 +22,12 @@ export class DomainServiceCoreUnitHelpers implements Unit.Domain.Core.Contract {
             clear,
             merge,
         };
+    }
+
+    public config(props: Unit.Domain.Core.Config.Props = {}): ConfigService {
+        return this.contract<ConfigService>({
+            getOrThrow: jest.fn((key: string) => props.values?.[key]),
+        });
     }
 
     public collection<T extends object>(props: Unit.Domain.Core.CollectionFactory.Props<T>): Collection<T> {

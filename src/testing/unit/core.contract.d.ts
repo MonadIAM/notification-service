@@ -1,4 +1,5 @@
-import { Collection } from "@mikro-orm/core";
+import { Collection } from "@mikro-orm/postgresql";
+import { ConfigService } from "@nestjs/config";
 import { jest } from "@jest/globals";
 
 declare global {
@@ -28,12 +29,23 @@ declare global {
                     readonly createMessage: CreateMessage.Signature;
                     readonly repositories: Repositories.Signature;
                     readonly services: Services.Signature;
+                    readonly config: Config.Signature;
                 }
 
                 namespace TransactionFactory {
                     type Result = Transaction;
 
                     type Signature = () => Result;
+                }
+
+                namespace Config {
+                    type Props = {
+                        readonly values?: Record<string, unknown>;
+                    };
+
+                    type Result = ConfigService;
+
+                    type Signature = (props?: Props) => Result;
                 }
 
                 namespace CollectionFactory {
