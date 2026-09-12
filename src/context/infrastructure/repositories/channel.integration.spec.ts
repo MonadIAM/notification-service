@@ -3,8 +3,8 @@ import { QueryOrder } from "@mikro-orm/postgresql";
 import { randomUUID } from "node:crypto";
 
 import { PublicLinkOperator, PublicStringOperator } from "~infrastructure/database/enums";
+import { CoreFixture } from "~testing/integration/repositories/core.fixture";
 import { postgresSuite } from "~testing/integration/postgres.suite";
-import { CoreFixture } from "~testing/fixtures/core.fixture";
 import { ChannelType } from "~context/enums";
 
 import { ChannelRepository } from "./channel.repository";
