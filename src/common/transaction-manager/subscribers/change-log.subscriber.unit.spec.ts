@@ -98,9 +98,9 @@ describe("ChangeLogSubscriber", () => {
             expect.objectContaining({
                 entity: "00000000-0000-4000-8000-000000000001",
                 changeType: ChangeSetType.UPDATE,
+                entityType: "Notification",
                 auditEntry: "audit-entry",
                 signature: "signature",
-                entityType: "Notification",
                 keyVersion: 1,
             }),
         );
@@ -261,37 +261,45 @@ describe("ChangeLogSubscriber", () => {
         });
     });
 
-    it("does not persist delete changes without original entity", async () => {
-        const operationContext = helpers.operationContext();
-        const { subscriber } = helpers.subscriber({ operationContext });
-        const transaction = helpers.transaction();
-        const uow = helpers.uow({
-            changeSets: [
-                helpers.changeSet({
-                    type: ChangeSetType.DELETE,
-                    payload: {},
-                }),
-            ],
+    it("builds delete deltas from entity values when original entity is absent", async () => {
+        const recipient = {
+            id: "00000000-0000-4000-8000-000000000002",
+            account: "00000000-0000-4000-8000-000000000003",
+            timezone: "Europe/Moscow",
+            locale: "ru",
+        };
+        const changeLog = await helpers.flushSingleChangeLog({
+            changeSet: helpers.changeSet({
+                entity: recipient,
+                type: ChangeSetType.DELETE,
+                payload: {},
+            }),
         });
 
-        await operationContext.run({ changeLogEnabled: true, auditEntry: "audit-entry" }, () =>
-            subscriber.onFlush(helpers.flushEventArgs({ uow: uow.uow, em: transaction.entityManager })),
+        expect(changeLog.delta).toEqual(
+            expect.objectContaining({
+                timezone: { old: recipient.timezone, new: null },
+                account: { old: recipient.account, new: null },
+                locale: { old: recipient.locale, new: null },
+                id: { old: recipient.id, new: null },
+            }),
         );
-
-        expect(transaction.persist).not.toHaveBeenCalled();
-        expect(uow.computeChangeSet).not.toHaveBeenCalled();
     });
 
-    it("does not persist composite primary keys into the uuid entity field", async () => {
+    it("joins a composite primary key returned as an object into the entity field", async () => {
         const operationContext = helpers.operationContext();
         const { subscriber } = helpers.subscriber({ operationContext });
         const transaction = helpers.transaction();
         const uow = helpers.uow({
             changeSets: [
                 helpers.changeSet({
-                    primaryKey: ["00000000-0000-4000-8000-000000000001", "00000000-0000-4000-8000-000000000002", 1],
-                    originalEntity: { depth: 0 },
+                    primaryKey: {
+                        recipient: "00000000-0000-4000-8000-000000000001",
+                        notification: "00000000-0000-4000-8000-000000000002",
+                        position: 1,
+                    },
                     className: "NotificationClosure",
+                    originalEntity: { depth: 0 },
                     payload: { depth: 1 },
                 }),
             ],
@@ -301,8 +309,39 @@ describe("ChangeLogSubscriber", () => {
             subscriber.onFlush(helpers.flushEventArgs({ uow: uow.uow, em: transaction.entityManager })),
         );
 
-        expect(transaction.persist).not.toHaveBeenCalled();
-        expect(uow.computeChangeSet).not.toHaveBeenCalled();
+        expect(transaction.persist.mock.calls[0][0]).toEqual(
+            expect.objectContaining({
+                entity: "00000000-0000-4000-8000-000000000001:00000000-0000-4000-8000-000000000002:1",
+                entityType: "NotificationClosure",
+            }),
+        );
+    });
+
+    it("joins a composite primary key into the entity field", async () => {
+        const operationContext = helpers.operationContext();
+        const { subscriber } = helpers.subscriber({ operationContext });
+        const transaction = helpers.transaction();
+        const uow = helpers.uow({
+            changeSets: [
+                helpers.changeSet({
+                    primaryKey: ["00000000-0000-4000-8000-000000000001", "00000000-0000-4000-8000-000000000002", 1],
+                    className: "NotificationClosure",
+                    originalEntity: { depth: 0 },
+                    payload: { depth: 1 },
+                }),
+            ],
+        });
+
+        await operationContext.run({ changeLogEnabled: true, auditEntry: "audit-entry" }, () =>
+            subscriber.onFlush(helpers.flushEventArgs({ uow: uow.uow, em: transaction.entityManager })),
+        );
+
+        expect(transaction.persist.mock.calls[0][0]).toEqual(
+            expect.objectContaining({
+                entity: "00000000-0000-4000-8000-000000000001:00000000-0000-4000-8000-000000000002:1",
+                entityType: "NotificationClosure",
+            }),
+        );
     });
 
     it("does not process change sets added while persisting archive entities", async () => {
