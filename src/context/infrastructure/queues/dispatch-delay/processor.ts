@@ -40,7 +40,7 @@ export class DispatchDelayProcessor extends WorkerHost {
             where: { id: job.data.message },
         });
 
-        if (dispatch.status !== MessageStatus.CANCELLED) {
+        if (dispatch.status === MessageStatus.QUEUED) {
             await this.dispatchService.send({ message: dispatch });
             await this.messageCommands.markSent({ context: CONSUMER_META, input: { message: dispatch.id } });
         }
@@ -62,8 +62,8 @@ export class DispatchDelayProcessor extends WorkerHost {
             await this.messageCommands.markFailed({
                 context: CONSUMER_META,
                 input: {
-                    message: job.data.message,
                     reason: FailureReason.PROVIDER,
+                    message: job.data.message,
                     error: failure,
                 },
             });
@@ -71,10 +71,11 @@ export class DispatchDelayProcessor extends WorkerHost {
             try {
                 await lastValueFrom(
                     this.kafkaClient.emit(KafkaTopic.MESSAGE_DISPATCH_DEAD, {
+                        key: job.data.event,
                         value: {
                             originalTopic: KafkaTopic.MESSAGE_DISPATCH,
-                            error: failure,
                             payload: message,
+                            error: failure,
                         },
                     }),
                 );

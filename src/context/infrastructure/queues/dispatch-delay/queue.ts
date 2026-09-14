@@ -27,17 +27,17 @@ export class DispatchDelayQueue implements Queues.DispatchDelay.Contract {
     public async schedule(props: Queues.DispatchDelay.Schedule.Props): Promise<void> {
         await this.queue.add(
             BullJobName.DISPATCH,
-            { message: props.message },
+            { message: props.message, event: props.event },
             {
                 jobId: `dispatch:${props.message}`,
                 attempts: this.attempts,
+                removeOnComplete: true,
+                removeOnFail: false,
                 delay: this.delay,
                 backoff: {
                     delay: this.backoffDelay,
                     type: "exponential",
                 },
-                removeOnComplete: true,
-                removeOnFail: false,
             },
         );
     }

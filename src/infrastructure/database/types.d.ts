@@ -112,6 +112,7 @@ declare global {
         type Columns<Entity> = Raw<Entity> & ForeignKeys<Entity>;
 
         type Database = {
+            "system.inbox": Columns<SystemEntities.Inbox>;
             "notification.channel": Columns<Entities.Channel>;
             "notification.message": Columns<Entities.Message>;
             "notification.notification": Columns<Entities.Notification>;

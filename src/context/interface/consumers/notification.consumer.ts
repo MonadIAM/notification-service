@@ -1,20 +1,28 @@
+import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/microservices";
 import { NotificationTopicAction, NotificationContentKind } from "@monadiam/shared";
-import { EventPattern, Payload, ClientKafka } from "@nestjs/microservices";
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
 import { I18nService } from "nestjs-i18n";
 import { escapeUTF8 } from "entities";
 import { lastValueFrom } from "rxjs";
 
-import { KafkaTopicBuilder, KAFKA_RETRY_REGISTRY, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE } from "~infrastructure/kafka";
 import { KafkaMetricsRecorder } from "~observability/metrics/kafka.recorder";
 import { NOTIFICATION_COMMANDS } from "~context/application/commands";
 import { CONSUMER_META, CUSTOM_TEMPLATE } from "~context/constants";
 import { Exception } from "~common/exceptions";
 import { KafkaTopic } from "~context/enums";
+import {
+    KAFKA_SCHEMA_REGISTRY,
+    KAFKA_RETRY_REGISTRY,
+    KafkaIncomingMapper,
+    KafkaTopicBuilder,
+    KAFKA_SERVICE,
+} from "~infrastructure/kafka";
 
 @Controller()
 export class NotificationConsumer implements Consumers.Notification.Contract, OnModuleInit {
+    private readonly incomingMapper = new KafkaIncomingMapper();
     private readonly logger = new Logger(NotificationConsumer.name);
+    private readonly consumerKey = "notification.notification.v1";
 
     public constructor(
         private readonly i18nService: I18nService,
@@ -35,40 +43,45 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
 
         this.retryRegistry.register({
             topic: KafkaTopic.NOTIFICATION,
+            consumerKey: this.consumerKey,
             handler: this,
         });
     }
 
     @EventPattern(KafkaTopic.NOTIFICATION)
-    public async handle(@Payload() message: Consumers.Notification.Message): Consumers.Notification.Handle.Result {
+    public async handle(
+        @Payload() message: Consumers.Notification.Message,
+        @Ctx() context: KafkaContext,
+    ): Consumers.Notification.Handle.Result {
+        const incoming = this.incomingMapper.map({ consumerKey: this.consumerKey, context });
         try {
-            await this.process({ message });
+            await this.process({ incoming, message });
         } catch (error) {
-            await this.reject({ message, error });
+            await this.reject({ incoming, message, error });
         }
     }
 
     public async process(props: Consumers.Notification.Process.Props): Consumers.Notification.Process.Result {
-        const { message } = props;
+        const { incoming, message } = props;
         this.schemaRegistry.validate({ topic: KafkaTopic.NOTIFICATION, value: message });
         if (message.actionType === NotificationTopicAction.CANCEL) {
-            const { alreadyDispatched } = await this.notificationCommands.cancel({
-                input: { dedupKey: message.payload.input.dedupKey },
+            await this.notificationCommands.cancel({
+                input: {
+                    dedupKey: message.payload.input.dedupKey,
+                    override: await this.render({ payload: message.payload.input.override }),
+                },
                 actor: message.payload.actor,
                 realm: message.payload.realm,
                 context: CONSUMER_META,
+                incoming,
             });
-
-            if (alreadyDispatched) {
-                await this.publish({ payload: message.payload.input.override });
-            }
         } else {
-            await this.publish({ payload: message.payload });
+            await this.publish({ incoming, payload: message.payload });
         }
     }
 
     public async reject(props: Consumers.Notification.Reject.Props): Consumers.Notification.Reject.Result {
-        const { message, error } = props;
+        const { incoming, message, error } = props;
         const retryable = Exception.isRetryable(error);
 
         if (!retryable) {
@@ -79,6 +92,7 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
             this.kafkaClient.emit(
                 retryable ? KafkaTopicBuilder.retry(KafkaTopic.NOTIFICATION) : KafkaTopic.NOTIFICATION_DEAD,
                 {
+                    key: incoming.event,
                     value: {
                         originalTopic: KafkaTopic.NOTIFICATION,
                         error: String(error),
@@ -96,7 +110,21 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
     }
 
     public async publish(props: Consumers.Notification.Publish.Props): Consumers.Notification.Publish.Result {
-        const { actor, realm, input } = props.payload;
+        const { incoming, payload } = props;
+        const { actor, realm } = payload;
+        const input = await this.render({ payload });
+
+        await this.notificationCommands.create({
+            context: CONSUMER_META,
+            incoming,
+            actor,
+            realm,
+            input,
+        });
+    }
+
+    public async render(props: Consumers.Notification.Render.Props): Consumers.Notification.Render.Result {
+        const { realm, input } = props.payload;
 
         let title: string;
         let body: string;
@@ -119,20 +147,15 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
             [title, body] = [input.title, input.text];
         }
 
-        await this.notificationCommands.create({
-            context: CONSUMER_META,
-            actor,
+        return {
+            template: input.kind === NotificationContentKind.TEMPLATE ? input.template : CUSTOM_TEMPLATE,
+            sourceService: input.sourceService,
+            account: input.recipient,
+            category: input.category,
+            dedupKey: input.dedupKey,
             realm,
-            input: {
-                template: input.kind === NotificationContentKind.TEMPLATE ? input.template : CUSTOM_TEMPLATE,
-                sourceService: input.sourceService,
-                account: input.recipient,
-                category: input.category,
-                dedupKey: input.dedupKey,
-                realm,
-                title,
-                body,
-            },
-        });
+            title,
+            body,
+        };
     }
 }

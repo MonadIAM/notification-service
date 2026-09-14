@@ -12,15 +12,16 @@ declare global {
 
             namespace Create {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     context: Extract.Meta;
                     actor?: string;
                     realm?: string;
                     input: {
-                        account: string;
                         category: NotificationCategory;
                         sourceService: PlatformService;
                         dedupKey?: string;
                         template: string;
+                        account: string;
                         realm?: string;
                         title?: string;
                         body?: string;
@@ -34,15 +35,17 @@ declare global {
 
             namespace Cancel {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     context: Extract.Meta;
                     actor?: string;
                     realm?: string;
                     input: {
+                        override: Services.Notification.Create.Props["input"];
                         dedupKey: string;
                     };
                 };
 
-                type Result = Promise<{ alreadyDispatched: boolean }>;
+                type Result = Promise<void>;
 
                 type Signature = (props: Props) => Result;
             }

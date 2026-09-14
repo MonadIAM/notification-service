@@ -29,8 +29,8 @@ export class NotificationCommands implements Commands.Notification.Contract {
     }
 
     public async create(props: Commands.Notification.Create.Props): Commands.Notification.Create.Result {
-        const { input } = props;
-        await this.transactionalService.run({
+        const { incoming, context, actor, realm, input } = props;
+        await this.transactionalService.consume({
             resource: this.resource,
             outbox: {
                 payloadMapper: this.mapper.messageDispatchPayload,
@@ -40,8 +40,12 @@ export class NotificationCommands implements Commands.Notification.Contract {
             audit: {
                 entityType: EntityType.NOTIFICATION,
                 actionType: ActionType.CREATE,
-                ...props,
+                context,
+                actor,
+                realm,
+                input,
             },
+            incoming,
             execute: async (transaction) => {
                 const { messages } = await this.notificationService.create({
                     input: {
@@ -63,47 +67,61 @@ export class NotificationCommands implements Commands.Notification.Contract {
     }
 
     public async cancel(props: Commands.Notification.Cancel.Props): Commands.Notification.Cancel.Result {
-        const { input } = props;
-        const notification = await this.notificationRepository.findUnique({
-            options: { populate: ["messages"] },
-            where: { dedupKey: input.dedupKey },
-        });
+        const { incoming, context, actor, realm, input } = props;
 
-        if (notification) {
-            const toCancel: Entities.Message[] = [];
-            const pending: Entities.Message[] = [];
+        await this.transactionalService.consume({
+            resource: this.resource,
+            outbox: {
+                payloadMapper: this.mapper.messageDispatchPayload,
+                destinationTopic: KafkaTopic.MESSAGE_DISPATCH,
+                actionType: MessageDispatchAction.DISPATCH,
+            },
+            audit: {
+                entityType: EntityType.MESSAGE,
+                actionType: ActionType.UPDATE,
+                context,
+                actor,
+                realm,
+                input,
+            },
+            incoming,
+            execute: async (transaction) => {
+                const notification = await this.notificationRepository.findUnique({
+                    options: { populate: ["messages"] },
+                    where: { dedupKey: input.dedupKey },
+                    transaction,
+                });
+                const messages: Entities.Message[] = [];
 
-            for (const message of notification.messages.getItems()) {
-                if (message.channelType === ChannelType.IN_APP) {
-                    toCancel.push(message);
-                } else if (message.status === MessageStatus.QUEUED) {
-                    pending.push(message);
-                }
-            }
+                if (notification) {
+                    const toCancel: Entities.Message[] = [];
+                    const pending: Entities.Message[] = [];
 
-            const cancelled = await Promise.all(pending.map(({ id }) => this.dispatchDelayQueue.cancel({ message: id })));
+                    for (const message of notification.messages.getItems()) {
+                        if (message.channelType === ChannelType.IN_APP) {
+                            toCancel.push(message);
+                        } else if (message.status === MessageStatus.QUEUED) {
+                            pending.push(message);
+                        }
+                    }
 
-            if (cancelled.includes(false)) {
-                return { alreadyDispatched: true };
-            } else {
-                toCancel.push(...pending);
+                    const cancelled = await Promise.all(
+                        pending.map(({ id }) => this.dispatchDelayQueue.cancel({ message: id })),
+                    );
 
-                if (toCancel.length) {
-                    await this.transactionalService.run({
-                        resource: this.resource,
-                        audit: {
-                            entityType: EntityType.MESSAGE,
-                            actionType: ActionType.UPDATE,
-                            ...props,
-                        },
-                        execute: (transaction) => {
+                    if (cancelled.includes(false)) {
+                        const override = await this.notificationService.create({ input: input.override, transaction });
+                        messages.push(...override.messages);
+                    } else {
+                        toCancel.push(...pending);
+                        if (toCancel.length) {
                             this.messageService.markCancelled({ input: { messages: toCancel }, transaction });
-                        },
-                    });
+                        }
+                    }
                 }
-            }
-        }
 
-        return { alreadyDispatched: false };
+                return { messages };
+            },
+        });
     }
 }

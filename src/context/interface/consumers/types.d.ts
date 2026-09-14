@@ -16,7 +16,7 @@ declare global {
             namespace Handle {
                 type Result = Promise<void>;
 
-                type Signature = (message: Message) => Result;
+                type Signature = (message: Message, context: KafkaContext) => Result;
             }
 
             interface InternalContract {
@@ -26,6 +26,7 @@ declare global {
 
             namespace Process {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                 };
 
@@ -36,6 +37,7 @@ declare global {
 
             namespace Reject {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                     error: unknown;
                 };
@@ -58,7 +60,7 @@ declare global {
             namespace Handle {
                 type Result = Promise<void>;
 
-                type Signature = (message: Message) => Result;
+                type Signature = (message: Message, context: KafkaContext) => Result;
             }
 
             interface InternalContract {
@@ -68,6 +70,7 @@ declare global {
 
             namespace Process {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                 };
 
@@ -78,6 +81,7 @@ declare global {
 
             namespace Reject {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                     error: unknown;
                 };
@@ -100,7 +104,7 @@ declare global {
             namespace Handle {
                 type Result = Promise<void>;
 
-                type Signature = (message: Message) => Result;
+                type Signature = (message: Message, context: KafkaContext) => Result;
             }
 
             interface InternalContract {
@@ -110,6 +114,7 @@ declare global {
 
             namespace Process {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                 };
 
@@ -120,6 +125,7 @@ declare global {
 
             namespace Reject {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                     error: unknown;
                 };
@@ -142,17 +148,19 @@ declare global {
             namespace Handle {
                 type Result = Promise<void>;
 
-                type Signature = (message: Message) => Result;
+                type Signature = (message: Message, context: KafkaContext) => Result;
             }
 
             interface InternalContract {
                 publish: Publish.Signature;
                 process: Process.Signature;
+                render: Render.Signature;
                 reject: Reject.Signature;
             }
 
             namespace Publish {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     payload: Topics.Notification.NotificationSpec;
                 };
 
@@ -161,8 +169,19 @@ declare global {
                 type Signature = (props: Props) => Result;
             }
 
+            namespace Render {
+                type Props = {
+                    payload: Topics.Notification.NotificationSpec;
+                };
+
+                type Result = Promise<Services.Notification.Create.Props["input"]>;
+
+                type Signature = (props: Props) => Result;
+            }
+
             namespace Process {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                 };
 
@@ -173,6 +192,7 @@ declare global {
 
             namespace Reject {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                     error: unknown;
                 };
@@ -200,7 +220,7 @@ declare global {
             namespace Handle {
                 type Result = Promise<void>;
 
-                type Signature = (message: Message) => Result;
+                type Signature = (message: Message, context: KafkaContext) => Result;
             }
 
             interface InternalContract {
@@ -210,6 +230,7 @@ declare global {
 
             namespace Process {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                 };
 
@@ -220,6 +241,7 @@ declare global {
 
             namespace Reject {
                 type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                     error: unknown;
                 };
@@ -254,6 +276,7 @@ declare global {
                 type Props = {
                     context: KafkaContext;
                     message: Message;
+                    event: string;
                 };
 
                 type Result = Promise<void>;
@@ -265,6 +288,7 @@ declare global {
                 type Props = {
                     message: Message;
                     error: unknown;
+                    event: string;
                 };
 
                 type Result = Promise<void>;
