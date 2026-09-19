@@ -5,12 +5,17 @@
   "message": {
     "NOT_FOUND": "Message not found."
   },
+  "dispatch": {
+    "ALREADY_FAILED": "Message dispatch has already failed: {error}."
+  },
   "preference": {
     "CATEGORY_NOT_CONFIGURABLE": "Security notifications cannot be reconfigured.",
     "CHANNEL_NOT_CONFIGURABLE": "This channel does not support per-category notification preferences."
   },
   "kafka-retry": {
-    "HANDLER_NOT_REGISTERED": "No retry handler is registered for topic {topic}."
+    "HANDLER_NOT_REGISTERED": "No retry handler is registered for topic {topic}.",
+    "INVALID_ORIGINAL_TOPIC": "The original topic is not supported for delayed retries.",
+    "SCHEDULE_FAILED": "Failed to schedule a delayed retry: {error}."
   },
   "kafka-incoming": {
     "EVENT_MISSING": "The Kafka message key required for idempotent processing is missing."

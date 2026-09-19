@@ -244,6 +244,7 @@ declare global {
                     incoming: TransactionManager.Service.IncomingMessage;
                     message: Message;
                     error: unknown;
+                    terminal?: boolean;
                 };
 
                 type Result = Promise<void>;
@@ -253,7 +254,9 @@ declare global {
         }
 
         namespace Retry {
-            type Message = Consumers.DLQ.Message;
+            type Message = Omit<Consumers.DLQ.Message, "payload"> & {
+                payload: Consumers.MessageDispatch.Message;
+            };
 
             interface Contract extends PublicContract, InternalContract {}
 

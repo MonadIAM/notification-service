@@ -1,16 +1,17 @@
-import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
+import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ClientKafka } from "@nestjs/microservices";
 import { lastValueFrom } from "rxjs";
 import { Job } from "bullmq";
 
 import { FailureReason, KafkaTopic, MessageDispatchAction, MessageStatus } from "~context/enums";
-import { KafkaMetricsRecorder } from "~observability/metrics/kafka.recorder";
 import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { MESSAGE_COMMANDS } from "~context/application/commands/tokens";
+import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { DISPATCH_SERVICE } from "~context/domain/services";
 import { KAFKA_SERVICE } from "~infrastructure/kafka";
 import { CONSUMER_META } from "~context/constants";
+import { Exception } from "~common/exceptions";
 
 import { BullQueue } from "../enums";
 
@@ -20,7 +21,7 @@ export class DispatchDelayProcessor extends WorkerHost {
     private readonly logger = new Logger(DispatchDelayProcessor.name);
 
     public constructor(
-        @Inject(KafkaMetricsRecorder)
+        @Inject(KAFKA_METRICS_RECORDER)
         private readonly kafkaMetrics: Observability.Metrics.Kafka.PublicContract,
         @Inject(MESSAGE_REPOSITORY)
         private readonly messageRepository: Repositories.Message.QueryContract,
@@ -35,6 +36,24 @@ export class DispatchDelayProcessor extends WorkerHost {
     }
 
     public async process(job: Job<Queues.DispatchDelay.JobData>): Promise<void> {
+        if (job.data.terminalError === undefined) {
+            try {
+                await this.send(job);
+            } catch (error) {
+                if (Exception.isRetryable(error) && job.attemptsMade + 1 < (job.opts.attempts ?? 1)) {
+                    throw error;
+                }
+
+                await job.updateData({ ...job.data, terminalError: String(error) });
+            }
+        }
+
+        if (job.data.terminalError !== undefined) {
+            await this.reject(job);
+        }
+    }
+
+    public async send(job: Job<Queues.DispatchDelay.JobData>): Promise<void> {
         const dispatch = await this.messageRepository.findUniqueOrThrow({
             options: { populate: ["notification"] },
             where: { id: job.data.message },
@@ -46,19 +65,16 @@ export class DispatchDelayProcessor extends WorkerHost {
         }
     }
 
-    @OnWorkerEvent("failed")
-    public async onFailed(job: Job<Queues.DispatchDelay.JobData>, error: Error): Promise<void> {
-        if (job.attemptsMade >= (job.opts.attempts ?? 1)) {
-            const failure = job.failedReason ?? "unknown delayed dispatch failure";
-            const message: Consumers.MessageDispatch.Message = {
-                actionType: MessageDispatchAction.DISPATCH,
-                payload: { message: job.data.message },
-            };
+    public async reject(job: Job<Queues.DispatchDelay.JobData>): Promise<void> {
+        const failure = job.data.terminalError ?? "unknown delayed dispatch failure";
+        const message: Consumers.MessageDispatch.Message = {
+            actionType: MessageDispatchAction.DISPATCH,
+            payload: { message: job.data.message },
+        };
+        this.logger.error(`Delayed dispatch rejected for message "${job.data.message}": ${failure}`);
 
-            this.logger.error(
-                `Delayed dispatch exhausted after ${job.attemptsMade} attempts for message "${job.data.message}": ${failure}`,
-            );
-
+        const [[dispatch]] = await this.messageRepository.findMany({ where: { id: job.data.message } });
+        if (dispatch?.status === MessageStatus.QUEUED) {
             await this.messageCommands.markFailed({
                 context: CONSUMER_META,
                 input: {
@@ -67,25 +83,18 @@ export class DispatchDelayProcessor extends WorkerHost {
                     error: failure,
                 },
             });
-
-            try {
-                await lastValueFrom(
-                    this.kafkaClient.emit(KafkaTopic.MESSAGE_DISPATCH_DEAD, {
-                        key: job.data.event,
-                        value: {
-                            originalTopic: KafkaTopic.MESSAGE_DISPATCH,
-                            payload: message,
-                            error: failure,
-                        },
-                    }),
-                );
-            } catch (publishError) {
-                this.logger.error(
-                    `Dead-letter publication failed for message "${job.data.message}": ${String(publishError)}`,
-                );
-            }
-
-            this.kafkaMetrics.recordDead({ topic: KafkaTopic.MESSAGE_DISPATCH, error });
         }
+
+        await lastValueFrom(
+            this.kafkaClient.emit(KafkaTopic.MESSAGE_DISPATCH_DEAD, {
+                key: job.data.event,
+                value: {
+                    originalTopic: KafkaTopic.MESSAGE_DISPATCH,
+                    payload: message,
+                    error: failure,
+                },
+            }),
+        );
+        this.kafkaMetrics.recordDead({ topic: KafkaTopic.MESSAGE_DISPATCH, error: failure });
     }
 }

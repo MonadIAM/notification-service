@@ -8,7 +8,7 @@ import { BullJobName, BullQueue } from "../enums";
 
 @Injectable()
 export class KafkaRetryQueue implements Queues.KafkaRetry.Contract {
-    private readonly maxRetries: number;
+    private readonly attempts: number;
     private readonly baseDelay: number;
     private readonly jitter: number;
 
@@ -17,9 +17,9 @@ export class KafkaRetryQueue implements Queues.KafkaRetry.Contract {
         private readonly queue: Queue<Queues.KafkaRetry.JobData>,
         private readonly configService: ConfigService,
     ) {
-        this.baseDelay = ms(this.configService.getOrThrow<StringValue>("KAFKA_DLQ_RETRY_BASE_DELAY"));
-        this.jitter = ms(this.configService.getOrThrow<StringValue>("KAFKA_DLQ_RETRY_JITTER"));
-        this.maxRetries = this.configService.getOrThrow<number>("KAFKA_DLQ_MAX_RETRIES");
+        this.baseDelay = ms(this.configService.getOrThrow<StringValue>("DISPATCH_RETRY_BASE_DELAY"));
+        this.jitter = ms(this.configService.getOrThrow<StringValue>("DISPATCH_RETRY_JITTER"));
+        this.attempts = this.configService.getOrThrow<number>("DISPATCH_RETRY_ATTEMPTS");
     }
 
     public async schedule(props: Queues.KafkaRetry.Schedule.Props): Queues.KafkaRetry.Schedule.Result {
@@ -29,7 +29,7 @@ export class KafkaRetryQueue implements Queues.KafkaRetry.Contract {
         await this.queue.add(BullJobName.RETRY, data, {
             delay: this.baseDelay + Math.random() * this.jitter,
             jobId: `${message.originalTopic}-${event}`,
-            attempts: this.maxRetries,
+            attempts: this.attempts,
             removeOnComplete: true,
             removeOnFail: false,
             backoff: {

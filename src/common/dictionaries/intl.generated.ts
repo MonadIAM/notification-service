@@ -79,12 +79,17 @@ export type I18nTranslations = {
         "message": {
             "NOT_FOUND": string;
         };
+        "dispatch": {
+            "ALREADY_FAILED": string;
+        };
         "preference": {
             "CATEGORY_NOT_CONFIGURABLE": string;
             "CHANNEL_NOT_CONFIGURABLE": string;
         };
         "kafka-retry": {
             "HANDLER_NOT_REGISTERED": string;
+            "INVALID_ORIGINAL_TOPIC": string;
+            "SCHEDULE_FAILED": string;
         };
         "kafka-incoming": {
             "EVENT_MISSING": string;

@@ -280,13 +280,23 @@ export class EnvironmentVariablesDTO {
     declare public KAFKAJS_NO_PARTITIONER_WARNING: number;
 
     @Validator.IsInt()
-    declare public KAFKA_DLQ_MAX_RETRIES: number;
+    @Validator.Min(0)
+    declare public KAFKA_CONSUMER_MAX_RETRIES: number;
 
     @Validator.IsMsString()
-    declare public KAFKA_DLQ_RETRY_BASE_DELAY: StringValue;
+    declare public KAFKA_CONSUMER_RETRY_INITIAL_DELAY: StringValue;
 
     @Validator.IsMsString()
-    declare public KAFKA_DLQ_RETRY_JITTER: StringValue;
+    declare public KAFKA_CONSUMER_RETRY_MAX_DELAY: StringValue;
+
+    @Validator.IsPositiveInt()
+    declare public DISPATCH_RETRY_ATTEMPTS: number;
+
+    @Validator.IsMsString()
+    declare public DISPATCH_RETRY_BASE_DELAY: StringValue;
+
+    @Validator.IsMsString()
+    declare public DISPATCH_RETRY_JITTER: StringValue;
 
     // ---------------------------------------------------------------------------
     // Schema Registry

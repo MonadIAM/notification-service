@@ -5,18 +5,11 @@ import { I18nService } from "nestjs-i18n";
 import { escapeUTF8 } from "entities";
 import { lastValueFrom } from "rxjs";
 
-import { KafkaMetricsRecorder } from "~observability/metrics/kafka.recorder";
+import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE, KafkaIncomingMapper } from "~infrastructure/kafka";
+import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { NOTIFICATION_COMMANDS } from "~context/application/commands";
 import { CONSUMER_META, CUSTOM_TEMPLATE } from "~context/constants";
-import { Exception } from "~common/exceptions";
 import { KafkaTopic } from "~context/enums";
-import {
-    KAFKA_SCHEMA_REGISTRY,
-    KAFKA_RETRY_REGISTRY,
-    KafkaIncomingMapper,
-    KafkaTopicBuilder,
-    KAFKA_SERVICE,
-} from "~infrastructure/kafka";
 
 @Controller()
 export class NotificationConsumer implements Consumers.Notification.Contract, OnModuleInit {
@@ -28,24 +21,18 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         private readonly i18nService: I18nService,
         @Inject(NOTIFICATION_COMMANDS)
         private readonly notificationCommands: Commands.Notification.ConsumerContract,
-        @Inject(KafkaMetricsRecorder)
+        @Inject(KAFKA_METRICS_RECORDER)
         private readonly kafkaMetrics: Observability.Metrics.Kafka.PublicContract,
         @Inject(KAFKA_SCHEMA_REGISTRY)
         private readonly schemaRegistry: Kafka.SchemaRegistry.PublicContract,
-        @Inject(KAFKA_RETRY_REGISTRY)
-        private readonly retryRegistry: Kafka.RetryRegistry.Contract,
+        @Inject(KAFKA_RETRY_SERVICE)
+        private readonly kafkaRetry: Kafka.Retry.Contract,
         @Inject(KAFKA_SERVICE)
         private readonly kafkaClient: ClientKafka,
     ) {}
 
     public async onModuleInit(): Promise<void> {
         await this.kafkaClient.connect();
-
-        this.retryRegistry.register({
-            topic: KafkaTopic.NOTIFICATION,
-            consumerKey: this.consumerKey,
-            handler: this,
-        });
     }
 
     @EventPattern(KafkaTopic.NOTIFICATION)
@@ -53,16 +40,28 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         @Payload() message: Consumers.Notification.Message,
         @Ctx() context: KafkaContext,
     ): Consumers.Notification.Handle.Result {
-        const incoming = this.incomingMapper.map({ consumerKey: this.consumerKey, context });
-        try {
-            await this.process({ incoming, message });
-        } catch (error) {
-            await this.reject({ incoming, message, error });
-        }
+        const incoming = {
+            consumerKey: this.consumerKey,
+            event: this.incomingMapper.reference({ context }),
+        };
+        await this.kafkaRetry.execute({
+            topic: KafkaTopic.NOTIFICATION,
+            heartbeat: context.getHeartbeat(),
+            process: () =>
+                this.process({
+                    incoming: this.incomingMapper.map({ consumerKey: this.consumerKey, context }),
+                    message,
+                }),
+            reject: (error) => this.reject({ incoming, message, error }),
+        });
     }
 
     public async process(props: Consumers.Notification.Process.Props): Consumers.Notification.Process.Result {
-        const { incoming, message } = props;
+        const { incoming } = props;
+        const message = await this.schemaRegistry.decode<Consumers.Notification.Message>({
+            topic: KafkaTopic.NOTIFICATION,
+            value: props.message,
+        });
         this.schemaRegistry.validate({ topic: KafkaTopic.NOTIFICATION, value: message });
         if (message.actionType === NotificationTopicAction.CANCEL) {
             await this.notificationCommands.cancel({
@@ -82,31 +81,20 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
 
     public async reject(props: Consumers.Notification.Reject.Props): Consumers.Notification.Reject.Result {
         const { incoming, message, error } = props;
-        const retryable = Exception.isRetryable(error);
-
-        if (!retryable) {
-            this.logger.warn(`Non-retryable error in notification consumer: ${String(error)}`);
-        }
+        this.logger.warn(`Rejected message in notification consumer: ${String(error)}`);
 
         await lastValueFrom(
-            this.kafkaClient.emit(
-                retryable ? KafkaTopicBuilder.retry(KafkaTopic.NOTIFICATION) : KafkaTopic.NOTIFICATION_DEAD,
-                {
-                    key: incoming.event,
-                    value: {
-                        originalTopic: KafkaTopic.NOTIFICATION,
-                        error: String(error),
-                        payload: message,
-                    },
+            this.kafkaClient.emit(KafkaTopic.NOTIFICATION_DEAD, {
+                key: incoming.event,
+                value: {
+                    originalTopic: KafkaTopic.NOTIFICATION,
+                    error: String(error),
+                    payload: message,
                 },
-            ),
+            }),
         );
 
-        if (retryable) {
-            this.kafkaMetrics.recordRetry({ topic: KafkaTopic.NOTIFICATION, error });
-        } else {
-            this.kafkaMetrics.recordDead({ topic: KafkaTopic.NOTIFICATION, error });
-        }
+        this.kafkaMetrics.recordDead({ topic: KafkaTopic.NOTIFICATION, error });
     }
 
     public async publish(props: Consumers.Notification.Publish.Props): Consumers.Notification.Publish.Result {

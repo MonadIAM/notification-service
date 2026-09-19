@@ -5,12 +5,17 @@
   "message": {
     "NOT_FOUND": "Сообщение не найдено."
   },
+  "dispatch": {
+    "ALREADY_FAILED": "Отправка сообщения уже завершилась ошибкой: {error}."
+  },
   "preference": {
     "CATEGORY_NOT_CONFIGURABLE": "Уведомления безопасности нельзя перенастроить.",
     "CHANNEL_NOT_CONFIGURABLE": "Этот канал не поддерживает настройку уведомлений по категориям."
   },
   "kafka-retry": {
-    "HANDLER_NOT_REGISTERED": "Для топика {topic} не зарегистрирован обработчик повторов."
+    "HANDLER_NOT_REGISTERED": "Для топика {topic} не зарегистрирован обработчик повторов.",
+    "INVALID_ORIGINAL_TOPIC": "Исходный топик не поддерживает отложенные повторы.",
+    "SCHEDULE_FAILED": "Не удалось запланировать отложенный повтор: {error}."
   },
   "kafka-incoming": {
     "EVENT_MISSING": "Отсутствует Kafka key, необходимый для идемпотентной обработки сообщения."

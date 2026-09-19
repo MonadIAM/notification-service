@@ -15,6 +15,7 @@ declare global {
 
         namespace DispatchDelay {
             type JobData = {
+                terminalError?: string;
                 message: string;
                 event: string;
             };
@@ -48,6 +49,7 @@ declare global {
 
         namespace KafkaRetry {
             type JobData = Consumers.Retry.Message & {
+                terminalError?: string;
                 event: string;
             };
 
