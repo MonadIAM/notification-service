@@ -1,23 +1,15 @@
-import type { DispatchService } from "~context/domain/services/dispatch.service";
+declare namespace Unit.Domain.Dispatch {
+    interface Contract extends Core.Contract {
+        service: Service.Signature;
+    }
 
-declare global {
-    namespace Unit {
-        namespace Domain {
-            namespace Dispatch {
-                interface Contract extends Core.Contract {
-                    readonly service: Service.Signature;
-                }
+    namespace Service {
+        type Result = {
+            service: Services.Dispatch.Contract;
+            services: ServiceMocks.Contract;
+            transaction: Core.Transaction;
+        };
 
-                namespace Service {
-                    type Result = {
-                        readonly services: ServiceMocks.Contract;
-                        readonly transaction: Core.Transaction;
-                        readonly service: DispatchService;
-                    };
-
-                    type Signature = () => Result;
-                }
-            }
-        }
+        type Signature = () => Result;
     }
 }

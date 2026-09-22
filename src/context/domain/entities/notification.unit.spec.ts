@@ -1,24 +1,18 @@
 import { describe, it, expect } from "@jest/globals";
 import { isUUID } from "class-validator";
 
+import { EntityFactoryRegistry } from "~testing/entity-factory.registry";
 import { NotificationCategory, PlatformService } from "~context/enums";
 
 import { Notification } from "./notification.entity";
-import { Recipient } from "./recipient.entity";
 
-function createRecipient(): Recipient {
-    return new Recipient({
-        account: "00000000-0000-4000-8000-000000000001",
-        timezone: "UTC",
-        locale: "en",
-    });
-}
+const entities = new EntityFactoryRegistry();
 
 function createNotification(overrides?: Partial<Entities.Notification.ConstructorProps>): Notification {
     return new Notification({
         sourceService: PlatformService.IDENTITY_SERVICE,
         category: NotificationCategory.SECURITY,
-        recipient: createRecipient(),
+        recipient: entities.createRecipient(),
         template: "LOGIN_ALERT",
         ...overrides,
     });
@@ -27,7 +21,7 @@ function createNotification(overrides?: Partial<Entities.Notification.Constructo
 describe("Notification Entity", () => {
     describe("constructor", () => {
         it("should assign required fields and relations", () => {
-            const recipient = createRecipient();
+            const recipient = entities.createRecipient();
 
             const notification = createNotification({
                 sourceService: PlatformService.ACCESS_CONTROL_SERVICE,

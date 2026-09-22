@@ -4,11 +4,8 @@ import { PreferenceQueries } from "~context/application/queries/preference.queri
 
 import { DomainServiceCoreUnitHelpers } from "../core.helpers";
 
-export class PreferenceQueriesUnitHelpers
-    extends DomainServiceCoreUnitHelpers
-    implements Unit.Application.PreferenceQueries.Contract
-{
-    public queries(): Unit.Application.PreferenceQueries.Queries.Result {
+export class PreferenceQueriesUnitHelpers extends DomainServiceCoreUnitHelpers implements Unit.Queries.Preference.Contract {
+    public queries(): Unit.Queries.Preference.Queries.Result {
         const preferenceRepository = {
             findMany: jest.fn<Repositories.Preference.QueryContract["findMany"]>(),
         };

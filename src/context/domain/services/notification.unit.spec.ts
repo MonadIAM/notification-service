@@ -103,47 +103,46 @@ describe("NotificationService", () => {
     });
 
     describe("resolveChannelTypes", () => {
-        it("returns in-app and email for the security category regardless of preferences", () => {
-            const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
-            const preference = helpers.createPreference({
+        it.each([
+            {
                 category: NotificationCategory.SECURITY,
-                channelType: ChannelType.EMAIL,
                 isDuplicationEnabled: false,
-                recipient,
-            });
-            recipient.preferences = helpers.collection({ owner: recipient, items: [preference] });
-            recipient.channels = helpers.collection({ owner: recipient, items: [] });
-            const { service } = helpers.service({ recipient });
-
-            const result = service.resolveChannelTypes({ recipient, category: NotificationCategory.SECURITY });
-
-            expect(result).toEqual([ChannelType.IN_APP, ChannelType.EMAIL]);
-        });
-
-        it("adds the duplicatable channel type when no preference exists for the category", () => {
-            const { recipient } = createRecipient();
-            const { service } = helpers.service({ recipient });
-
-            const result = service.resolveChannelTypes({ recipient, category: NotificationCategory.INVITES });
-
-            expect(result).toEqual([ChannelType.IN_APP, ChannelType.EMAIL]);
-        });
-
-        it("omits the duplicatable channel type when its preference is disabled", () => {
-            const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
-            const preference = helpers.createPreference({
+                expected: [ChannelType.IN_APP, ChannelType.EMAIL],
+            },
+            {
                 category: NotificationCategory.INVITES,
-                channelType: ChannelType.EMAIL,
+                isDuplicationEnabled: undefined,
+                expected: [ChannelType.IN_APP, ChannelType.EMAIL],
+            },
+            {
+                category: NotificationCategory.INVITES,
+                isDuplicationEnabled: true,
+                expected: [ChannelType.IN_APP, ChannelType.EMAIL],
+            },
+            {
+                category: NotificationCategory.INVITES,
                 isDuplicationEnabled: false,
-                recipient,
-            });
-            recipient.preferences = helpers.collection({ owner: recipient, items: [preference] });
-            recipient.channels = helpers.collection({ owner: recipient, items: [] });
-            const { service } = helpers.service({ recipient });
+                expected: [ChannelType.IN_APP],
+            },
+        ])(
+            "resolves $category with email preference $isDuplicationEnabled",
+            ({ category, isDuplicationEnabled, expected }) => {
+                const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
+                if (isDuplicationEnabled !== undefined) {
+                    const preference = helpers.createPreference({
+                        channelType: ChannelType.EMAIL,
+                        isDuplicationEnabled,
+                        recipient,
+                        category,
+                    });
+                    recipient.preferences = helpers.collection({ owner: recipient, items: [preference] });
+                }
+                const { service } = helpers.service({ recipient });
 
-            const result = service.resolveChannelTypes({ recipient, category: NotificationCategory.INVITES });
+                const result = service.resolveChannelTypes({ recipient, category });
 
-            expect(result).toEqual([ChannelType.IN_APP]);
-        });
+                expect(result).toEqual(expected);
+            },
+        );
     });
 });

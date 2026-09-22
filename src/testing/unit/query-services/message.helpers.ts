@@ -4,11 +4,8 @@ import { MessageQueries } from "~context/application/queries/message.queries";
 
 import { DomainServiceCoreUnitHelpers } from "../core.helpers";
 
-export class MessageQueriesUnitHelpers
-    extends DomainServiceCoreUnitHelpers
-    implements Unit.Application.MessageQueries.Contract
-{
-    public queries(): Unit.Application.MessageQueries.Queries.Result {
+export class MessageQueriesUnitHelpers extends DomainServiceCoreUnitHelpers implements Unit.Queries.Message.Contract {
+    public queries(): Unit.Queries.Message.Queries.Result {
         const messageRepository = {
             findUniqueOrThrow: jest.fn<Repositories.Message.QueryContract["findUniqueOrThrow"]>(),
             findMany: jest.fn<Repositories.Message.QueryContract["findMany"]>(),

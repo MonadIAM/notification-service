@@ -4,11 +4,8 @@ import { ChannelCommands } from "~context/application/commands/channel.commands"
 
 import { ApplicationCommandUnitHelpers } from "./core.helpers";
 
-export class ChannelCommandsUnitHelpers
-    extends ApplicationCommandUnitHelpers
-    implements Unit.Application.ChannelCommands.Contract
-{
-    public commands(): Unit.Application.ChannelCommands.Commands.Result {
+export class ChannelCommandsUnitHelpers extends ApplicationCommandUnitHelpers implements Unit.Commands.Channel.Contract {
+    public commands(): Unit.Commands.Channel.Commands.Result {
         const execution = this.execution();
 
         const channelService = {

@@ -6,9 +6,9 @@ import { DomainServiceCoreUnitHelpers } from "../core.helpers";
 
 export class NotificationQueriesUnitHelpers
     extends DomainServiceCoreUnitHelpers
-    implements Unit.Application.NotificationQueries.Contract
+    implements Unit.Queries.Notification.Contract
 {
-    public queries(): Unit.Application.NotificationQueries.Queries.Result {
+    public queries(): Unit.Queries.Notification.Queries.Result {
         const notificationRepository = {
             findUniqueOrThrow: jest.fn<Repositories.Notification.QueryContract["findUniqueOrThrow"]>(),
             findMany: jest.fn<Repositories.Notification.QueryContract["findMany"]>(),

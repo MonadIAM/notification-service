@@ -6,9 +6,9 @@ import { ApplicationCommandUnitHelpers } from "./core.helpers";
 
 export class RecipientCommandsUnitHelpers
     extends ApplicationCommandUnitHelpers
-    implements Unit.Application.RecipientCommands.Contract
+    implements Unit.Commands.Recipient.Contract
 {
-    public commands(): Unit.Application.RecipientCommands.Commands.Result {
+    public commands(): Unit.Commands.Recipient.Commands.Result {
         const execution = this.execution();
 
         const recipientService = {

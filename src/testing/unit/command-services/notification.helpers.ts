@@ -6,9 +6,9 @@ import { ApplicationCommandUnitHelpers } from "./core.helpers";
 
 export class NotificationCommandsUnitHelpers
     extends ApplicationCommandUnitHelpers
-    implements Unit.Application.NotificationCommands.Contract
+    implements Unit.Commands.Notification.Contract
 {
-    public commands(): Unit.Application.NotificationCommands.Commands.Result {
+    public commands(): Unit.Commands.Notification.Commands.Result {
         const execution = this.execution();
 
         const messageService = {

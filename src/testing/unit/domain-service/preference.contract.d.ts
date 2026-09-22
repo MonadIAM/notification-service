@@ -1,27 +1,19 @@
-import type { PreferenceService } from "~context/domain/services/preference.service";
+declare namespace Unit.Domain.Preference {
+    interface Contract extends Core.Contract {
+        service: Service.Signature;
+    }
 
-declare global {
-    namespace Unit {
-        namespace Domain {
-            namespace Preference {
-                interface Contract extends Core.Contract {
-                    readonly service: Service.Signature;
-                }
+    namespace Service {
+        type Props = {
+            recipient?: Entities.Recipient;
+        };
 
-                namespace Service {
-                    type Props = {
-                        readonly recipient?: Entities.Recipient;
-                    };
+        type Result = {
+            repositories: RepositoryMocks.Contract;
+            service: Services.Preference.Contract;
+            transaction: Core.Transaction;
+        };
 
-                    type Result = {
-                        readonly repositories: RepositoryMocks.Contract;
-                        readonly transaction: Core.Transaction;
-                        readonly service: PreferenceService;
-                    };
-
-                    type Signature = (props?: Props) => Result;
-                }
-            }
-        }
+        type Signature = (props?: Props) => Result;
     }
 }

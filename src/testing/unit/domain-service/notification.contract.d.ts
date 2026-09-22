@@ -1,27 +1,19 @@
-import type { NotificationService } from "~context/domain/services/notification.service";
+declare namespace Unit.Domain.Notification {
+    interface Contract extends Core.Contract {
+        service: Service.Signature;
+    }
 
-declare global {
-    namespace Unit {
-        namespace Domain {
-            namespace Notification {
-                interface Contract extends Core.Contract {
-                    readonly service: Service.Signature;
-                }
+    namespace Service {
+        type Props = {
+            recipient?: Entities.Recipient;
+        };
 
-                namespace Service {
-                    type Props = {
-                        readonly recipient?: Entities.Recipient;
-                    };
+        type Result = {
+            service: Services.Notification.Contract;
+            repositories: RepositoryMocks.Contract;
+            transaction: Core.Transaction;
+        };
 
-                    type Result = {
-                        readonly repositories: RepositoryMocks.Contract;
-                        readonly transaction: Core.Transaction;
-                        readonly service: NotificationService;
-                    };
-
-                    type Signature = (props?: Props) => Result;
-                }
-            }
-        }
+        type Signature = (props?: Props) => Result;
     }
 }

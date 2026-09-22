@@ -1,24 +1,18 @@
 import { describe, it, expect } from "@jest/globals";
 import { isUUID } from "class-validator";
 
+import { EntityFactoryRegistry } from "~testing/entity-factory.registry";
 import { NotificationCategory, ChannelType } from "~context/enums";
 
 import { Preference } from "./preference.entity";
-import { Recipient } from "./recipient.entity";
 
-function createRecipient(): Recipient {
-    return new Recipient({
-        account: "00000000-0000-4000-8000-000000000001",
-        timezone: "UTC",
-        locale: "en",
-    });
-}
+const entities = new EntityFactoryRegistry();
 
 function createPreference(overrides?: Partial<Entities.Preference.ConstructorProps>): Preference {
     return new Preference({
         category: NotificationCategory.SYSTEM,
         channelType: ChannelType.EMAIL,
-        recipient: createRecipient(),
+        recipient: entities.createRecipient(),
         ...overrides,
     });
 }
@@ -26,7 +20,7 @@ function createPreference(overrides?: Partial<Entities.Preference.ConstructorPro
 describe("Preference Entity", () => {
     describe("constructor", () => {
         it("should assign required fields and relations", () => {
-            const recipient = createRecipient();
+            const recipient = entities.createRecipient();
 
             const preference = createPreference({
                 category: NotificationCategory.INVITES,

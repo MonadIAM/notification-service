@@ -1,15 +1,12 @@
-import { ChangeSetType, Collection } from "@mikro-orm/postgresql";
 import { ConfigService } from "@nestjs/config";
 import { jest } from "@jest/globals";
 
-import { Notification, Preference, Recipient, Channel, Message } from "~context/domain/entities";
-import { AuditLog, ChangeLog } from "~common/transaction-manager/entities";
-import { NotificationCategory, PlatformService, ChannelType } from "~context/enums";
+import { EntityFactoryRegistry } from "~testing/entity-factory.registry";
 
-export class DomainServiceCoreUnitHelpers implements Unit.Domain.Core.Contract {
+export class DomainServiceCoreUnitHelpers extends EntityFactoryRegistry implements Unit.Domain.Core.Contract {
     public transaction(): Unit.Domain.Core.Transaction {
         const flush = jest.fn(() => Promise.resolve());
-        const persist = jest.fn();
+        const persist = jest.fn<(entity: object) => void>();
         const remove = jest.fn();
         const clear = jest.fn();
         const merge = jest.fn();
@@ -28,100 +25,6 @@ export class DomainServiceCoreUnitHelpers implements Unit.Domain.Core.Contract {
         return this.contract<ConfigService>({
             getOrThrow: jest.fn((key: string) => props.values?.[key]),
         });
-    }
-
-    public collection<T extends object>(props: Unit.Domain.Core.CollectionFactory.Props<T>): Collection<T> {
-        return new Collection<T>(props.owner, props.items);
-    }
-
-    public createRecipient(props: Unit.Domain.Core.CreateRecipient.Props = {}): Entities.Recipient {
-        const entity = new Recipient({
-            account: "00000000-0000-4000-8000-0000000000ff",
-            timezone: "Europe/Moscow",
-            locale: "ru",
-        });
-
-        Object.assign(entity, props);
-
-        return entity;
-    }
-
-    public createChannel(props: Unit.Domain.Core.CreateChannel.Props = {}): Entities.Channel {
-        const entity = new Channel({
-            recipient: this.createRecipient(),
-            type: ChannelType.IN_APP,
-            isVerified: true,
-        });
-
-        Object.assign(entity, props);
-
-        return entity;
-    }
-
-    public createPreference(props: Unit.Domain.Core.CreatePreference.Props = {}): Entities.Preference {
-        const entity = new Preference({
-            category: NotificationCategory.INVITES,
-            recipient: this.createRecipient(),
-            channelType: ChannelType.EMAIL,
-            isDuplicationEnabled: false,
-        });
-
-        Object.assign(entity, props);
-
-        return entity;
-    }
-
-    public createNotification(props: Unit.Domain.Core.CreateNotification.Props = {}): Entities.Notification {
-        const entity = new Notification({
-            sourceService: PlatformService.IDENTITY_SERVICE,
-            category: NotificationCategory.SYSTEM,
-            recipient: this.createRecipient(),
-            template: "unit.template",
-            title: "Unit Title",
-            body: "Unit Body",
-        });
-
-        Object.assign(entity, props);
-
-        return entity;
-    }
-
-    public createMessage(props: Unit.Domain.Core.CreateMessage.Props = {}): Entities.Message {
-        const entity = new Message({
-            notification: this.createNotification(),
-            channelType: ChannelType.IN_APP,
-            address: "unit@example.com",
-        });
-
-        Object.assign(entity, props);
-
-        return entity;
-    }
-
-    public createAuditLog(props: Unit.Domain.Core.CreateAuditLog.Props = {}): SystemEntities.AuditLog {
-        const entity = new AuditLog({
-            context: { userAgent: "unit-agent", ip: "127.0.0.1" },
-            entityType: "NOTIFICATION",
-            actionType: "CREATE",
-        });
-
-        Object.assign(entity, props);
-
-        return entity;
-    }
-
-    public createChangeLog(props: Unit.Domain.Core.CreateChangeLog.Props = {}): SystemEntities.ChangeLog {
-        const entity = new ChangeLog({
-            auditEntry: "00000000-0000-4000-8000-0000000000fe",
-            entity: "00000000-0000-4000-8000-0000000000fd",
-            changeType: ChangeSetType.CREATE,
-            entityType: "NOTIFICATION",
-            delta: {},
-        });
-
-        Object.assign(entity, props);
-
-        return entity;
     }
 
     public services(): Unit.Domain.ServiceMocks.Contract {

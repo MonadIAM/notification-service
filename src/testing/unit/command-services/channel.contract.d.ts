@@ -1,27 +1,16 @@
-import type { jest } from "@jest/globals";
+declare namespace Unit.Commands.Channel {
+    interface Contract extends Core.Contract {
+        commands: Commands.Signature;
+    }
 
-declare global {
-    namespace Unit {
-        namespace Application {
-            namespace ChannelCommands {
-                interface Contract extends CommandCore.Contract {
-                    readonly commands: Commands.Signature;
-                }
+    namespace Commands {
+        type Result = Core.Execution.Result & {
+            commands: globalThis.Commands.Channel.Contract;
+            channelService: Jest.Mocked<
+                Pick<Services.Channel.CommandContract, "markVerified" | "toggleSound" | "create" | "purge">
+            >;
+        };
 
-                namespace Commands {
-                    type Result = CommandCore.Execution.Result & {
-                        readonly commands: globalThis.Commands.Channel.Contract;
-                        readonly channelService: {
-                            readonly markVerified: jest.Mock<Services.Channel.CommandContract["markVerified"]>;
-                            readonly toggleSound: jest.Mock<Services.Channel.CommandContract["toggleSound"]>;
-                            readonly create: jest.Mock<Services.Channel.CommandContract["create"]>;
-                            readonly purge: jest.Mock<Services.Channel.CommandContract["purge"]>;
-                        };
-                    };
-
-                    type Signature = () => Result;
-                }
-            }
-        }
+        type Signature = () => Result;
     }
 }

@@ -1,34 +1,25 @@
-import type { MessageRepository } from "~context/infrastructure/repositories/message.repository";
-import type { MessageService } from "~context/domain/services/message.service";
+declare namespace Integration.Domain.Message {
+    type Suite = Postgres.Suite.Contract<Service.Context, Fixtures.Core.Contract>;
 
-declare global {
-    namespace Integration {
-        namespace Domain {
-            namespace Message {
-                type Suite = Postgres.Suite.Contract<Service.Context, Fixtures.Core.Contract>;
+    interface Contract {
+        repositories: Repositories.Signature;
+        service: Service.Signature;
+    }
 
-                interface Contract {
-                    readonly repositories: Repositories.Signature;
-                    readonly service: Service.Signature;
-                }
+    namespace Service {
+        type Context = {
+            messageService: Services.Message.Contract;
+            repositories: Repositories.Context;
+        };
 
-                namespace Service {
-                    type Context = {
-                        readonly messageService: MessageService;
-                        readonly repositories: Repositories.Context;
-                    };
+        type Signature = (context: Postgres.Suite.FactoryContext) => Context;
+    }
 
-                    type Signature = (context: Postgres.Suite.FactoryContext) => Context;
-                }
+    namespace Repositories {
+        type Context = {
+            messages: globalThis.Repositories.Message.Contract;
+        };
 
-                namespace Repositories {
-                    type Context = {
-                        readonly messages: MessageRepository;
-                    };
-
-                    type Signature = (context: Postgres.Suite.FactoryContext) => Context;
-                }
-            }
-        }
+        type Signature = (context: Postgres.Suite.FactoryContext) => Context;
     }
 }

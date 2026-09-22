@@ -1,27 +1,19 @@
-import type { ChannelService } from "~context/domain/services/channel.service";
+declare namespace Unit.Domain.Channel {
+    interface Contract extends Core.Contract {
+        service: Service.Signature;
+    }
 
-declare global {
-    namespace Unit {
-        namespace Domain {
-            namespace Channel {
-                interface Contract extends Core.Contract {
-                    readonly service: Service.Signature;
-                }
+    namespace Service {
+        type Props = {
+            recipient?: Entities.Recipient;
+        };
 
-                namespace Service {
-                    type Props = {
-                        readonly recipient?: Entities.Recipient;
-                    };
+        type Result = {
+            repositories: RepositoryMocks.Contract;
+            service: Services.Channel.Contract;
+            transaction: Core.Transaction;
+        };
 
-                    type Result = {
-                        readonly repositories: RepositoryMocks.Contract;
-                        readonly transaction: Core.Transaction;
-                        readonly service: ChannelService;
-                    };
-
-                    type Signature = (props?: Props) => Result;
-                }
-            }
-        }
+        type Signature = (props?: Props) => Result;
     }
 }

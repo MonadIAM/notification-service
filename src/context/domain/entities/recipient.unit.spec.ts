@@ -1,31 +1,20 @@
 import { describe, it, expect } from "@jest/globals";
 import { isUUID } from "class-validator";
 
+import { EntityFactoryRegistry } from "~testing/entity-factory.registry";
 import { ChannelType } from "~context/enums";
 
 import { Recipient } from "./recipient.entity";
-import { Channel } from "./channel.entity";
 
 const ACCOUNT_ID = "00000000-0000-4000-8000-000000000001";
+
+const entities = new EntityFactoryRegistry();
 
 function createRecipient(overrides?: Partial<Entities.Recipient.ConstructorProps>): Recipient {
     return new Recipient({
         account: ACCOUNT_ID,
         timezone: "UTC",
         locale: "en",
-        ...overrides,
-    });
-}
-
-function createChannel(
-    recipient: Recipient,
-    overrides?: Partial<Omit<Entities.Channel.ConstructorProps, "recipient">>,
-): Channel {
-    return new Channel({
-        type: ChannelType.EMAIL,
-        address: "user@example.com",
-        isVerified: true,
-        recipient,
         ...overrides,
     });
 }
@@ -114,19 +103,12 @@ describe("Recipient Entity", () => {
     });
 
     describe("selectOtpChannel", () => {
-        it("should select verified email channel", () => {
+        it.each([
+            { type: ChannelType.EMAIL, address: "user@example.com" },
+            { type: ChannelType.SMS, address: "+15551234567" },
+        ])("should select a verified $type channel", ({ type, address }) => {
             const recipient = createRecipient();
-            const channel = createChannel(recipient);
-
-            recipient.selectOtpChannel(channel);
-
-            expect(recipient.defaultOtpChannel).toBe(channel);
-            expect(recipient.updatedAt).toBeInstanceOf(Date);
-        });
-
-        it("should select verified sms channel", () => {
-            const recipient = createRecipient();
-            const channel = createChannel(recipient, { type: ChannelType.SMS, address: "+15551234567" });
+            const channel = entities.createChannel({ recipient, type, address });
 
             recipient.selectOtpChannel(channel);
 
@@ -137,21 +119,21 @@ describe("Recipient Entity", () => {
         it("should throw when channel belongs to another recipient", () => {
             const recipient = createRecipient();
             const anotherRecipient = createRecipient({ account: "00000000-0000-4000-8000-000000000002" });
-            const channel = createChannel(anotherRecipient);
+            const channel = entities.createChannel({ recipient: anotherRecipient, type: ChannelType.EMAIL });
 
             expect(() => recipient.selectOtpChannel(channel)).toThrow("NOT_OWN_CHANNEL");
         });
 
         it("should throw when channel is not verified", () => {
             const recipient = createRecipient();
-            const channel = createChannel(recipient, { isVerified: false });
+            const channel = entities.createChannel({ recipient, type: ChannelType.EMAIL, isVerified: false });
 
             expect(() => recipient.selectOtpChannel(channel)).toThrow("CHANNEL_NOT_VERIFIED");
         });
 
         it("should throw for in-app channel", () => {
             const recipient = createRecipient();
-            const channel = createChannel(recipient, { type: ChannelType.IN_APP, address: undefined });
+            const channel = entities.createChannel({ recipient, type: ChannelType.IN_APP, address: undefined });
 
             expect(() => recipient.selectOtpChannel(channel)).toThrow("UNSUPPORTED_OTP_CHANNEL_TYPE");
         });
@@ -160,7 +142,7 @@ describe("Recipient Entity", () => {
     describe("clearOtpChannel", () => {
         it("should clear selected otp channel", () => {
             const recipient = createRecipient();
-            const channel = createChannel(recipient);
+            const channel = entities.createChannel({ recipient, type: ChannelType.EMAIL, address: "user@example.com" });
             recipient.selectOtpChannel(channel);
 
             recipient.clearOtpChannel();

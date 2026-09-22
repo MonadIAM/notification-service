@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 
 import { NotificationIntegrationHelpers } from "~testing/integration/domain-service/notification.helpers";
 import { NotificationCategory, PlatformService, MessageStatus, ChannelType } from "~context/enums";
-import { Channel, Notification, Preference, Message } from "~context/domain/entities";
+import { Notification, Preference, Message } from "~context/domain/entities";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
 import { postgresSuite } from "~testing/integration/postgres.suite";
 
@@ -53,15 +53,11 @@ describe("NotificationService integration", () => {
 
     it("fans out a security notification to persisted in-app and email channels", async () => {
         const recipient = await suite.fixtures().createRecipient();
-        const inApp = await suite.transaction(async (transaction) => {
-            const channel = new Channel({
-                type: ChannelType.IN_APP,
-                isVerified: true,
-                recipient,
-            });
-            transaction.persist(channel);
-            await transaction.flush();
-            return channel;
+        const inApp = await suite.fixtures().createChannel({
+            type: ChannelType.IN_APP,
+            address: undefined,
+            isVerified: true,
+            recipient,
         });
         const email = await suite.fixtures().createChannel({
             address: "recipient@example.test",

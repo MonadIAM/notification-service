@@ -1,24 +1,18 @@
 import { describe, it, expect } from "@jest/globals";
 import { isUUID } from "class-validator";
 
+import { EntityFactoryRegistry } from "~testing/entity-factory.registry";
 import { ChannelType } from "~context/enums";
 
-import { Recipient } from "./recipient.entity";
 import { Channel } from "./channel.entity";
 
-function createRecipient(): Recipient {
-    return new Recipient({
-        account: "00000000-0000-4000-8000-000000000001",
-        timezone: "UTC",
-        locale: "en",
-    });
-}
+const entities = new EntityFactoryRegistry();
 
 function createChannel(overrides?: Partial<Entities.Channel.ConstructorProps>): Channel {
     return new Channel({
         type: ChannelType.EMAIL,
         address: "user@example.com",
-        recipient: createRecipient(),
+        recipient: entities.createRecipient(),
         ...overrides,
     });
 }
@@ -26,7 +20,7 @@ function createChannel(overrides?: Partial<Entities.Channel.ConstructorProps>): 
 describe("Channel Entity", () => {
     describe("constructor", () => {
         it("should assign required fields and relations", () => {
-            const recipient = createRecipient();
+            const recipient = entities.createRecipient();
 
             const channel = createChannel({
                 sourceIdentifier: "identifier-1",
@@ -110,8 +104,8 @@ describe("Channel Entity", () => {
             expect(channel.updatedAt).toBeInstanceOf(Date);
         });
 
-        it("should throw for non-in-app channel", () => {
-            const channel = createChannel({ type: ChannelType.EMAIL });
+        it.each([ChannelType.EMAIL, ChannelType.SMS])("should reject sound for %s", (type) => {
+            const channel = createChannel({ type });
 
             expect(() => channel.toggleSound()).toThrow("SOUND_NOT_APPLICABLE");
         });

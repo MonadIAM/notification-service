@@ -1,25 +1,17 @@
-import type { jest } from "@jest/globals";
+declare namespace Unit.Queries.Channel {
+    interface Contract extends Domain.Core.Contract {
+        queries: Queries.Signature;
+    }
 
-declare global {
-    namespace Unit {
-        namespace Application {
-            namespace ChannelQueries {
-                interface Contract extends Domain.Core.Contract {
-                    readonly queries: Queries.Signature;
-                }
+    namespace Queries {
+        type Result = {
+            queries: globalThis.Queries.Channel.Contract;
+            channelRepository: {
+                findUniqueOrThrow: Jest.Mock<Repositories.Channel.QueryContract["findUniqueOrThrow"]>;
+                findMany: Jest.Mock<Repositories.Channel.QueryContract["findMany"]>;
+            };
+        };
 
-                namespace Queries {
-                    type Result = {
-                        readonly queries: globalThis.Queries.Channel.Contract;
-                        readonly channelRepository: {
-                            readonly findUniqueOrThrow: jest.Mock<Repositories.Channel.QueryContract["findUniqueOrThrow"]>;
-                            readonly findMany: jest.Mock<Repositories.Channel.QueryContract["findMany"]>;
-                        };
-                    };
-
-                    type Signature = () => Result;
-                }
-            }
-        }
+        type Signature = () => Result;
     }
 }

@@ -118,29 +118,32 @@ describe("RecipientService integration", () => {
         }).toEqual({ timezone: "Asia/Tokyo", locale: "ja", updatedAt: null });
     });
 
-    it("persists a verified owned email channel as the otp default", async () => {
-        const recipient = await suite.fixtures().createRecipient();
-        const channel = await suite.fixtures().createChannel({
-            sourceIdentifier: randomUUID(),
-            type: ChannelType.EMAIL,
-            isVerified: true,
-            recipient,
-        });
+    it.each([ChannelType.EMAIL, ChannelType.SMS])(
+        "persists a verified owned %s channel as the otp default",
+        async (type) => {
+            const recipient = await suite.fixtures().createRecipient();
+            const channel = await suite.fixtures().createChannel({
+                sourceIdentifier: randomUUID(),
+                type,
+                isVerified: true,
+                recipient,
+            });
 
-        await suite.transaction((transaction) =>
-            suite.repository().recipientService.selectOtpChannel({
-                input: { account: recipient.account, channel: channel.id },
-                transaction,
-            }),
-        );
+            await suite.transaction((transaction) =>
+                suite.repository().recipientService.selectOtpChannel({
+                    input: { account: recipient.account, channel: channel.id },
+                    transaction,
+                }),
+            );
 
-        const persisted = await loadRecipient(suite, recipient.account);
+            const persisted = await loadRecipient(suite, recipient.account);
 
-        expect({ id: persisted.defaultOtpChannel?.id, type: persisted.defaultOtpChannel?.type }).toEqual({
-            type: ChannelType.EMAIL,
-            id: channel.id,
-        });
-    });
+            expect({ id: persisted.defaultOtpChannel?.id, type: persisted.defaultOtpChannel?.type }).toEqual({
+                type,
+                id: channel.id,
+            });
+        },
+    );
 
     it("rejects a verified channel owned by another recipient without changing the otp default", async () => {
         const recipient = await suite.fixtures().createRecipient();

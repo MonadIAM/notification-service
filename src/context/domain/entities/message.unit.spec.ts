@@ -1,15 +1,16 @@
 import { describe, it, expect } from "@jest/globals";
 import { isUUID } from "class-validator";
 
+import { EntityFactoryRegistry } from "~testing/entity-factory.registry";
 import { FailureReason, MessageStatus, ChannelType } from "~context/enums";
 
-import { Notification } from "./notification.entity";
-import { Channel } from "./channel.entity";
 import { Message } from "./message.entity";
+
+const entities = new EntityFactoryRegistry();
 
 function createMessage(overrides?: Partial<Entities.Message.ConstructorProps>): Message {
     return new Message({
-        notification: {} as Notification,
+        notification: entities.createNotification(),
         channelType: ChannelType.EMAIL,
         address: "user@example.com",
         ...overrides,
@@ -19,8 +20,8 @@ function createMessage(overrides?: Partial<Entities.Message.ConstructorProps>): 
 describe("Message Entity", () => {
     describe("constructor", () => {
         it("should assign required fields and relations", () => {
-            const notification = {} as Notification;
-            const channel = {} as Channel;
+            const notification = entities.createNotification();
+            const channel = entities.createChannel({ recipient: notification.recipient });
 
             const message = createMessage({
                 address: "+15551234567",
@@ -104,25 +105,18 @@ describe("Message Entity", () => {
     });
 
     describe("markFailed", () => {
-        it("should mark a non-delivered message as failed", () => {
+        it.each([
+            { reason: FailureReason.PROVIDER, error: "provider timeout" },
+            { reason: FailureReason.INTERNAL, error: undefined },
+        ])("should record failure $reason with error $error", ({ reason, error }) => {
             const message = createMessage();
 
-            message.markFailed({ reason: FailureReason.PROVIDER, error: "provider timeout" });
+            message.markFailed({ reason, error });
 
             expect(message.status).toBe(MessageStatus.FAILED);
             expect(message.failedAt).toBeInstanceOf(Date);
-            expect(message.failureReason).toBe(FailureReason.PROVIDER);
-            expect(message.error).toBe("provider timeout");
-        });
-
-        it("should allow failure without error message", () => {
-            const message = createMessage();
-
-            message.markFailed({ reason: FailureReason.INTERNAL });
-
-            expect(message.status).toBe(MessageStatus.FAILED);
-            expect(message.failureReason).toBe(FailureReason.INTERNAL);
-            expect(message.error).toBeUndefined();
+            expect(message.failureReason).toBe(reason);
+            expect(message.error).toBe(error);
         });
 
         it("should throw when delivered message is failed", () => {
@@ -143,8 +137,8 @@ describe("Message Entity", () => {
             expect(message.readAt).toBeInstanceOf(Date);
         });
 
-        it("should throw for non-in-app message", () => {
-            const message = createMessage({ channelType: ChannelType.EMAIL });
+        it.each([ChannelType.EMAIL, ChannelType.SMS])("should reject read state for %s", (channelType) => {
+            const message = createMessage({ channelType });
 
             expect(() => message.markRead()).toThrow("READ_STATE_IN_APP_ONLY");
         });

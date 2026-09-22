@@ -4,11 +4,8 @@ import { MessageCommands } from "~context/application/commands/message.commands"
 
 import { ApplicationCommandUnitHelpers } from "./core.helpers";
 
-export class MessageCommandsUnitHelpers
-    extends ApplicationCommandUnitHelpers
-    implements Unit.Application.MessageCommands.Contract
-{
-    public commands(): Unit.Application.MessageCommands.Commands.Result {
+export class MessageCommandsUnitHelpers extends ApplicationCommandUnitHelpers implements Unit.Commands.Message.Contract {
+    public commands(): Unit.Commands.Message.Commands.Result {
         const execution = this.execution();
 
         const messageService = {

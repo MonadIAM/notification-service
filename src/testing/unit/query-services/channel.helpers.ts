@@ -4,11 +4,8 @@ import { ChannelQueries } from "~context/application/queries/channel.queries";
 
 import { DomainServiceCoreUnitHelpers } from "../core.helpers";
 
-export class ChannelQueriesUnitHelpers
-    extends DomainServiceCoreUnitHelpers
-    implements Unit.Application.ChannelQueries.Contract
-{
-    public queries(): Unit.Application.ChannelQueries.Queries.Result {
+export class ChannelQueriesUnitHelpers extends DomainServiceCoreUnitHelpers implements Unit.Queries.Channel.Contract {
+    public queries(): Unit.Queries.Channel.Queries.Result {
         const channelRepository = {
             findUniqueOrThrow: jest.fn<Repositories.Channel.QueryContract["findUniqueOrThrow"]>(),
             findMany: jest.fn<Repositories.Channel.QueryContract["findMany"]>(),

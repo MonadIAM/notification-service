@@ -1,8 +1,7 @@
 import { ChangeSetType } from "@mikro-orm/core";
 import { randomUUID } from "node:crypto";
 
-import { Channel, Message, Notification, Preference, Recipient } from "~context/domain/entities";
-import { AuditLog, ChangeLog } from "~common/transaction-manager/entities";
+import { EntityFactoryRegistry } from "~testing/entity-factory.registry";
 import { DeltaChanges } from "~common/transaction-manager/value-objects";
 import {
     NotificationCategory,
@@ -15,12 +14,13 @@ import {
 } from "~context/enums";
 
 export class CoreFixture implements Fixtures.Core.Contract {
+    private readonly entities = new EntityFactoryRegistry();
     private sequence = 0;
 
     public constructor(private readonly entityManager: ORM.EntityManager) {}
 
     public async createRecipient(props: Fixtures.Core.CreateRecipient.Props = {}): Fixtures.Core.CreateRecipient.Result {
-        const recipient = new Recipient({
+        const recipient = this.entities.createRecipient({
             account: props.account ?? randomUUID(),
             timezone: props.timezone ?? "UTC",
             locale: props.locale ?? "en-US",
@@ -34,10 +34,10 @@ export class CoreFixture implements Fixtures.Core.Contract {
 
     public async createChannel(props: Fixtures.Core.CreateChannel.Props): Fixtures.Core.CreateChannel.Result {
         const type = props.type ?? ChannelType.EMAIL;
-        const channel = new Channel({
-            address: props.address ?? this.nextAddress(type),
+        const channel = this.entities.createChannel({
+            address: "address" in props ? props.address : this.nextAddress(type),
             sourceIdentifier: props.sourceIdentifier,
-            isVerified: props.isVerified,
+            isVerified: props.isVerified ?? false,
             recipient: props.recipient,
             type,
         });
@@ -48,7 +48,7 @@ export class CoreFixture implements Fixtures.Core.Contract {
     public async createNotification(
         props: Fixtures.Core.CreateNotification.Props,
     ): Fixtures.Core.CreateNotification.Result {
-        const notification = new Notification({
+        const notification = this.entities.createNotification({
             sourceService: props.sourceService ?? PlatformService.NOTIFICATION_SERVICE,
             category: props.category ?? NotificationCategory.SYSTEM,
             template: props.template ?? "test-template",
@@ -64,7 +64,7 @@ export class CoreFixture implements Fixtures.Core.Contract {
 
     public async createMessage(props: Fixtures.Core.CreateMessage.Props): Fixtures.Core.CreateMessage.Result {
         const channelType = props.channelType ?? props.channel?.type ?? ChannelType.EMAIL;
-        const message = new Message({
+        const message = this.entities.createMessage({
             address: props.address ?? this.nextAddress(channelType),
             notification: props.notification,
             channel: props.channel,
@@ -90,10 +90,10 @@ export class CoreFixture implements Fixtures.Core.Contract {
     }
 
     public async createPreference(props: Fixtures.Core.CreatePreference.Props): Fixtures.Core.CreatePreference.Result {
-        const preference = new Preference({
+        const preference = this.entities.createPreference({
             category: props.category ?? NotificationCategory.SYSTEM,
             channelType: props.channelType ?? ChannelType.EMAIL,
-            isDuplicationEnabled: props.isDuplicationEnabled,
+            isDuplicationEnabled: props.isDuplicationEnabled ?? true,
             recipient: props.recipient,
         });
 
@@ -101,7 +101,7 @@ export class CoreFixture implements Fixtures.Core.Contract {
     }
 
     public async createAuditLog(props: Fixtures.Core.CreateAuditLog.Props = {}): Fixtures.Core.CreateAuditLog.Result {
-        const auditLog = new AuditLog({
+        const auditLog = this.entities.createAuditLog({
             entityType: props.entityType ?? EntityType.NOTIFICATION,
             actionType: props.actionType ?? ActionType.CREATE,
             actor: props.actor ?? randomUUID(),
@@ -120,7 +120,7 @@ export class CoreFixture implements Fixtures.Core.Contract {
 
     public async createChangeLog(props: Fixtures.Core.CreateChangeLog.Props = {}): Fixtures.Core.CreateChangeLog.Result {
         const auditEntry = props.auditEntry ?? (await this.createAuditLog());
-        const changeLog = new ChangeLog({
+        const changeLog = this.entities.createChangeLog({
             entityType: props.entityType ?? EntityType.NOTIFICATION,
             changeType: props.changeType ?? ChangeSetType.CREATE,
             entity: props.entity ?? randomUUID(),

@@ -6,9 +6,9 @@ import { ApplicationCommandUnitHelpers } from "./core.helpers";
 
 export class PreferenceCommandsUnitHelpers
     extends ApplicationCommandUnitHelpers
-    implements Unit.Application.PreferenceCommands.Contract
+    implements Unit.Commands.Preference.Contract
 {
-    public commands(): Unit.Application.PreferenceCommands.Commands.Result {
+    public commands(): Unit.Commands.Preference.Commands.Result {
         const execution = this.execution();
 
         const preferenceService = {

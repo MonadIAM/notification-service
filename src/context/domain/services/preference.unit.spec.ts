@@ -40,39 +40,32 @@ describe("PreferenceService", () => {
     });
 
     describe("toggle", () => {
-        it("throws for a category that is not configurable", async () => {
-            const { service, repositories, transaction } = helpers.service();
+        it.each([
+            {
+                category: NotificationCategory.SECURITY,
+                channelType: ChannelType.EMAIL,
+                error: "CATEGORY_NOT_CONFIGURABLE",
+            },
+            {
+                category: NotificationCategory.INVITES,
+                channelType: ChannelType.IN_APP,
+                error: "CHANNEL_NOT_CONFIGURABLE",
+            },
+        ])(
+            "rejects $category/$channelType with $error before loading the recipient",
+            async ({ category, channelType, error }) => {
+                const { service, repositories, transaction } = helpers.service();
 
-            await expect(
-                service.toggle({
-                    transaction: transaction.entityManager,
-                    input: {
-                        category: NotificationCategory.SECURITY,
-                        channelType: ChannelType.EMAIL,
-                        account: ACCOUNT_ID,
-                    },
-                }),
-            ).rejects.toThrow("services.preference.CATEGORY_NOT_CONFIGURABLE");
+                await expect(
+                    service.toggle({
+                        transaction: transaction.entityManager,
+                        input: { category, channelType, account: ACCOUNT_ID },
+                    }),
+                ).rejects.toThrow(`services.preference.${error}`);
 
-            expect(repositories.recipients.findUniqueOrThrow).not.toHaveBeenCalled();
-        });
-
-        it("throws for a channel type that cannot be duplicated", async () => {
-            const { service, repositories, transaction } = helpers.service();
-
-            await expect(
-                service.toggle({
-                    transaction: transaction.entityManager,
-                    input: {
-                        category: NotificationCategory.INVITES,
-                        channelType: ChannelType.IN_APP,
-                        account: ACCOUNT_ID,
-                    },
-                }),
-            ).rejects.toThrow("services.preference.CHANNEL_NOT_CONFIGURABLE");
-
-            expect(repositories.recipients.findUniqueOrThrow).not.toHaveBeenCalled();
-        });
+                expect(repositories.recipients.findUniqueOrThrow).not.toHaveBeenCalled();
+            },
+        );
 
         it("toggles an existing preference and returns it", async () => {
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
