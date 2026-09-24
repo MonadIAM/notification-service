@@ -5,8 +5,8 @@ import { randomUUID } from "node:crypto";
 
 import { TransactionalHelper } from "~testing/integration/transaction-manager/transactional.helpers";
 import { ActionType, ChannelType, EntityType, KafkaTopic } from "~context/enums";
+import { postgresSuite } from "~testing/integration/containers/postgres.suite";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
-import { postgresSuite } from "~testing/integration/postgres.suite";
 import { Channel, Recipient } from "~context/domain/entities";
 
 import { AuditLog, ChangeLog, Inbox, Outbox } from "../entities";

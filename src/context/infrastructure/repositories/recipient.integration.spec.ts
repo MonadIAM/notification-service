@@ -2,8 +2,8 @@ import { describe, expect, it } from "@jest/globals";
 import { QueryOrder } from "@mikro-orm/postgresql";
 import { randomUUID } from "node:crypto";
 
+import { postgresSuite } from "~testing/integration/containers/postgres.suite";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
-import { postgresSuite } from "~testing/integration/postgres.suite";
 import { PublicLinkOperator } from "~infrastructure/database/enums";
 
 import { RecipientRepository } from "./recipient.repository";

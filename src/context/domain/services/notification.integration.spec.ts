@@ -3,9 +3,9 @@ import { randomUUID } from "node:crypto";
 
 import { NotificationIntegrationHelpers } from "~testing/integration/domain-service/notification.helpers";
 import { NotificationCategory, PlatformService, MessageStatus, ChannelType } from "~context/enums";
+import { postgresSuite } from "~testing/integration/containers/postgres.suite";
 import { Notification, Preference, Message } from "~context/domain/entities";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
-import { postgresSuite } from "~testing/integration/postgres.suite";
 
 const helpers = new NotificationIntegrationHelpers();
 

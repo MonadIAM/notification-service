@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { PublicLinkOperator, PublicStringOperator } from "~infrastructure/database/enums";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
-import { postgresSuite } from "~testing/integration/postgres.suite";
+import { postgresSuite } from "~testing/integration/containers/postgres.suite";
 import { ChannelType } from "~context/enums";
 
 import { ChannelRepository } from "./channel.repository";

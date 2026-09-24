@@ -2,9 +2,9 @@ import { describe, expect, it } from "@jest/globals";
 import { randomUUID } from "node:crypto";
 
 import { MessageIntegrationHelpers } from "~testing/integration/domain-service/message.helpers";
+import { postgresSuite } from "~testing/integration/containers/postgres.suite";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
 import { FailureReason, MessageStatus, ChannelType } from "~context/enums";
-import { postgresSuite } from "~testing/integration/postgres.suite";
 import { Message } from "~context/domain/entities";
 
 const helpers = new MessageIntegrationHelpers();

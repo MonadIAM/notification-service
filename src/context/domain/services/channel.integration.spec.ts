@@ -3,9 +3,9 @@ import { randomUUID } from "node:crypto";
 
 import { Channel, Message, Notification, Preference, Recipient } from "~context/domain/entities";
 import { ChannelIntegrationHelpers } from "~testing/integration/domain-service/channel.helpers";
+import { postgresSuite } from "~testing/integration/containers/postgres.suite";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
 import { CONFIGURABLE_NOTIFICATION_CATEGORIES } from "~context/constants";
-import { postgresSuite } from "~testing/integration/postgres.suite";
 import { ChannelType } from "~context/enums";
 
 const helpers = new ChannelIntegrationHelpers();

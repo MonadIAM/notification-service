@@ -3,8 +3,8 @@ import { randomUUID } from "node:crypto";
 
 import { RecipientIntegrationHelpers } from "~testing/integration/domain-service/recipient.helpers";
 import { Channel, Notification, Preference, Recipient, Message } from "~context/domain/entities";
+import { postgresSuite } from "~testing/integration/containers/postgres.suite";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
-import { postgresSuite } from "~testing/integration/postgres.suite";
 import { ChannelType } from "~context/enums";
 
 const helpers = new RecipientIntegrationHelpers();

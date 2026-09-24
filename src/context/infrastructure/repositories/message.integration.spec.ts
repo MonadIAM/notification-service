@@ -2,9 +2,9 @@ import { describe, expect, it } from "@jest/globals";
 import { QueryOrder } from "@mikro-orm/postgresql";
 
 import { PublicLinkOperator, PublicStringOperator } from "~infrastructure/database/enums";
+import { postgresSuite } from "~testing/integration/containers/postgres.suite";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
 import { ChannelType, FailureReason, MessageStatus } from "~context/enums";
-import { postgresSuite } from "~testing/integration/postgres.suite";
 
 import { MessageRepository } from "./message.repository";
 
