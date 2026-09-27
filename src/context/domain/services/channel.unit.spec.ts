@@ -179,4 +179,54 @@ describe("ChannelService", () => {
             expect(transaction.remove).toHaveBeenCalledWith(channel);
         });
     });
+
+    describe("ensure", () => {
+        it("reuses a channel on resend and confirms it idempotently", () => {
+            const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
+            const channel = helpers.createChannel({
+                recipient,
+                sourceIdentifier: SOURCE_IDENTIFIER,
+                address: "user@example.test",
+                type: ChannelType.EMAIL,
+                isVerified: false,
+            });
+            const { service, transaction } = helpers.service({ recipient });
+            recipient.channels = helpers.collection({ owner: recipient, items: [channel] });
+            const input = {
+                recipient,
+                sourceIdentifier: SOURCE_IDENTIFIER,
+                address: channel.address,
+                type: channel.type,
+            };
+
+            expect(service.ensure({ input, transaction: transaction.entityManager })).toBe(channel);
+            expect(channel.isVerified).toBe(false);
+            service.ensure({ input: { ...input, isVerified: true }, transaction: transaction.entityManager });
+            service.ensure({ input: { ...input, isVerified: true }, transaction: transaction.entityManager });
+            expect(channel.isVerified).toBe(true);
+            expect(transaction.persist).not.toHaveBeenCalled();
+        });
+
+        it("rejects an identifier that conflicts with the existing channel", () => {
+            const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
+            recipient.channels = helpers.collection({
+                owner: recipient,
+                items: [helpers.createChannel({ recipient, sourceIdentifier: SOURCE_IDENTIFIER, type: ChannelType.EMAIL })],
+            });
+            const { service, transaction } = helpers.service({ recipient });
+
+            expect(() =>
+                service.ensure({
+                    input: {
+                        recipient,
+                        sourceIdentifier: SECOND_CHANNEL_ID,
+                        type: ChannelType.EMAIL,
+                        address: "other@example.test",
+                    },
+                    transaction: transaction.entityManager,
+                }),
+            ).toThrow("services.channel.IDENTIFIER_MISMATCH");
+            expect(transaction.persist).not.toHaveBeenCalled();
+        });
+    });
 });

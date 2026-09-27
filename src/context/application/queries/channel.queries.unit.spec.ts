@@ -9,20 +9,22 @@ const ACTOR = "actor-account";
 const ID = "entity-a";
 
 describe("ChannelQueries", () => {
-    it.each([
-        { mode: QueryMode.DEFAULT, scope: { recipient: { account: ACTOR } } },
-        { mode: QueryMode.MANAGE, scope: {} },
-    ])("%s enforces the appropriate ownership scope on single and paged reads", async ({ mode, scope }) => {
-        const { queries, channelRepository: repository } = helpers.queries();
-        repository.findUniqueOrThrow.mockResolvedValue(helpers.createChannel());
-        repository.findMany.mockResolvedValue([[], 0]);
+    describe("findUnique / findMany", () => {
+        it.each([
+            { mode: QueryMode.DEFAULT, scope: { recipient: { account: ACTOR } } },
+            { mode: QueryMode.MANAGE, scope: {} },
+        ])("%s enforces the appropriate ownership scope on single and paged reads", async ({ mode, scope }) => {
+            const { queries, channelRepository: repository } = helpers.queries();
+            repository.findUniqueOrThrow.mockResolvedValue(helpers.createChannel());
+            repository.findMany.mockResolvedValue([[], 0]);
 
-        await queries.findUnique({ mode, actor: ACTOR, channel: ID });
-        await queries.findMany({ mode, actor: ACTOR, pagination: PAGINATION, filters: {}, sort: {} });
+            await queries.findUnique({ mode, actor: ACTOR, channel: ID });
+            await queries.findMany({ mode, actor: ACTOR, pagination: PAGINATION, filters: {}, sort: {} });
 
-        expect(repository.findUniqueOrThrow.mock.calls).toEqual([
-            [expect.objectContaining({ where: { id: ID, ...scope } })],
-        ]);
-        expect(repository.findMany.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ prefilter: scope }));
+            expect(repository.findUniqueOrThrow.mock.calls).toEqual([
+                [expect.objectContaining({ where: { id: ID, ...scope } })],
+            ]);
+            expect(repository.findMany.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ prefilter: scope }));
+        });
     });
 });

@@ -17,63 +17,67 @@ describe("ChangeLogRepository", () => {
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    it("maps the persisted change log entry through the schema", async () => {
-        const entity = randomUUID();
-        const changeLog = await suite.fixtures().createChangeLog({
-            delta: new DeltaChanges({ title: { old: "Old Title", new: "New Title" } }),
-            changeType: ChangeSetType.UPDATE,
-            entityType: EntityType.MESSAGE,
-            entity,
+    describe("findUniqueOrThrow", () => {
+        it("maps the persisted change log entry through the schema", async () => {
+            const entity = randomUUID();
+            const changeLog = await suite.fixtures().createChangeLog({
+                delta: new DeltaChanges({ title: { old: "Old Title", new: "New Title" } }),
+                changeType: ChangeSetType.UPDATE,
+                entityType: EntityType.MESSAGE,
+                entity,
+            });
+
+            await expect(suite.repository().findUniqueOrThrow({ where: { id: changeLog.id } })).resolves.toMatchObject({
+                delta: new DeltaChanges({ title: { old: "Old Title", new: "New Title" } }),
+                auditEntry: changeLog.auditEntry,
+                changeType: ChangeSetType.UPDATE,
+                keyVersion: changeLog.keyVersion,
+                signature: changeLog.signature,
+                createdAt: changeLog.createdAt,
+                entityType: EntityType.MESSAGE,
+                id: changeLog.id,
+                entity,
+            });
         });
 
-        await expect(suite.repository().findUniqueOrThrow({ where: { id: changeLog.id } })).resolves.toMatchObject({
-            delta: new DeltaChanges({ title: { old: "Old Title", new: "New Title" } }),
-            auditEntry: changeLog.auditEntry,
-            changeType: ChangeSetType.UPDATE,
-            keyVersion: changeLog.keyVersion,
-            signature: changeLog.signature,
-            createdAt: changeLog.createdAt,
-            entityType: EntityType.MESSAGE,
-            id: changeLog.id,
-            entity,
+        it("persists a joined composite entity id in the text column", async () => {
+            const entity = `${randomUUID()}:${randomUUID()}:1`;
+            const changeLog = await suite.fixtures().createChangeLog({ entity });
+
+            await expect(suite.repository().findUniqueOrThrow({ where: { id: changeLog.id } })).resolves.toMatchObject({
+                entity,
+            });
         });
     });
 
-    it("persists a joined composite entity id in the text column", async () => {
-        const entity = `${randomUUID()}:${randomUUID()}:1`;
-        const changeLog = await suite.fixtures().createChangeLog({ entity });
+    describe("findMany", () => {
+        it("finds change log entries by change type and entity mapper filters", async () => {
+            const matched = await suite.fixtures().createChangeLog({
+                changeType: ChangeSetType.CREATE,
+                entityType: EntityType.MESSAGE,
+            });
+            await suite.fixtures().createChangeLog({
+                changeType: ChangeSetType.UPDATE,
+                entityType: EntityType.MESSAGE,
+            });
 
-        await expect(suite.repository().findUniqueOrThrow({ where: { id: changeLog.id } })).resolves.toMatchObject({
-            entity,
-        });
-    });
-
-    it("finds change log entries by change type and entity mapper filters", async () => {
-        const matched = await suite.fixtures().createChangeLog({
-            changeType: ChangeSetType.CREATE,
-            entityType: EntityType.MESSAGE,
-        });
-        await suite.fixtures().createChangeLog({
-            changeType: ChangeSetType.UPDATE,
-            entityType: EntityType.MESSAGE,
-        });
-
-        const [entries, total] = await suite.repository().findMany({
-            pagination: { currentPage: 1, elementsPerPage: 10 },
-            sort: { createdAt: QueryOrder.ASC },
-            filters: {
-                changeType: {
-                    operator: PublicStringOperator.EQUAL,
-                    value: ChangeSetType.CREATE,
+            const [entries, total] = await suite.repository().findMany({
+                pagination: { currentPage: 1, elementsPerPage: 10 },
+                sort: { createdAt: QueryOrder.ASC },
+                filters: {
+                    changeType: {
+                        operator: PublicStringOperator.EQUAL,
+                        value: ChangeSetType.CREATE,
+                    },
+                    entityType: {
+                        operator: PublicStringOperator.EQUAL,
+                        value: EntityType.MESSAGE,
+                    },
                 },
-                entityType: {
-                    operator: PublicStringOperator.EQUAL,
-                    value: EntityType.MESSAGE,
-                },
-            },
-        });
+            });
 
-        expect(total).toBe(1);
-        expect(entries.map(({ id }) => id)).toEqual([matched.id]);
+            expect(total).toBe(1);
+            expect(entries.map(({ id }) => id)).toEqual([matched.id]);
+        });
     });
 });

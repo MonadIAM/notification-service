@@ -90,16 +90,95 @@ describe("RecipientService", () => {
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const { service, repositories, transaction } = helpers.service({ recipient });
 
+            repositories.recipients.findUnique.mockImplementation(() => Promise.resolve(recipient));
             await service.purge({
                 transaction: transaction.entityManager,
                 input: { account: ACCOUNT_ID },
             });
 
-            expect(repositories.recipients.findUniqueOrThrow).toHaveBeenCalledWith({
+            expect(repositories.recipients.findUnique).toHaveBeenCalledWith({
                 transaction: transaction.entityManager,
                 where: { account: ACCOUNT_ID },
             });
             expect(transaction.remove).toHaveBeenCalledWith(recipient);
+        });
+
+        it("accepts repeated deletion when the recipient is absent", async () => {
+            const { service, repositories, transaction } = helpers.service();
+            repositories.recipients.findUnique.mockImplementation(() => Promise.resolve(null));
+
+            await service.purge({ input: { account: ACCOUNT_ID }, transaction: transaction.entityManager });
+
+            expect(transaction.remove).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("ensure", () => {
+        it("reuses an existing recipient without changing their settings", async () => {
+            const recipient = helpers.createRecipient({ account: ACCOUNT_ID, locale: "ru", timezone: "Europe/Moscow" });
+            const { service, repositories, transaction } = helpers.service({ recipient });
+            repositories.recipients.findUnique.mockImplementation(() => Promise.resolve(recipient));
+
+            await expect(
+                service.ensure({
+                    input: { account: ACCOUNT_ID, locale: "en", timezone: "UTC" },
+                    transaction: transaction.entityManager,
+                }),
+            ).resolves.toBe(recipient);
+            expect(transaction.persist).not.toHaveBeenCalled();
+            expect(recipient.locale).toBe("ru");
+        });
+
+        it("creates the missing recipient and in-app channel", async () => {
+            const { service, repositories, transaction } = helpers.service();
+            repositories.recipients.findUnique.mockImplementation(() => Promise.resolve(null));
+
+            const recipient = await service.ensure({
+                input: { account: ACCOUNT_ID, locale: "en", timezone: "UTC" },
+                transaction: transaction.entityManager,
+            });
+
+            expect(transaction.persist).toHaveBeenCalledWith(
+                expect.objectContaining({ recipient, type: ChannelType.IN_APP }),
+            );
+            expect(transaction.persist).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe("ensureChannel", () => {
+        it("confirms the existing channel without a flush or recreating the recipient", async () => {
+            const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
+            const channel = helpers.createChannel({
+                recipient,
+                type: ChannelType.EMAIL,
+                sourceIdentifier: "identifier-id",
+                address: "user@example.test",
+                isVerified: false,
+            });
+            recipient.channels = helpers.collection({ owner: recipient, items: [channel] });
+            const { service, repositories, transaction } = helpers.service({ recipient });
+            repositories.recipients.findUnique.mockImplementation(() => Promise.resolve(recipient));
+
+            const result = await service.ensureChannel({
+                input: {
+                    account: ACCOUNT_ID,
+                    sourceIdentifier: "identifier-id",
+                    address: "user@example.test",
+                    type: ChannelType.EMAIL,
+                    isVerified: true,
+                },
+                transaction: transaction.entityManager,
+            });
+
+            expect(result).toEqual({ recipient, channel });
+            expect(channel.isVerified).toBe(true);
+            expect(repositories.recipients.findUnique).toHaveBeenCalledWith({
+                options: { populate: ["channels"] },
+                where: { account: ACCOUNT_ID },
+                transaction: transaction.entityManager,
+            });
+            expect(transaction.flush).not.toHaveBeenCalled();
+            expect(transaction.persist).not.toHaveBeenCalled();
         });
     });
 });

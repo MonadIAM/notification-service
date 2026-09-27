@@ -39,135 +39,143 @@ describe("MessageService integration", () => {
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    it("persists the sent and delivered state transitions", async () => {
-        const message = await createMessage(suite, {
-            channelType: ChannelType.EMAIL,
-        });
+    describe("markSent / markDelivered", () => {
+        it("persists the sent and delivered state transitions", async () => {
+            const message = await createMessage(suite, {
+                channelType: ChannelType.EMAIL,
+            });
 
-        await suite.transaction((transaction) =>
-            suite.repository().messageService.markSent({
-                input: { message: message.id },
-                transaction,
-            }),
-        );
-
-        await expect(loadMessage(suite, message.id)).resolves.toEqual(
-            expect.objectContaining({
-                status: MessageStatus.SENT,
-                sentAt: expect.any(Date),
-                deliveredAt: null,
-            }),
-        );
-
-        await suite.transaction((transaction) =>
-            suite.repository().messageService.markDelivered({
-                input: { message: message.id },
-                transaction,
-            }),
-        );
-
-        await expect(loadMessage(suite, message.id)).resolves.toEqual(
-            expect.objectContaining({
-                status: MessageStatus.DELIVERED,
-                deliveredAt: expect.any(Date),
-                sentAt: expect.any(Date),
-            }),
-        );
-    });
-
-    it("persists the failure reason and provider error", async () => {
-        const message = await createMessage(suite, {
-            channelType: ChannelType.EMAIL,
-        });
-
-        await suite.transaction((transaction) =>
-            suite.repository().messageService.markFailed({
-                input: {
-                    error: "provider rejected the message",
-                    reason: FailureReason.PROVIDER,
-                    message: message.id,
-                },
-                transaction,
-            }),
-        );
-
-        await expect(loadMessage(suite, message.id)).resolves.toEqual(
-            expect.objectContaining({
-                error: "provider rejected the message",
-                failureReason: FailureReason.PROVIDER,
-                status: MessageStatus.FAILED,
-                failedAt: expect.any(Date),
-            }),
-        );
-    });
-
-    it("marks an in-app message read for its owning account", async () => {
-        const account = randomUUID();
-        const message = await createMessage(suite, {
-            channelType: ChannelType.IN_APP,
-            account,
-        });
-
-        await suite.transaction((transaction) =>
-            suite.repository().messageService.markRead({
-                input: { message: message.id, actor: account },
-                transaction,
-            }),
-        );
-
-        await expect(loadMessage(suite, message.id)).resolves.toEqual(
-            expect.objectContaining({ readAt: expect.any(Date) }),
-        );
-    });
-
-    it("hides another account's message and leaves it unread", async () => {
-        const message = await createMessage(suite, {
-            channelType: ChannelType.IN_APP,
-        });
-
-        await expect(
-            suite.transaction((transaction) =>
-                suite.repository().messageService.markRead({
-                    input: { message: message.id, actor: randomUUID() },
-                    transaction,
-                }),
-            ),
-        ).rejects.toThrow("services.message.NOT_FOUND");
-
-        await expect(loadMessage(suite, message.id)).resolves.toEqual(expect.objectContaining({ readAt: null }));
-    });
-
-    it("merges detached messages and persists their cancellation", async () => {
-        const first = await createMessage(suite, {
-            channelType: ChannelType.EMAIL,
-        });
-        const secondRecipient = await suite.fixtures().createRecipient();
-        const secondNotification = await suite.fixtures().createNotification({ recipient: secondRecipient });
-        const second = await suite.fixtures().createMessage({
-            notification: secondNotification,
-            channelType: ChannelType.SMS,
-        });
-
-        await suite.transaction(async (transaction) => {
-            await Promise.resolve(
-                suite.repository().messageService.markCancelled({
-                    input: { messages: [first, second] },
+            await suite.transaction((transaction) =>
+                suite.repository().messageService.markSent({
+                    input: { message: message.id },
                     transaction,
                 }),
             );
+
+            await expect(loadMessage(suite, message.id)).resolves.toEqual(
+                expect.objectContaining({
+                    status: MessageStatus.SENT,
+                    sentAt: expect.any(Date),
+                    deliveredAt: null,
+                }),
+            );
+
+            await suite.transaction((transaction) =>
+                suite.repository().messageService.markDelivered({
+                    input: { message: message.id },
+                    transaction,
+                }),
+            );
+
+            await expect(loadMessage(suite, message.id)).resolves.toEqual(
+                expect.objectContaining({
+                    status: MessageStatus.DELIVERED,
+                    deliveredAt: expect.any(Date),
+                    sentAt: expect.any(Date),
+                }),
+            );
+        });
+    });
+
+    describe("markFailed", () => {
+        it("persists the failure reason and provider error", async () => {
+            const message = await createMessage(suite, {
+                channelType: ChannelType.EMAIL,
+            });
+
+            await suite.transaction((transaction) =>
+                suite.repository().messageService.markFailed({
+                    input: {
+                        error: "provider rejected the message",
+                        reason: FailureReason.PROVIDER,
+                        message: message.id,
+                    },
+                    transaction,
+                }),
+            );
+
+            await expect(loadMessage(suite, message.id)).resolves.toEqual(
+                expect.objectContaining({
+                    error: "provider rejected the message",
+                    failureReason: FailureReason.PROVIDER,
+                    status: MessageStatus.FAILED,
+                    failedAt: expect.any(Date),
+                }),
+            );
+        });
+    });
+
+    describe("markRead", () => {
+        it("marks an in-app message read for its owning account", async () => {
+            const account = randomUUID();
+            const message = await createMessage(suite, {
+                channelType: ChannelType.IN_APP,
+                account,
+            });
+
+            await suite.transaction((transaction) =>
+                suite.repository().messageService.markRead({
+                    input: { message: message.id, actor: account },
+                    transaction,
+                }),
+            );
+
+            await expect(loadMessage(suite, message.id)).resolves.toEqual(
+                expect.objectContaining({ readAt: expect.any(Date) }),
+            );
         });
 
-        await expect(loadMessage(suite, first.id)).resolves.toEqual(
-            expect.objectContaining({
-                status: MessageStatus.CANCELLED,
-                cancelledAt: expect.any(Date),
-            }),
-        );
-        await expect(loadMessage(suite, second.id)).resolves.toEqual(
-            expect.objectContaining({
-                status: MessageStatus.CANCELLED,
-                cancelledAt: expect.any(Date),
-            }),
-        );
+        it("hides another account's message and leaves it unread", async () => {
+            const message = await createMessage(suite, {
+                channelType: ChannelType.IN_APP,
+            });
+
+            await expect(
+                suite.transaction((transaction) =>
+                    suite.repository().messageService.markRead({
+                        input: { message: message.id, actor: randomUUID() },
+                        transaction,
+                    }),
+                ),
+            ).rejects.toThrow("services.message.NOT_FOUND");
+
+            await expect(loadMessage(suite, message.id)).resolves.toEqual(expect.objectContaining({ readAt: null }));
+        });
+    });
+
+    describe("markCancelled", () => {
+        it("merges detached messages and persists their cancellation", async () => {
+            const first = await createMessage(suite, {
+                channelType: ChannelType.EMAIL,
+            });
+            const secondRecipient = await suite.fixtures().createRecipient();
+            const secondNotification = await suite.fixtures().createNotification({ recipient: secondRecipient });
+            const second = await suite.fixtures().createMessage({
+                notification: secondNotification,
+                channelType: ChannelType.SMS,
+            });
+
+            await suite.transaction(async (transaction) => {
+                await Promise.resolve(
+                    suite.repository().messageService.markCancelled({
+                        input: { messages: [first, second] },
+                        transaction,
+                    }),
+                );
+            });
+
+            await expect(loadMessage(suite, first.id)).resolves.toEqual(
+                expect.objectContaining({
+                    status: MessageStatus.CANCELLED,
+                    cancelledAt: expect.any(Date),
+                }),
+            );
+            await expect(loadMessage(suite, second.id)).resolves.toEqual(
+                expect.objectContaining({
+                    status: MessageStatus.CANCELLED,
+                    cancelledAt: expect.any(Date),
+                }),
+            );
+        });
     });
 });
