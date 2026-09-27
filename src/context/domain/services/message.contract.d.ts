@@ -6,11 +6,20 @@ declare global {
             interface Contract extends CommandContract {}
 
             interface CommandContract {
+                cancelDispatch: CancelDispatch.Signature;
                 markCancelled: MarkCancelled.Signature;
                 markDelivered: MarkDelivered.Signature;
                 markFailed: MarkFailed.Signature;
                 markSent: MarkSent.Signature;
                 markRead: MarkRead.Signature;
+            }
+
+            namespace CancelDispatch {
+                type Props = MarkCancelled.Props;
+
+                type Result = Promise<boolean>;
+
+                type Signature = (props: Props) => Result;
             }
 
             namespace MarkCancelled {

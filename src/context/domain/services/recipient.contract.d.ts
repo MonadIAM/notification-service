@@ -5,6 +5,8 @@ declare namespace Services {
         interface CommandContract {
             selectOtpChannel: SelectOtpChannel.Signature;
             create: Create.Signature;
+            ensure: Ensure.Signature;
+            ensureChannel: EnsureChannel.Signature;
             update: Update.Signature;
             purge: Purge.Signature;
         }
@@ -34,6 +36,25 @@ declare namespace Services {
             };
 
             type Result = Entities.Recipient;
+
+            type Signature = (props: Props) => Result;
+        }
+
+        namespace Ensure {
+            type Props = Create.Props;
+
+            type Result = Promise<Entities.Recipient>;
+
+            type Signature = (props: Props) => Result;
+        }
+
+        namespace EnsureChannel {
+            type Props = Services.Channel.Create.Props;
+
+            type Result = Promise<{
+                recipient: Entities.Recipient;
+                channel: Entities.Channel;
+            }>;
 
             type Signature = (props: Props) => Result;
         }

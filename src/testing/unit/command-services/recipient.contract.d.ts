@@ -7,7 +7,10 @@ declare namespace Unit.Commands.Recipient {
         type Result = Core.Execution.Result & {
             commands: globalThis.Commands.Recipient.Contract;
             recipientService: Jest.Mocked<
-                Pick<Services.Recipient.CommandContract, "selectOtpChannel" | "create" | "update" | "purge">
+                Pick<
+                    Services.Recipient.CommandContract,
+                    "selectOtpChannel" | "create" | "update" | "purge" | "ensureChannel"
+                >
             >;
         };
 

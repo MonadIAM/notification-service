@@ -91,19 +91,19 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
     public async process(props: Consumers.MessageDispatch.Process.Props): Consumers.MessageDispatch.Process.Result {
         const { incoming, message } = props;
         this.schemaRegistry.validate({ topic: KafkaTopic.MESSAGE_DISPATCH, value: message });
-        const dispatch = await this.messageRepository.findUniqueOrThrow({
+        const dispatch = await this.messageRepository.findUnique({
             options: { populate: ["notification"] },
             where: { id: message.payload.message },
         });
 
-        if (dispatch.status === MessageStatus.FAILED) {
+        if (dispatch?.status === MessageStatus.FAILED) {
             throw Exception.unprocessable({
                 messageKey: "services.dispatch.ALREADY_FAILED",
                 params: { error: dispatch.error },
             });
         }
 
-        if (dispatch.status === MessageStatus.QUEUED) {
+        if (dispatch?.status === MessageStatus.QUEUED) {
             if (DEBOUNCED_CATEGORIES.includes(dispatch.notification.category)) {
                 await this.dispatchDelayQueue.schedule({ message: dispatch.id, event: incoming.event });
             } else {

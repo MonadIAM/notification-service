@@ -25,12 +25,19 @@ export class ChannelService implements Services.Channel.Contract {
             transaction,
         });
 
+        return this.createForRecipient({ input: { ...input, recipient }, transaction });
+    }
+
+    public createForRecipient(
+        props: Services.Channel.CreateForRecipient.Props,
+    ): Services.Channel.CreateForRecipient.Result {
+        const { transaction, input } = props;
         const channel = new Channel({
             sourceIdentifier: input.sourceIdentifier,
             isVerified: input.isVerified,
+            recipient: input.recipient,
             address: input.address,
             type: input.type,
-            recipient,
         });
 
         transaction.persist(channel);
@@ -40,12 +47,27 @@ export class ChannelService implements Services.Channel.Contract {
                 transaction.persist(
                     new Preference({
                         isDuplicationEnabled: false,
+                        recipient: input.recipient,
                         channelType: channel.type,
-                        recipient,
                         category,
                     }),
                 );
             }
+        }
+
+        return channel;
+    }
+
+    public ensure(props: Services.Channel.Ensure.Props): Services.Channel.Ensure.Result {
+        const { input } = props;
+        const channel = input.recipient.channels.getItems().find((item) => item.type === input.type);
+
+        if (!channel) {
+            return this.createForRecipient(props);
+        } else if (channel.sourceIdentifier !== input.sourceIdentifier || channel.address !== input.address) {
+            throw Exception.conflict({ messageKey: `${this.dictionaryPath}.IDENTIFIER_MISMATCH` });
+        } else if (input.isVerified && !channel.isVerified) {
+            channel.markVerified();
         }
 
         return channel;

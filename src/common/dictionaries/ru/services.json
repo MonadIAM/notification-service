@@ -1,5 +1,6 @@
 {
   "channel": {
+    "IDENTIFIER_MISMATCH": "Идентификатор не соответствует существующему каналу доставки.",
     "IN_APP_CHANNEL_NOT_FOUND": "In-app канал не найден для этого получателя."
   },
   "message": {

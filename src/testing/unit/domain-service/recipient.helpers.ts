@@ -1,3 +1,4 @@
+import { ChannelService } from "~context/domain/services/channel.service";
 import { RecipientService } from "~context/domain/services/recipient.service";
 
 import { DomainServiceCoreUnitHelpers } from "../core.helpers";
@@ -11,6 +12,10 @@ export class RecipientUnitHelpers extends DomainServiceCoreUnitHelpers implement
             service: new RecipientService(
                 this.contract<Repositories.Recipient.Contract>(repositories.recipients),
                 this.contract<Repositories.Channel.Contract>(repositories.channels),
+                new ChannelService(
+                    this.contract<Repositories.Recipient.Contract>(repositories.recipients),
+                    this.contract<Repositories.Channel.Contract>(repositories.channels),
+                ),
             ),
             repositories,
             transaction,

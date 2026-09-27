@@ -1,5 +1,5 @@
-import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { ClientKafka } from "@nestjs/microservices";
 import { lastValueFrom } from "rxjs";
 import { Job } from "bullmq";
@@ -54,12 +54,12 @@ export class DispatchDelayProcessor extends WorkerHost {
     }
 
     public async send(job: Job<Queues.DispatchDelay.JobData>): Promise<void> {
-        const dispatch = await this.messageRepository.findUniqueOrThrow({
+        const dispatch = await this.messageRepository.findUnique({
             options: { populate: ["notification"] },
             where: { id: job.data.message },
         });
 
-        if (dispatch.status === MessageStatus.QUEUED) {
+        if (dispatch?.status === MessageStatus.QUEUED) {
             await this.dispatchService.send({ message: dispatch });
             await this.messageCommands.markSent({ context: CONSUMER_META, input: { message: dispatch.id } });
         }

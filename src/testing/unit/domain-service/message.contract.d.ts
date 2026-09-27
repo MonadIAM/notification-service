@@ -9,6 +9,7 @@ declare namespace Unit.Domain.Message {
         };
 
         type Result = {
+            dispatchDelayQueue: Jest.Mocked<Pick<Queues.DispatchDelay.Contract, "cancel">>;
             repositories: RepositoryMocks.Contract;
             service: Services.Message.Contract;
             transaction: Core.Transaction;

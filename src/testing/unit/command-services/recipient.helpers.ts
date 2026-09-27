@@ -12,6 +12,7 @@ export class RecipientCommandsUnitHelpers
         const execution = this.execution();
 
         const recipientService = {
+            ensureChannel: jest.fn<Services.Recipient.CommandContract["ensureChannel"]>(),
             create: jest.fn<Services.Recipient.CommandContract["create"]>(),
             update: jest.fn<Services.Recipient.CommandContract["update"]>(),
             selectOtpChannel: jest.fn<Services.Recipient.CommandContract["selectOtpChannel"]>(),

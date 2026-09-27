@@ -3,6 +3,7 @@ import { NotificationConsumer } from "./notification.consumer";
 import { AccessCacheConsumer } from "./access-cache.consumer";
 import { BlacklistConsumer } from "./blacklist.consumer";
 import { DispatchConsumer } from "./dispatch.consumer";
+import { AccountConsumer } from "./account.consumer";
 import { RetryConsumer } from "./retry.consumer";
 
 export const CONSUMERS = [
@@ -11,6 +12,7 @@ export const CONSUMERS = [
     AccessCacheConsumer,
     BlacklistConsumer,
     DispatchConsumer,
+    AccountConsumer,
     RetryConsumer,
 ];
 
@@ -20,5 +22,6 @@ export {
     AccessCacheConsumer,
     BlacklistConsumer,
     DispatchConsumer,
+    AccountConsumer,
     RetryConsumer,
 };

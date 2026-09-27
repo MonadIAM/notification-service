@@ -1,5 +1,6 @@
 import { RecipientRepository } from "~context/infrastructure/repositories/recipient.repository";
 import { ChannelRepository } from "~context/infrastructure/repositories/channel.repository";
+import { ChannelService } from "~context/domain/services/channel.service";
 import { RecipientService } from "~context/domain/services/recipient.service";
 
 export class RecipientIntegrationHelpers implements Integration.Domain.Recipient.Contract {
@@ -7,7 +8,11 @@ export class RecipientIntegrationHelpers implements Integration.Domain.Recipient
         const repositories = this.repositories(context);
 
         return {
-            recipientService: new RecipientService(repositories.recipients, repositories.channels),
+            recipientService: new RecipientService(
+                repositories.recipients,
+                repositories.channels,
+                new ChannelService(repositories.recipients, repositories.channels),
+            ),
             repositories,
         };
     }

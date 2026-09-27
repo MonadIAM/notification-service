@@ -1,8 +1,8 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
+import { ActionType, EntityType, ChannelType } from "~context/enums";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
 import { RECIPIENT_SERVICE } from "~context/domain/services";
-import { ActionType, EntityType } from "~context/enums";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class RecipientCommands implements Commands.Recipient.Contract {
@@ -81,9 +81,31 @@ export class RecipientCommands implements Commands.Recipient.Contract {
         return { message: `${this.dictionaryPath}.OTP_CHANNEL_SELECTED` };
     }
 
+    public async confirm(props: Commands.Recipient.Confirm.Props): Commands.Recipient.Confirm.Result {
+        const { incoming, input, context } = props;
+        await this.transactionalService.consume({
+            resource: this.resource,
+            incoming,
+            audit: { entityType: EntityType.RECIPIENT, actionType: ActionType.UPDATE, context, input },
+            changeLog: true,
+            execute: async (transaction) => {
+                await this.recipientService.ensureChannel({
+                    input: {
+                        type: input.identifier.type === "email" ? ChannelType.EMAIL : ChannelType.SMS,
+                        sourceIdentifier: input.identifier.id,
+                        address: input.identifier.value,
+                        account: input.account,
+                        isVerified: true,
+                    },
+                    transaction,
+                });
+            },
+        });
+    }
+
     public async purge(props: Commands.Recipient.Purge.Props): Commands.Recipient.Purge.Result {
-        const { input } = props;
-        await this.transactionalService.run({
+        const { input, incoming } = props;
+        const operation: TransactionManager.Service.Run.Props<void> = {
             resource: this.resource,
             audit: {
                 entityType: EntityType.RECIPIENT,
@@ -94,6 +116,12 @@ export class RecipientCommands implements Commands.Recipient.Contract {
             execute: async (transaction) => {
                 await this.recipientService.purge({ input: { account: input.account }, transaction });
             },
-        });
+        };
+
+        if (incoming) {
+            await this.transactionalService.consume({ ...operation, incoming });
+        } else {
+            await this.transactionalService.run(operation);
+        }
     }
 }

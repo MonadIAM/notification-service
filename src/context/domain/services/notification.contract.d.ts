@@ -7,7 +7,9 @@ declare global {
 
             interface CommandContract {
                 resolveChannelTypes: ResolveChannelTypes.Signature;
+                register: Register.Signature;
                 create: Create.Signature;
+                cancel: Cancel.Signature;
             }
 
             namespace ResolveChannelTypes {
@@ -17,6 +19,38 @@ declare global {
                 };
 
                 type Result = ChannelType[];
+
+                type Signature = (props: Props) => Result;
+            }
+
+            namespace Register {
+                type Props = {
+                    transaction: ORM.EntityManager;
+                    input: {
+                        account: string;
+                        sourceIdentifier: string;
+                        type: ChannelType;
+                        address: string;
+                        title: string;
+                        body: string;
+                    };
+                };
+
+                type Result = Create.Result;
+
+                type Signature = (props: Props) => Result;
+            }
+
+            namespace Cancel {
+                type Props = {
+                    transaction: ORM.EntityManager;
+                    input: {
+                        override: Create.Props["input"];
+                        dedupKey: string;
+                    };
+                };
+
+                type Result = Promise<{ messages: Entities.Message[] }>;
 
                 type Signature = (props: Props) => Result;
             }

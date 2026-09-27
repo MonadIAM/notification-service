@@ -74,6 +74,7 @@ export type I18nTranslations = {
     };
     "services": {
         "channel": {
+            "IDENTIFIER_MISMATCH": string;
             "IN_APP_CHANNEL_NOT_FOUND": string;
         };
         "message": {

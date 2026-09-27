@@ -7,6 +7,7 @@ declare global {
 
             interface ConsumerContract {
                 create: Create.Signature;
+                register: Register.Signature;
                 cancel: Cancel.Signature;
             }
 
@@ -25,6 +26,23 @@ declare global {
                         realm?: string;
                         title?: string;
                         body?: string;
+                    };
+                };
+
+                type Result = Promise<void>;
+
+                type Signature = (props: Props) => Result;
+            }
+
+            namespace Register {
+                type Props = {
+                    incoming: TransactionManager.Service.IncomingMessage;
+                    context: Extract.Meta;
+                    input: {
+                        account: string;
+                        identifier: Topics.Account.Identifier;
+                        title: string;
+                        body: string;
                     };
                 };
 

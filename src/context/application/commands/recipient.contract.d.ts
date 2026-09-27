@@ -4,6 +4,7 @@ declare namespace Commands {
 
         interface ConsumerContract {
             create(props: Create.Props): Create.Result;
+            confirm: Confirm.Signature;
             purge(props: Purge.Props): Purge.Result;
         }
 
@@ -22,8 +23,24 @@ declare namespace Commands {
             type Signature = (props: Props) => Result;
         }
 
+        namespace Confirm {
+            type Props = {
+                incoming: TransactionManager.Service.IncomingMessage;
+                context: Extract.Meta;
+                input: {
+                    account: string;
+                    identifier: Topics.Account.Identifier;
+                };
+            };
+
+            type Result = Promise<void>;
+
+            type Signature = (props: Props) => Result;
+        }
+
         namespace Purge {
             type Props = {
+                incoming?: TransactionManager.Service.IncomingMessage;
                 context: Extract.Meta;
                 input: {
                     account: string;

@@ -9,6 +9,7 @@ declare namespace Unit.Domain.Notification {
         };
 
         type Result = {
+            dispatchDelayQueue: Jest.Mocked<Pick<Queues.DispatchDelay.Contract, "cancel">>;
             service: Services.Notification.Contract;
             repositories: RepositoryMocks.Contract;
             transaction: Core.Transaction;

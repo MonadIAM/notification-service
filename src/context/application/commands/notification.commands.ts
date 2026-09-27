@@ -1,9 +1,7 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
-import { MessageDispatchAction, MessageStatus, ChannelType, ActionType, EntityType, KafkaTopic } from "~context/enums";
-import { NOTIFICATION_SERVICE, MESSAGE_SERVICE } from "~context/domain/services";
-import { NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
-import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
+import { MessageDispatchAction, ChannelType, ActionType, EntityType, KafkaTopic } from "~context/enums";
+import { NOTIFICATION_SERVICE } from "~context/domain/services";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
 
 import { NotificationMapper } from "../mappers";
@@ -16,14 +14,8 @@ export class NotificationCommands implements Commands.Notification.Contract {
     public constructor(
         @Inject(TRANSACTIONAL_SERVICE)
         private readonly transactionalService: TransactionManager.Service.PublicContract,
-        @Inject(NOTIFICATION_REPOSITORY)
-        private readonly notificationRepository: Repositories.Notification.Contract,
-        @Inject(DISPATCH_DELAY_QUEUE)
-        private readonly dispatchDelayQueue: Queues.DispatchDelay.Contract,
         @Inject(NOTIFICATION_SERVICE)
         private readonly notificationService: Services.Notification.CommandContract,
-        @Inject(MESSAGE_SERVICE)
-        private readonly messageService: Services.Message.CommandContract,
     ) {
         this.mapper = new NotificationMapper();
     }
@@ -66,6 +58,39 @@ export class NotificationCommands implements Commands.Notification.Contract {
         });
     }
 
+    public async register(props: Commands.Notification.Register.Props): Commands.Notification.Register.Result {
+        const { incoming, context, input } = props;
+        await this.transactionalService.consume({
+            resource: this.resource,
+            incoming,
+            outbox: {
+                payloadMapper: this.mapper.messageDispatchPayload,
+                destinationTopic: KafkaTopic.MESSAGE_DISPATCH,
+                actionType: MessageDispatchAction.DISPATCH,
+            },
+            audit: {
+                entityType: EntityType.NOTIFICATION,
+                actionType: ActionType.CREATE,
+                context,
+                input,
+            },
+            execute: async (transaction) => {
+                const { messages } = await this.notificationService.register({
+                    input: {
+                        type: input.identifier.type === "email" ? ChannelType.EMAIL : ChannelType.SMS,
+                        sourceIdentifier: input.identifier.id,
+                        address: input.identifier.value,
+                        account: input.account,
+                        title: input.title,
+                        body: input.body,
+                    },
+                    transaction,
+                });
+                return { messages };
+            },
+        });
+    }
+
     public async cancel(props: Commands.Notification.Cancel.Props): Commands.Notification.Cancel.Result {
         const { incoming, context, actor, realm, input } = props;
 
@@ -86,39 +111,7 @@ export class NotificationCommands implements Commands.Notification.Contract {
             },
             incoming,
             execute: async (transaction) => {
-                const notification = await this.notificationRepository.findUnique({
-                    options: { populate: ["messages"] },
-                    where: { dedupKey: input.dedupKey },
-                    transaction,
-                });
-                const messages: Entities.Message[] = [];
-
-                if (notification) {
-                    const toCancel: Entities.Message[] = [];
-                    const pending: Entities.Message[] = [];
-
-                    for (const message of notification.messages.getItems()) {
-                        if (message.channelType === ChannelType.IN_APP) {
-                            toCancel.push(message);
-                        } else if (message.status === MessageStatus.QUEUED) {
-                            pending.push(message);
-                        }
-                    }
-
-                    const cancelled = await Promise.all(
-                        pending.map(({ id }) => this.dispatchDelayQueue.cancel({ message: id })),
-                    );
-
-                    if (cancelled.includes(false)) {
-                        const override = await this.notificationService.create({ input: input.override, transaction });
-                        messages.push(...override.messages);
-                    } else {
-                        toCancel.push(...pending);
-                        if (toCancel.length) {
-                            this.messageService.markCancelled({ input: { messages: toCancel }, transaction });
-                        }
-                    }
-                }
+                const { messages } = await this.notificationService.cancel({ input, transaction });
 
                 return { messages };
             },
