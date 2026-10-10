@@ -19,135 +19,204 @@ function createRecipient(overrides?: Partial<Entities.Recipient.ConstructorProps
     });
 }
 
-describe("Recipient Entity", () => {
-    describe("constructor", () => {
-        it("should assign required fields", () => {
+describe("[Entity] - Recipient", () => {
+    describe("[Method] - constructor", () => {
+        it("[case] - assigns required fields", () => {
+            // Arrange
+
+            // Act
             const recipient = createRecipient({
                 account: "00000000-0000-4000-8000-000000000002",
                 timezone: "Europe/Moscow",
                 locale: "ru",
             });
+            const result = recipient.account;
+            const result1 = recipient.timezone;
 
-            expect(recipient.account).toBe("00000000-0000-4000-8000-000000000002");
-            expect(recipient.timezone).toBe("Europe/Moscow");
+            // Assert
+            expect(result).toBe("00000000-0000-4000-8000-000000000002");
+            expect(result1).toBe("Europe/Moscow");
             expect(recipient.locale).toBe("ru");
         });
 
-        it("should initialize relation collections", () => {
-            const recipient = createRecipient();
+        it("[case] - initializes relation collections", () => {
+            // Arrange
 
-            expect(recipient.channels.length).toBe(0);
-            expect(recipient.notifications.length).toBe(0);
+            // Act
+            const recipient = createRecipient();
+            const result = recipient.channels.length;
+            const result1 = recipient.notifications.length;
+
+            // Assert
+            expect(result).toBe(0);
+            expect(result1).toBe(0);
             expect(recipient.preferences.length).toBe(0);
         });
 
-        it("should auto-generate id, createdAt, version", () => {
-            const recipient = createRecipient();
+        it("[case] - autos-generate id, createdAt, version", () => {
+            // Arrange
 
-            expect(isUUID(recipient.id, "4")).toBe(true);
-            expect(recipient.createdAt).toBeInstanceOf(Date);
-            expect(recipient.version).toBe(1);
-            expect(recipient.updatedAt).toBeUndefined();
+            // Act
+            const recipient = createRecipient();
+            const result = isUUID(recipient.id, "4");
+            const result1 = recipient.createdAt;
+            const result2 = recipient.version;
+            const result3 = recipient.updatedAt;
+
+            // Assert
+            expect(result).toBe(true);
+            expect(result1).toBeInstanceOf(Date);
+            expect(result2).toBe(1);
+            expect(result3).toBeUndefined();
             expect(recipient.defaultOtpChannel).toBeUndefined();
         });
     });
 
-    describe("update", () => {
-        it("should update a single field", () => {
+    describe("[Method] - update", () => {
+        it("[case] - updates a single field", () => {
+            // Arrange
             const recipient = createRecipient({ timezone: "UTC" });
 
+            // Act
             recipient.update({ patch: { timezone: "Europe/Moscow" } });
+            const result = recipient.timezone;
 
-            expect(recipient.timezone).toBe("Europe/Moscow");
+            // Assert
+            expect(result).toBe("Europe/Moscow");
             expect(recipient.updatedAt).toBeInstanceOf(Date);
         });
 
-        it("should update multiple fields at once", () => {
+        it("[case] - updates multiple fields at once", () => {
+            // Arrange
             const recipient = createRecipient({ timezone: "UTC", locale: "en" });
 
+            // Act
             recipient.update({ patch: { timezone: "Europe/Moscow", locale: "ru" } });
+            const result = recipient.timezone;
 
-            expect(recipient.timezone).toBe("Europe/Moscow");
+            // Assert
+            expect(result).toBe("Europe/Moscow");
             expect(recipient.locale).toBe("ru");
         });
 
-        it("should skip unchanged fields", () => {
+        it("[case] - skips unchanged fields", () => {
+            // Arrange
             const recipient = createRecipient({ timezone: "UTC", locale: "en" });
 
+            // Act
             recipient.update({ patch: { timezone: "UTC", locale: "ru" } });
+            const result = recipient.timezone;
 
-            expect(recipient.timezone).toBe("UTC");
+            // Assert
+            expect(result).toBe("UTC");
             expect(recipient.locale).toBe("ru");
         });
 
-        it("should ignore undefined values in patch", () => {
+        it("[case] - ignores undefined values in patch", () => {
+            // Arrange
             const recipient = createRecipient({ timezone: "UTC", locale: "en" });
 
+            // Act
             recipient.update({ patch: { timezone: "Europe/Moscow", locale: undefined } });
+            const result = recipient.timezone;
 
-            expect(recipient.timezone).toBe("Europe/Moscow");
+            // Assert
+            expect(result).toBe("Europe/Moscow");
             expect(recipient.locale).toBe("en");
         });
 
-        it("should throw EMPTY_UPDATE_PATCH when patch object is empty", () => {
+        it("[case] - throws EMPTY_UPDATE_PATCH when patch object is empty", () => {
+            // Arrange
             const recipient = createRecipient();
 
-            expect(() => recipient.update({ patch: {} })).toThrow("EMPTY_UPDATE_PATCH");
+            // Act
+            const act = (): unknown => recipient.update({ patch: {} });
+
+            // Assert
+            expect(act).toThrow("EMPTY_UPDATE_PATCH");
         });
 
-        it("should throw NO_CHANGES_DETECTED when all values match current state", () => {
+        it("[case] - throws NO_CHANGES_DETECTED when all values match current state", () => {
+            // Arrange
             const recipient = createRecipient({ timezone: "UTC" });
 
-            expect(() => recipient.update({ patch: { timezone: "UTC" } })).toThrow("NO_CHANGES_DETECTED");
+            // Act
+            const act = (): unknown => recipient.update({ patch: { timezone: "UTC" } });
+
+            // Assert
+            expect(act).toThrow("NO_CHANGES_DETECTED");
         });
     });
 
-    describe("selectOtpChannel", () => {
+    describe("[Method] - selectOtpChannel", () => {
         it.each([
             { type: ChannelType.EMAIL, address: "user@example.com" },
             { type: ChannelType.SMS, address: "+15551234567" },
-        ])("should select a verified $type channel", ({ type, address }) => {
+        ])("[case] - selects a verified $type channel", ({ type, address }) => {
+            // Arrange
             const recipient = createRecipient();
             const channel = entities.createChannel({ recipient, type, address });
 
+            // Act
             recipient.selectOtpChannel(channel);
+            const result = recipient.defaultOtpChannel;
 
-            expect(recipient.defaultOtpChannel).toBe(channel);
+            // Assert
+            expect(result).toBe(channel);
             expect(recipient.updatedAt).toBeInstanceOf(Date);
         });
 
-        it("should throw when channel belongs to another recipient", () => {
+        it("[case] - throws when channel belongs to another recipient", () => {
+            // Arrange
             const recipient = createRecipient();
             const anotherRecipient = createRecipient({ account: "00000000-0000-4000-8000-000000000002" });
             const channel = entities.createChannel({ recipient: anotherRecipient, type: ChannelType.EMAIL });
 
-            expect(() => recipient.selectOtpChannel(channel)).toThrow("NOT_OWN_CHANNEL");
+            // Act
+            const act = (): unknown => recipient.selectOtpChannel(channel);
+
+            // Assert
+            expect(act).toThrow("NOT_OWN_CHANNEL");
         });
 
-        it("should throw when channel is not verified", () => {
+        it("[case] - throws when channel is not verified", () => {
+            // Arrange
             const recipient = createRecipient();
             const channel = entities.createChannel({ recipient, type: ChannelType.EMAIL, isVerified: false });
 
-            expect(() => recipient.selectOtpChannel(channel)).toThrow("CHANNEL_NOT_VERIFIED");
+            // Act
+            const act = (): unknown => recipient.selectOtpChannel(channel);
+
+            // Assert
+            expect(act).toThrow("CHANNEL_NOT_VERIFIED");
         });
 
-        it("should throw for in-app channel", () => {
+        it("[case] - throws for in-app channel", () => {
+            // Arrange
             const recipient = createRecipient();
             const channel = entities.createChannel({ recipient, type: ChannelType.IN_APP, address: undefined });
 
-            expect(() => recipient.selectOtpChannel(channel)).toThrow("UNSUPPORTED_OTP_CHANNEL_TYPE");
+            // Act
+            const act = (): unknown => recipient.selectOtpChannel(channel);
+
+            // Assert
+            expect(act).toThrow("UNSUPPORTED_OTP_CHANNEL_TYPE");
         });
     });
 
-    describe("clearOtpChannel", () => {
-        it("should clear selected otp channel", () => {
+    describe("[Method] - clearOtpChannel", () => {
+        it("[case] - clears selected otp channel", () => {
+            // Arrange
             const recipient = createRecipient();
             const channel = entities.createChannel({ recipient, type: ChannelType.EMAIL, address: "user@example.com" });
             recipient.selectOtpChannel(channel);
 
+            // Act
             recipient.clearOtpChannel();
+            const result = recipient.defaultOtpChannel;
 
-            expect(recipient.defaultOtpChannel).toBeUndefined();
+            // Assert
+            expect(result).toBeUndefined();
             expect(recipient.updatedAt).toBeInstanceOf(Date);
         });
     });

@@ -7,16 +7,18 @@ const ACCOUNT_ID = "00000000-0000-4000-8000-400000000001";
 
 const helpers = new PreferenceUnitHelpers();
 
-describe("PreferenceService", () => {
+describe("[DomainService] - Preference", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    describe("create", () => {
-        it("creates a preference and persists it", () => {
+    describe("[Method] - create", () => {
+        it("[case] - creates a preference and persists it", () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const { service, transaction } = helpers.service({ recipient });
 
+            // Act
             const result = service.create({
                 transaction: transaction.entityManager,
                 input: {
@@ -26,8 +28,10 @@ describe("PreferenceService", () => {
                     recipient,
                 },
             });
+            const result1 = result;
 
-            expect(result).toEqual(
+            // Assert
+            expect(result1).toEqual(
                 expect.objectContaining({
                     category: NotificationCategory.INVITES,
                     channelType: ChannelType.EMAIL,
@@ -39,7 +43,7 @@ describe("PreferenceService", () => {
         });
     });
 
-    describe("toggle", () => {
+    describe("[Method] - toggle", () => {
         it.each([
             {
                 category: NotificationCategory.SECURITY,
@@ -52,22 +56,26 @@ describe("PreferenceService", () => {
                 error: "CHANNEL_NOT_CONFIGURABLE",
             },
         ])(
-            "rejects $category/$channelType with $error before loading the recipient",
+            "[case] - rejects $category/$channelType with $error before loading the recipient",
             async ({ category, channelType, error }) => {
+                // Arrange
                 const { service, repositories, transaction } = helpers.service();
 
-                await expect(
-                    service.toggle({
-                        transaction: transaction.entityManager,
-                        input: { category, channelType, account: ACCOUNT_ID },
-                    }),
-                ).rejects.toThrow(`services.preference.${error}`);
+                // Act
+                const result = service.toggle({
+                    transaction: transaction.entityManager,
+                    input: { category, channelType, account: ACCOUNT_ID },
+                });
+                await Promise.allSettled([result]);
 
+                // Assert
+                await expect(result).rejects.toThrow(`services.preference.${error}`);
                 expect(repositories.recipients.findUniqueOrThrow).not.toHaveBeenCalled();
             },
         );
 
-        it("toggles an existing preference and returns it", async () => {
+        it("[case] - toggles an existing preference and returns it", async () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const existing = helpers.createPreference({
                 category: NotificationCategory.INVITES,
@@ -79,6 +87,7 @@ describe("PreferenceService", () => {
             const toggleSpy = jest.spyOn(existing, "toggle");
             repositories.preferences.findUnique.mockImplementation(() => Promise.resolve(existing));
 
+            // Act
             const result = await service.toggle({
                 transaction: transaction.entityManager,
                 input: {
@@ -87,8 +96,12 @@ describe("PreferenceService", () => {
                     account: ACCOUNT_ID,
                 },
             });
+            const result1 = repositories.preferences.findUnique;
+            const result2 = toggleSpy;
+            const result3 = result;
 
-            expect(repositories.preferences.findUnique).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 transaction: transaction.entityManager,
                 where: {
                     category: NotificationCategory.INVITES,
@@ -96,15 +109,17 @@ describe("PreferenceService", () => {
                     recipient: recipient.id,
                 },
             });
-            expect(toggleSpy).toHaveBeenCalledTimes(1);
-            expect(result).toBe(existing);
+            expect(result2).toHaveBeenCalledTimes(1);
+            expect(result3).toBe(existing);
             expect(transaction.persist).not.toHaveBeenCalled();
         });
 
-        it("lazily creates a disabled preference when none exists yet", async () => {
+        it("[case] - lazily creates a disabled preference when none exists yet", async () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const { service, transaction } = helpers.service({ recipient });
 
+            // Act
             const result = await service.toggle({
                 transaction: transaction.entityManager,
                 input: {
@@ -113,8 +128,10 @@ describe("PreferenceService", () => {
                     account: ACCOUNT_ID,
                 },
             });
+            const result1 = result;
 
-            expect(result).toEqual(
+            // Assert
+            expect(result1).toEqual(
                 expect.objectContaining({
                     category: NotificationCategory.INVITES,
                     channelType: ChannelType.EMAIL,

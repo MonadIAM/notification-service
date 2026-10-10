@@ -33,41 +33,44 @@ async function createMessage(
     });
 }
 
-describe("MessageService integration", () => {
+describe("[DomainService] - Message", () => {
     const suite = postgresSuite({
         repository: (context) => helpers.service(context),
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    describe("markSent / markDelivered", () => {
-        it("persists the sent and delivered state transitions", async () => {
+    describe("[Behavior] - delivery status", () => {
+        it("[case] - persists the sent and delivered state transitions", async () => {
+            // Arrange
             const message = await createMessage(suite, {
                 channelType: ChannelType.EMAIL,
             });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().messageService.markSent({
                     input: { message: message.id },
                     transaction,
                 }),
             );
-
-            await expect(loadMessage(suite, message.id)).resolves.toEqual(
-                expect.objectContaining({
-                    status: MessageStatus.SENT,
-                    sentAt: expect.any(Date),
-                    deliveredAt: null,
-                }),
-            );
-
+            const sent = await loadMessage(suite, message.id);
             await suite.transaction((transaction) =>
                 suite.repository().messageService.markDelivered({
                     input: { message: message.id },
                     transaction,
                 }),
             );
+            const delivered = await loadMessage(suite, message.id);
 
-            await expect(loadMessage(suite, message.id)).resolves.toEqual(
+            // Assert
+            expect(sent).toEqual(
+                expect.objectContaining({
+                    status: MessageStatus.SENT,
+                    sentAt: expect.any(Date),
+                    deliveredAt: null,
+                }),
+            );
+            expect(delivered).toEqual(
                 expect.objectContaining({
                     status: MessageStatus.DELIVERED,
                     deliveredAt: expect.any(Date),
@@ -77,12 +80,14 @@ describe("MessageService integration", () => {
         });
     });
 
-    describe("markFailed", () => {
-        it("persists the failure reason and provider error", async () => {
+    describe("[Method] - markFailed", () => {
+        it("[case] - persists the failure reason and provider error", async () => {
+            // Arrange
             const message = await createMessage(suite, {
                 channelType: ChannelType.EMAIL,
             });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().messageService.markFailed({
                     input: {
@@ -93,8 +98,10 @@ describe("MessageService integration", () => {
                     transaction,
                 }),
             );
+            const result = await loadMessage(suite, message.id);
 
-            await expect(loadMessage(suite, message.id)).resolves.toEqual(
+            // Assert
+            expect(result).toEqual(
                 expect.objectContaining({
                     error: "provider rejected the message",
                     failureReason: FailureReason.PROVIDER,
@@ -105,46 +112,53 @@ describe("MessageService integration", () => {
         });
     });
 
-    describe("markRead", () => {
-        it("marks an in-app message read for its owning account", async () => {
+    describe("[Method] - markRead", () => {
+        it("[case] - marks an in-app message read for its owning account", async () => {
+            // Arrange
             const account = randomUUID();
             const message = await createMessage(suite, {
                 channelType: ChannelType.IN_APP,
                 account,
             });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().messageService.markRead({
                     input: { message: message.id, actor: account },
                     transaction,
                 }),
             );
+            const result = await loadMessage(suite, message.id);
 
-            await expect(loadMessage(suite, message.id)).resolves.toEqual(
-                expect.objectContaining({ readAt: expect.any(Date) }),
-            );
+            // Assert
+            expect(result).toEqual(expect.objectContaining({ readAt: expect.any(Date) }));
         });
 
-        it("hides another account's message and leaves it unread", async () => {
+        it("[case] - hides another account's message and leaves it unread", async () => {
+            // Arrange
             const message = await createMessage(suite, {
                 channelType: ChannelType.IN_APP,
             });
 
-            await expect(
-                suite.transaction((transaction) =>
-                    suite.repository().messageService.markRead({
-                        input: { message: message.id, actor: randomUUID() },
-                        transaction,
-                    }),
-                ),
-            ).rejects.toThrow("services.message.NOT_FOUND");
+            // Act
+            const result = suite.transaction((transaction) =>
+                suite.repository().messageService.markRead({
+                    input: { message: message.id, actor: randomUUID() },
+                    transaction,
+                }),
+            );
+            await Promise.allSettled([result]);
+            const result1 = await loadMessage(suite, message.id);
 
-            await expect(loadMessage(suite, message.id)).resolves.toEqual(expect.objectContaining({ readAt: null }));
+            // Assert
+            await expect(result).rejects.toThrow("services.message.NOT_FOUND");
+            expect(result1).toEqual(expect.objectContaining({ readAt: null }));
         });
     });
 
-    describe("markCancelled", () => {
-        it("merges detached messages and persists their cancellation", async () => {
+    describe("[Method] - markCancelled", () => {
+        it("[case] - merges detached messages and persists their cancellation", async () => {
+            // Arrange
             const first = await createMessage(suite, {
                 channelType: ChannelType.EMAIL,
             });
@@ -155,6 +169,7 @@ describe("MessageService integration", () => {
                 channelType: ChannelType.SMS,
             });
 
+            // Act
             await suite.transaction(async (transaction) => {
                 await Promise.resolve(
                     suite.repository().messageService.markCancelled({
@@ -163,14 +178,17 @@ describe("MessageService integration", () => {
                     }),
                 );
             });
+            const result = await loadMessage(suite, first.id);
+            const result1 = await loadMessage(suite, second.id);
 
-            await expect(loadMessage(suite, first.id)).resolves.toEqual(
+            // Assert
+            expect(result).toEqual(
                 expect.objectContaining({
                     status: MessageStatus.CANCELLED,
                     cancelledAt: expect.any(Date),
                 }),
             );
-            await expect(loadMessage(suite, second.id)).resolves.toEqual(
+            expect(result1).toEqual(
                 expect.objectContaining({
                     status: MessageStatus.CANCELLED,
                     cancelledAt: expect.any(Date),

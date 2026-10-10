@@ -11,16 +11,18 @@ const SOURCE_IDENTIFIER = "00000000-0000-4000-8000-100000000004";
 
 const helpers = new ChannelUnitHelpers();
 
-describe("ChannelService", () => {
+describe("[DomainService] - Channel", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    describe("create", () => {
-        it("creates a duplicatable channel with a disabled preference per configurable category", async () => {
+    describe("[Method] - create", () => {
+        it("[case] - creates a duplicatable channel with a disabled preference per configurable category", async () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const { service, repositories, transaction } = helpers.service({ recipient });
 
+            // Act
             const result = await service.create({
                 transaction: transaction.entityManager,
                 input: {
@@ -31,12 +33,17 @@ describe("ChannelService", () => {
                     isVerified: false,
                 },
             });
+            const result1 = repositories.recipients.findUniqueOrThrow;
+            const result2 = result;
+            const result3 = transaction.persist;
+            const result4 = transaction.persist;
 
-            expect(repositories.recipients.findUniqueOrThrow).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 where: { account: ACCOUNT_ID },
                 transaction: transaction.entityManager,
             });
-            expect(result).toEqual(
+            expect(result2).toEqual(
                 expect.objectContaining({
                     sourceIdentifier: SOURCE_IDENTIFIER,
                     address: "user@example.com",
@@ -44,9 +51,8 @@ describe("ChannelService", () => {
                     recipient,
                 }),
             );
-            expect(transaction.persist).toHaveBeenNthCalledWith(1, result);
-            expect(transaction.persist).toHaveBeenCalledTimes(1 + CONFIGURABLE_NOTIFICATION_CATEGORIES.length);
-
+            expect(result3).toHaveBeenNthCalledWith(1, result);
+            expect(result4).toHaveBeenCalledTimes(1 + CONFIGURABLE_NOTIFICATION_CATEGORIES.length);
             for (const [index, category] of CONFIGURABLE_NOTIFICATION_CATEGORIES.entries()) {
                 expect(transaction.persist).toHaveBeenNthCalledWith(
                     index + 2,
@@ -60,10 +66,12 @@ describe("ChannelService", () => {
             }
         });
 
-        it("creates a non-duplicatable channel without any preference", async () => {
+        it("[case] - creates a non-duplicatable channel without any preference", async () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const { service, transaction } = helpers.service({ recipient });
 
+            // Act
             const result = await service.create({
                 transaction: transaction.entityManager,
                 input: {
@@ -74,25 +82,31 @@ describe("ChannelService", () => {
                     isVerified: false,
                 },
             });
+            const result1 = transaction.persist;
 
-            expect(transaction.persist).toHaveBeenCalledTimes(1);
+            // Assert
+            expect(result1).toHaveBeenCalledTimes(1);
             expect(transaction.persist).toHaveBeenCalledWith(result);
         });
     });
 
-    describe("markVerified", () => {
-        it("finds the channel by its source identifier and marks it verified", async () => {
+    describe("[Method] - markVerified", () => {
+        it("[case] - finds the channel by its source identifier and marks it verified", async () => {
+            // Arrange
             const channel = helpers.createChannel({ id: CHANNEL_ID, isVerified: false });
             const { service, repositories, transaction } = helpers.service();
             const markVerifiedSpy = jest.spyOn(channel, "markVerified");
             repositories.channels.findUniqueOrThrow.mockImplementation(() => Promise.resolve(channel));
 
+            // Act
             await service.markVerified({
                 input: { sourceIdentifier: SOURCE_IDENTIFIER },
                 transaction: transaction.entityManager,
             });
+            const result = repositories.channels.findUniqueOrThrow;
 
-            expect(repositories.channels.findUniqueOrThrow).toHaveBeenCalledWith({
+            // Assert
+            expect(result).toHaveBeenCalledWith({
                 where: { sourceIdentifier: SOURCE_IDENTIFIER },
                 transaction: transaction.entityManager,
             });
@@ -100,8 +114,9 @@ describe("ChannelService", () => {
         });
     });
 
-    describe("toggleSound", () => {
-        it("toggles the sound of the in-app channel of the recipient", async () => {
+    describe("[Method] - toggleSound", () => {
+        it("[case] - toggles the sound of the in-app channel of the recipient", async () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const inApp = helpers.createChannel({ id: CHANNEL_ID, recipient, type: ChannelType.IN_APP });
             const email = helpers.createChannel({ id: SECOND_CHANNEL_ID, recipient, type: ChannelType.EMAIL });
@@ -109,37 +124,45 @@ describe("ChannelService", () => {
             const { service, repositories, transaction } = helpers.service({ recipient });
             const toggleSpy = jest.spyOn(inApp, "toggleSound");
 
+            // Act
             const result = await service.toggleSound({
                 transaction: transaction.entityManager,
                 input: { account: ACCOUNT_ID },
             });
+            const result1 = repositories.recipients.findUniqueOrThrow;
+            const result2 = toggleSpy;
 
-            expect(repositories.recipients.findUniqueOrThrow).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 transaction: transaction.entityManager,
                 options: { populate: ["channels"] },
                 where: { account: ACCOUNT_ID },
             });
-            expect(toggleSpy).toHaveBeenCalledTimes(1);
+            expect(result2).toHaveBeenCalledTimes(1);
             expect(result).toBe(inApp);
         });
 
-        it("throws when the recipient has no in-app channel", async () => {
+        it("[case] - throws when the recipient has no in-app channel", async () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const email = helpers.createChannel({ id: CHANNEL_ID, recipient, type: ChannelType.EMAIL });
             recipient.channels = helpers.collection({ owner: recipient, items: [email] });
             const { service, transaction } = helpers.service({ recipient });
 
-            await expect(
-                service.toggleSound({
-                    transaction: transaction.entityManager,
-                    input: { account: ACCOUNT_ID },
-                }),
-            ).rejects.toThrow("services.channel.IN_APP_CHANNEL_NOT_FOUND");
+            // Act
+            const result = service.toggleSound({
+                transaction: transaction.entityManager,
+                input: { account: ACCOUNT_ID },
+            });
+
+            // Assert
+            await expect(result).rejects.toThrow("services.channel.IN_APP_CHANNEL_NOT_FOUND");
         });
     });
 
-    describe("purge", () => {
-        it("clears the otp selection instead of removing the default otp channel", async () => {
+    describe("[Method] - purge", () => {
+        it("[case] - clears the otp selection instead of removing the default otp channel", async () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const channel = helpers.createChannel({ id: CHANNEL_ID, recipient, type: ChannelType.EMAIL });
             recipient.defaultOtpChannel = channel;
@@ -147,21 +170,26 @@ describe("ChannelService", () => {
             const clearSpy = jest.spyOn(recipient, "clearOtpChannel");
             repositories.channels.findUniqueOrThrow.mockImplementation(() => Promise.resolve(channel));
 
+            // Act
             await service.purge({
                 input: { sourceIdentifier: SOURCE_IDENTIFIER },
                 transaction: transaction.entityManager,
             });
+            const result = repositories.channels.findUniqueOrThrow;
+            const result1 = clearSpy;
 
-            expect(repositories.channels.findUniqueOrThrow).toHaveBeenCalledWith({
+            // Assert
+            expect(result).toHaveBeenCalledWith({
                 options: { populate: ["recipient", "recipient.defaultOtpChannel"] },
                 where: { sourceIdentifier: SOURCE_IDENTIFIER },
                 transaction: transaction.entityManager,
             });
-            expect(clearSpy).toHaveBeenCalledTimes(1);
+            expect(result1).toHaveBeenCalledTimes(1);
             expect(transaction.remove).not.toHaveBeenCalled();
         });
 
-        it("removes a channel that is not the default otp channel", async () => {
+        it("[case] - removes a channel that is not the default otp channel", async () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const channel = helpers.createChannel({ id: CHANNEL_ID, recipient, type: ChannelType.EMAIL });
             const otpChannel = helpers.createChannel({ id: SECOND_CHANNEL_ID, recipient, type: ChannelType.SMS });
@@ -170,18 +198,22 @@ describe("ChannelService", () => {
             const clearSpy = jest.spyOn(recipient, "clearOtpChannel");
             repositories.channels.findUniqueOrThrow.mockImplementation(() => Promise.resolve(channel));
 
+            // Act
             await service.purge({
                 input: { sourceIdentifier: SOURCE_IDENTIFIER },
                 transaction: transaction.entityManager,
             });
+            const result = clearSpy;
 
-            expect(clearSpy).not.toHaveBeenCalled();
+            // Assert
+            expect(result).not.toHaveBeenCalled();
             expect(transaction.remove).toHaveBeenCalledWith(channel);
         });
     });
 
-    describe("ensure", () => {
-        it("reuses a channel on resend and confirms it idempotently", () => {
+    describe("[Method] - ensure", () => {
+        it("[case] - reuses a channel on resend and confirms it idempotently", () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             const channel = helpers.createChannel({
                 recipient,
@@ -199,15 +231,22 @@ describe("ChannelService", () => {
                 type: channel.type,
             };
 
-            expect(service.ensure({ input, transaction: transaction.entityManager })).toBe(channel);
-            expect(channel.isVerified).toBe(false);
+            // Act
+            const reused = service.ensure({ input, transaction: transaction.entityManager });
+            const verifiedBeforeConfirmation = channel.isVerified;
             service.ensure({ input: { ...input, isVerified: true }, transaction: transaction.entityManager });
             service.ensure({ input: { ...input, isVerified: true }, transaction: transaction.entityManager });
-            expect(channel.isVerified).toBe(true);
+            const verifiedAfterConfirmation = channel.isVerified;
+
+            // Assert
+            expect(reused).toBe(channel);
+            expect(verifiedBeforeConfirmation).toBe(false);
+            expect(verifiedAfterConfirmation).toBe(true);
             expect(transaction.persist).not.toHaveBeenCalled();
         });
 
-        it("rejects an identifier that conflicts with the existing channel", () => {
+        it("[case] - rejects an identifier that conflicts with the existing channel", () => {
+            // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
             recipient.channels = helpers.collection({
                 owner: recipient,
@@ -215,7 +254,8 @@ describe("ChannelService", () => {
             });
             const { service, transaction } = helpers.service({ recipient });
 
-            expect(() =>
+            // Act
+            const act = (): unknown =>
                 service.ensure({
                     input: {
                         recipient,
@@ -224,8 +264,10 @@ describe("ChannelService", () => {
                         address: "other@example.test",
                     },
                     transaction: transaction.entityManager,
-                }),
-            ).toThrow("services.channel.IDENTIFIER_MISMATCH");
+                });
+
+            // Assert
+            expect(act).toThrow("services.channel.IDENTIFIER_MISMATCH");
             expect(transaction.persist).not.toHaveBeenCalled();
         });
     });

@@ -8,14 +8,15 @@ import { ChannelType, FailureReason, MessageStatus } from "~context/enums";
 
 import { MessageRepository } from "./message.repository";
 
-describe("MessageRepository", () => {
+describe("[Repository] - Message", () => {
     const suite = postgresSuite({
         repository: ({ readManager }) => new MessageRepository(readManager),
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    describe("findUniqueOrThrow", () => {
-        it("maps the persisted message through the schema", async () => {
+    describe("[Method] - findUniqueOrThrow", () => {
+        it("[case] - maps the persisted message through the schema", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const notification = await suite.fixtures().createNotification({ recipient });
             const channel = await suite.fixtures().createChannel({ recipient, type: ChannelType.EMAIL });
@@ -29,9 +30,13 @@ describe("MessageRepository", () => {
                 channel,
             });
 
+            // Act
             const loaded = await suite.repository().findUniqueOrThrow({ where: { id: message.id } });
+            const result = loaded;
+            const result1 = loaded.notification.id;
 
-            expect(loaded).toMatchObject({
+            // Assert
+            expect(result).toMatchObject({
                 error: "Provider rejected the message",
                 failureReason: FailureReason.PROVIDER,
                 address: "mapping@example.test",
@@ -44,13 +49,14 @@ describe("MessageRepository", () => {
                 id: message.id,
                 retryCount: 0,
             });
-            expect(loaded.notification.id).toBe(notification.id);
+            expect(result1).toBe(notification.id);
             expect(loaded.channel?.id).toBe(channel.id);
         });
     });
 
-    describe("findMany", () => {
-        it("finds messages by notification, channel type and status mapper filters", async () => {
+    describe("[Method] - findMany", () => {
+        it("[case] - finds messages by notification, channel type and status mapper filters", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const notification = await suite.fixtures().createNotification({
                 recipient,
@@ -71,6 +77,7 @@ describe("MessageRepository", () => {
                 channel,
             });
 
+            // Act
             const [messages, total] = await suite.repository().findMany({
                 pagination: { currentPage: 1, elementsPerPage: 10 },
                 sort: { createdAt: QueryOrder.ASC },
@@ -89,9 +96,12 @@ describe("MessageRepository", () => {
                     },
                 },
             });
+            const result = total;
+            const result1 = messages.map(({ id }) => id);
 
-            expect(total).toBe(1);
-            expect(messages.map(({ id }) => id)).toEqual([matched.id]);
+            // Assert
+            expect(result).toBe(1);
+            expect(result1).toEqual([matched.id]);
         });
     });
 });

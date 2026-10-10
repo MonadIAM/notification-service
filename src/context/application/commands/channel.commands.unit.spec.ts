@@ -9,36 +9,45 @@ const ACCOUNT = "target-account";
 const ACTOR = "actor-account";
 const ID = "entity-a";
 
-describe("ChannelCommands", () => {
-    describe("create", () => {
-        it("creates an external channel with its source identifier", async () => {
+describe("[Commands] - Channel", () => {
+    describe("[Method] - create", () => {
+        it("[case] - creates an external channel with its source identifier", async () => {
+            // Arrange
             const { commands, channelService, transaction } = helpers.commands();
             const input = { sourceIdentifier: ID, account: ACCOUNT, address: "mail@example.test", type: ChannelType.EMAIL };
 
+            // Act
             await commands.create({ input, context: CONTEXT });
 
+            // Assert
             expect(channelService.create.mock.calls).toEqual([[{ input, transaction: transaction.entityManager }]]);
         });
     });
 
-    describe("markVerified / purge", () => {
-        it.each(["markVerified", "purge"] as const)("targets the source identifier for %s", async (method) => {
+    describe("[Behavior] - channel lifecycle", () => {
+        it.each(["markVerified", "purge"] as const)("[case] - targets the source identifier for %s", async (method) => {
+            // Arrange
             const { commands, channelService, transaction } = helpers.commands();
 
+            // Act
             await commands[method]({ input: { sourceIdentifier: ID }, context: CONTEXT });
 
+            // Assert
             expect(channelService[method].mock.calls).toEqual([
                 [{ input: { sourceIdentifier: ID }, transaction: transaction.entityManager }],
             ]);
         });
     });
 
-    describe("toggleSound", () => {
-        it("toggles sound only for the authenticated account", async () => {
+    describe("[Method] - toggleSound", () => {
+        it("[case] - toggles sound only for the authenticated account", async () => {
+            // Arrange
             const { commands, channelService, transaction } = helpers.commands();
 
+            // Act
             await commands.toggleSound({ actor: ACTOR, context: CONTEXT });
 
+            // Assert
             expect(channelService.toggleSound.mock.calls).toEqual([
                 [{ input: { account: ACTOR }, transaction: transaction.entityManager }],
             ]);

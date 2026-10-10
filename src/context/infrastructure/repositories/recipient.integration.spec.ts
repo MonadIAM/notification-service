@@ -8,14 +8,15 @@ import { PublicLinkOperator } from "~infrastructure/database/enums";
 
 import { RecipientRepository } from "./recipient.repository";
 
-describe("RecipientRepository", () => {
+describe("[Repository] - Recipient", () => {
     const suite = postgresSuite({
         repository: ({ readManager }) => new RecipientRepository(readManager),
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    describe("findUniqueOrThrow", () => {
-        it("maps the persisted recipient through the schema", async () => {
+    describe("[Method] - findUniqueOrThrow", () => {
+        it("[case] - maps the persisted recipient through the schema", async () => {
+            // Arrange
             const account = randomUUID();
             const recipient = await suite.fixtures().createRecipient({
                 updatedAt: new Date("2026-03-01T00:00:00.000Z"),
@@ -25,7 +26,11 @@ describe("RecipientRepository", () => {
                 account,
             });
 
-            await expect(suite.repository().findUniqueOrThrow({ where: { id: recipient.id } })).resolves.toMatchObject({
+            // Act
+            const result = await suite.repository().findUniqueOrThrow({ where: { id: recipient.id } });
+
+            // Assert
+            expect(result).toMatchObject({
                 updatedAt: new Date("2026-03-01T00:00:00.000Z"),
                 createdAt: new Date("2026-01-01T00:00:00.000Z"),
                 version: recipient.version,
@@ -37,8 +42,9 @@ describe("RecipientRepository", () => {
         });
     });
 
-    describe("findMany", () => {
-        it("finds recipients by account mapper filter", async () => {
+    describe("[Method] - findMany", () => {
+        it("[case] - finds recipients by account mapper filter", async () => {
+            // Arrange
             const matched = await suite.fixtures().createRecipient({
                 account: "00000000-0000-0000-0000-000000000101",
             });
@@ -46,6 +52,7 @@ describe("RecipientRepository", () => {
                 account: "00000000-0000-0000-0000-000000000102",
             });
 
+            // Act
             const [recipients, total] = await suite.repository().findMany({
                 pagination: { currentPage: 1, elementsPerPage: 10 },
                 sort: { createdAt: QueryOrder.ASC },
@@ -56,9 +63,12 @@ describe("RecipientRepository", () => {
                     },
                 },
             });
+            const result = total;
+            const result1 = recipients.map(({ id }) => id);
 
-            expect(total).toBe(1);
-            expect(recipients.map(({ id }) => id)).toEqual([matched.id]);
+            // Assert
+            expect(result).toBe(1);
+            expect(result1).toEqual([matched.id]);
         });
     });
 });

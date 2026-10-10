@@ -14,25 +14,29 @@ const CHANGE_ID = "00000000-0000-4000-8000-000000000002";
 const CREATED_AT = new Date("2026-09-12T12:00:00.000Z");
 const helpers = new OutboxUnitHelpers();
 
-describe("OutboxService", () => {
+describe("[CommonService] - Outbox", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    describe("build", () => {
-        it("creates an outbox entry and validates its envelope", () => {
+    describe("[Method] - build", () => {
+        it("[case] - creates an outbox entry and validates its envelope", () => {
+            // Arrange
             const { service, registry } = helpers.service();
             const payload = { message: "00000000-0000-4000-8000-000000000010" };
             const metadata = { traceId: "trace-id" };
 
+            // Act
             const outbox = service.build({
                 actionType: MessageDispatchAction.DISPATCH,
                 destinationTopic: KafkaTopic.MESSAGE_DISPATCH,
                 metadata,
                 payload,
             });
+            const result = outbox;
 
-            expect(outbox).toEqual(
+            // Assert
+            expect(result).toEqual(
                 expect.objectContaining({
                     actionType: MessageDispatchAction.DISPATCH,
                     destinationTopic: KafkaTopic.MESSAGE_DISPATCH,
@@ -46,9 +50,11 @@ describe("OutboxService", () => {
             });
         });
 
-        it("does not include metadata in the validated envelope", () => {
+        it("[case] - does not include metadata in the validated envelope", () => {
+            // Arrange
             const { service, registry } = helpers.service();
 
+            // Act
             service.build({
                 payload: { id: "00000000-0000-4000-8000-000000000010" },
                 actionType: MessageDispatchAction.DISPATCH,
@@ -56,6 +62,7 @@ describe("OutboxService", () => {
                 metadata: { traceId: "trace-id" },
             });
 
+            // Assert
             expect(registry.validate).toHaveBeenCalledWith(
                 expect.objectContaining({
                     value: {
@@ -66,7 +73,8 @@ describe("OutboxService", () => {
             );
         });
 
-        it("propagates schema validation errors", () => {
+        it("[case] - propagates schema validation errors", () => {
+            // Arrange
             const error = new Error("schema validation failed");
             const registry = helpers.schemaRegistry({
                 validate: () => {
@@ -75,18 +83,22 @@ describe("OutboxService", () => {
             });
             const { service } = helpers.service({ registry });
 
-            expect(() =>
+            // Act
+            const act = (): unknown =>
                 service.build({
                     payload: { id: "00000000-0000-4000-8000-000000000010" },
                     actionType: MessageDispatchAction.DISPATCH,
                     destinationTopic: KafkaTopic.MESSAGE_DISPATCH,
-                }),
-            ).toThrow(error);
+                });
+
+            // Assert
+            expect(act).toThrow(error);
         });
     });
 
-    describe("buildAuditLogArchive", () => {
-        it("builds a full snake_case archive payload", () => {
+    describe("[Method] - buildAuditLogArchive", () => {
+        it("[case] - builds a full snake_case archive payload", () => {
+            // Arrange
             const { service } = helpers.service();
             const audit = helpers.createAuditLog({
                 actor: "00000000-0000-4000-8000-000000000010",
@@ -98,10 +110,14 @@ describe("OutboxService", () => {
                 id: AUDIT_ID,
             });
 
+            // Act
             const outbox = service.buildAuditLogArchive(audit);
+            const result = outbox.destinationTopic;
+            const result1 = outbox.actionType;
 
-            expect(outbox.destinationTopic).toBe(KafkaTopic.AUDIT_LOG_ARCHIVE);
-            expect(outbox.actionType).toBe(AuditLogTopicAction.ARCHIVE);
+            // Assert
+            expect(result).toBe(KafkaTopic.AUDIT_LOG_ARCHIVE);
+            expect(result1).toBe(AuditLogTopicAction.ARCHIVE);
             expect(outbox.payload).toEqual({
                 realm: "00000000-0000-4000-8000-000000000011",
                 actor: "00000000-0000-4000-8000-000000000010",
@@ -116,7 +132,8 @@ describe("OutboxService", () => {
             });
         });
 
-        it("uses null for omitted nullable fields", () => {
+        it("[case] - uses null for omitted nullable fields", () => {
+            // Arrange
             const { service } = helpers.service();
             const audit = helpers.createAuditLog({
                 createdAt: CREATED_AT,
@@ -130,7 +147,11 @@ describe("OutboxService", () => {
                 id: AUDIT_ID,
             });
 
-            expect(service.buildAuditLogArchive(audit).payload).toEqual({
+            // Act
+            const result = service.buildAuditLogArchive(audit).payload;
+
+            // Assert
+            expect(result).toEqual({
                 created_at: CREATED_AT.toISOString(),
                 service: "notification-service",
                 action_type: "CREATE",
@@ -145,8 +166,9 @@ describe("OutboxService", () => {
         });
     });
 
-    describe("buildChangeLogArchive", () => {
-        it("builds a full change log archive payload with serialized masked delta", () => {
+    describe("[Method] - buildChangeLogArchive", () => {
+        it("[case] - builds a full change log archive payload with serialized masked delta", () => {
+            // Arrange
             const { service } = helpers.service();
             const delta = new DeltaChanges({
                 token: {
@@ -164,10 +186,14 @@ describe("OutboxService", () => {
                 delta,
             });
 
+            // Act
             const outbox = service.buildChangeLogArchive(change);
+            const result = outbox.destinationTopic;
+            const result1 = outbox.actionType;
 
-            expect(outbox.destinationTopic).toBe(KafkaTopic.CHANGE_LOG_ARCHIVE);
-            expect(outbox.actionType).toBe(ChangeLogTopicAction.ARCHIVE);
+            // Assert
+            expect(result).toBe(KafkaTopic.CHANGE_LOG_ARCHIVE);
+            expect(result1).toBe(ChangeLogTopicAction.ARCHIVE);
             expect(outbox.payload).toEqual({
                 entity: "00000000-0000-4000-8000-000000000010",
                 created_at: CREATED_AT.toISOString(),

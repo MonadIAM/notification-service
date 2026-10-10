@@ -3,8 +3,8 @@ import { Controller, Inject, Logger } from "@nestjs/common";
 import { lastValueFrom } from "rxjs";
 
 import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE, KafkaIncomingMapper } from "~infrastructure/kafka";
-import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { KAFKA_RETRY_QUEUE } from "~context/infrastructure/queues";
+import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { Exception } from "~common/exceptions";
 import { KafkaTopic } from "~context/enums";
 

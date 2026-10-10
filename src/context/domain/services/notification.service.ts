@@ -1,7 +1,7 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
-import { RECIPIENT_REPOSITORY, NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
 import { NotificationCategory, ChannelType, MessageTemplate, PlatformService } from "~context/enums";
+import { RECIPIENT_REPOSITORY, NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
 import { DUPLICATABLE_CHANNEL_TYPES } from "~context/constants";
 
 import { RECIPIENT_SERVICE, MESSAGE_SERVICE } from "./tokens";

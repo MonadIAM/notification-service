@@ -8,27 +8,33 @@ const helpers = new MessageCommandsUnitHelpers();
 const ACTOR = "actor-account";
 const ID = "entity-a";
 
-describe("MessageCommands", () => {
-    describe("markRead", () => {
-        it("passes the authenticated reader to the domain check", async () => {
+describe("[Commands] - Message", () => {
+    describe("[Method] - markRead", () => {
+        it("[case] - passes the authenticated reader to the domain check", async () => {
+            // Arrange
             const { commands, messageService, transaction } = helpers.commands();
 
+            // Act
             await commands.markRead({ input: { message: ID }, actor: ACTOR, context: CONTEXT });
 
+            // Assert
             expect(messageService.markRead.mock.calls).toEqual([
                 [{ input: { message: ID, actor: ACTOR }, transaction: transaction.entityManager }],
             ]);
         });
     });
 
-    describe("markSent / markDelivered", () => {
+    describe("[Behavior] - delivery status", () => {
         it.each(["markSent", "markDelivered"] as const)(
-            "applies %s to the requested message in a transaction",
+            "[case] - applies %s to the requested message in a transaction",
             async (method) => {
+                // Arrange
                 const { commands, messageService, transaction } = helpers.commands();
 
+                // Act
                 await commands[method]({ input: { message: ID }, context: CONTEXT });
 
+                // Assert
                 expect(messageService[method].mock.calls).toEqual([
                     [{ input: { message: ID }, transaction: transaction.entityManager }],
                 ]);
@@ -36,13 +42,16 @@ describe("MessageCommands", () => {
         );
     });
 
-    describe("markFailed", () => {
-        it("retains the provider failure details", async () => {
+    describe("[Method] - markFailed", () => {
+        it("[case] - retains the provider failure details", async () => {
+            // Arrange
             const { commands, messageService, transaction } = helpers.commands();
             const input = { message: ID, reason: FailureReason.PROVIDER, error: "provider unavailable" };
 
+            // Act
             await commands.markFailed({ input, context: CONTEXT });
 
+            // Assert
             expect(messageService.markFailed.mock.calls).toEqual([[{ input, transaction: transaction.entityManager }]]);
         });
     });

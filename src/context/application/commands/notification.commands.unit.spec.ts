@@ -11,9 +11,10 @@ const ACTOR = "actor-account";
 const REALM = "realm-a";
 const ID = "entity-a";
 
-describe("NotificationCommands", () => {
-    describe("create", () => {
-        it("creates messages inside message consumption and schedules their dispatch", async () => {
+describe("[Commands] - Notification", () => {
+    describe("[Method] - create", () => {
+        it("[case] - creates messages inside message consumption and schedules their dispatch", async () => {
+            // Arrange
             const { commands, notificationService, consume, transaction } = helpers.commands();
             const input = {
                 sourceService: PlatformService.IDENTITY_SERVICE,
@@ -29,11 +30,16 @@ describe("NotificationCommands", () => {
             const messages = [helpers.createMessage()];
             notificationService.create.mockResolvedValue({ notification, messages });
 
+            // Act
             await commands.create({ input, incoming: INCOMING, context: CONTEXT, actor: ACTOR });
+            const result = notificationService.register;
+            const result1 = notificationService.create.mock.calls;
+            const result2 = await consume.mock.results[0]?.value;
 
-            expect(notificationService.register).not.toHaveBeenCalled();
-            expect(notificationService.create.mock.calls).toEqual([[{ input, transaction: transaction.entityManager }]]);
-            await expect(consume.mock.results[0]?.value).resolves.toEqual({ status: "processed", value: { messages } });
+            // Assert
+            expect(result).not.toHaveBeenCalled();
+            expect(result1).toEqual([[{ input, transaction: transaction.entityManager }]]);
+            expect(result2).toEqual({ status: "processed", value: { messages } });
             expect(consume.mock.calls).toEqual([
                 [
                     expect.objectContaining({
@@ -48,8 +54,9 @@ describe("NotificationCommands", () => {
         });
     });
 
-    describe("cancel", () => {
-        it("delegates cancellation to one domain operation and forwards replacement messages to outbox", async () => {
+    describe("[Method] - cancel", () => {
+        it("[case] - delegates cancellation to one domain operation and forwards replacement messages to outbox", async () => {
+            // Arrange
             const { commands, notificationService, transaction, consume } = helpers.commands();
             const input = {
                 dedupKey: ID,
@@ -63,14 +70,23 @@ describe("NotificationCommands", () => {
             const messages = [helpers.createMessage()];
             notificationService.cancel.mockResolvedValue({ messages });
 
+            // Act
             await commands.cancel({ input, incoming: INCOMING, context: CONTEXT });
+            const result = notificationService.cancel;
+            const result1 = notificationService.cancel;
+            const result2 = notificationService.create;
+            const result3 = notificationService.register;
+            const result4 = transaction.flush;
+            const result5 = consume;
+            const result6 = await consume.mock.results[0]?.value;
 
-            expect(notificationService.cancel).toHaveBeenCalledTimes(1);
-            expect(notificationService.cancel).toHaveBeenCalledWith({ input, transaction: transaction.entityManager });
-            expect(notificationService.create).not.toHaveBeenCalled();
-            expect(notificationService.register).not.toHaveBeenCalled();
-            expect(transaction.flush).not.toHaveBeenCalled();
-            expect(consume).toHaveBeenCalledWith(
+            // Assert
+            expect(result).toHaveBeenCalledTimes(1);
+            expect(result1).toHaveBeenCalledWith({ input, transaction: transaction.entityManager });
+            expect(result2).not.toHaveBeenCalled();
+            expect(result3).not.toHaveBeenCalled();
+            expect(result4).not.toHaveBeenCalled();
+            expect(result5).toHaveBeenCalledWith(
                 expect.objectContaining({
                     incoming: INCOMING,
                     outbox: expect.objectContaining({
@@ -79,38 +95,46 @@ describe("NotificationCommands", () => {
                     }),
                 }),
             );
-            await expect(consume.mock.results[0]?.value).resolves.toEqual({ status: "processed", value: { messages } });
+            expect(result6).toEqual({ status: "processed", value: { messages } });
         });
 
-        it("propagates cancellation failure without executing another domain operation", async () => {
+        it("[case] - propagates cancellation failure without executing another domain operation", async () => {
+            // Arrange
             const { commands, notificationService } = helpers.commands();
             notificationService.cancel.mockRejectedValue(new Error("queue unavailable"));
-            await expect(
-                commands.cancel({
-                    input: {
-                        dedupKey: ID,
-                        override: {
-                            account: ACCOUNT,
-                            sourceService: PlatformService.IDENTITY_SERVICE,
-                            category: NotificationCategory.SYSTEM,
-                            template: "replacement",
-                        },
+
+            // Act
+            const result = commands.cancel({
+                input: {
+                    dedupKey: ID,
+                    override: {
+                        account: ACCOUNT,
+                        sourceService: PlatformService.IDENTITY_SERVICE,
+                        category: NotificationCategory.SYSTEM,
+                        template: "replacement",
                     },
-                    incoming: INCOMING,
-                    context: CONTEXT,
-                }),
-            ).rejects.toThrow("queue unavailable");
-            expect(notificationService.create).not.toHaveBeenCalled();
+                },
+                incoming: INCOMING,
+                context: CONTEXT,
+            });
+            await Promise.allSettled([result]);
+            const result1 = notificationService.create;
+
+            // Assert
+            await expect(result).rejects.toThrow("queue unavailable");
+            expect(result1).not.toHaveBeenCalled();
             expect(notificationService.register).not.toHaveBeenCalled();
         });
     });
 
-    describe("register", () => {
-        it.each(["email", "phone"] as const)("delegates %s registration to one domain operation", async (type) => {
+    describe("[Method] - register", () => {
+        it.each(["email", "phone"] as const)("[case] - delegates %s registration to one domain operation", async (type) => {
+            // Arrange
             const { commands, notificationService, transaction, consume } = helpers.commands();
             const messages = [helpers.createMessage()];
             notificationService.register.mockResolvedValue({ notification: helpers.createNotification(), messages });
 
+            // Act
             await commands.register({
                 input: {
                     account: ACCOUNT,
@@ -121,9 +145,17 @@ describe("NotificationCommands", () => {
                 context: CONTEXT,
                 incoming: INCOMING,
             });
+            const result = notificationService.register;
+            const result1 = notificationService.register;
+            const result2 = notificationService.create;
+            const result3 = transaction.flush;
+            const result4 = consume;
+            const result5 = consume;
+            const result6 = await consume.mock.results[0]?.value;
 
-            expect(notificationService.register).toHaveBeenCalledTimes(1);
-            expect(notificationService.register).toHaveBeenCalledWith({
+            // Assert
+            expect(result).toHaveBeenCalledTimes(1);
+            expect(result1).toHaveBeenCalledWith({
                 input: {
                     account: ACCOUNT,
                     sourceIdentifier: ID,
@@ -134,10 +166,10 @@ describe("NotificationCommands", () => {
                 },
                 transaction: transaction.entityManager,
             });
-            expect(notificationService.create).not.toHaveBeenCalled();
-            expect(transaction.flush).not.toHaveBeenCalled();
-            expect(consume).toHaveBeenCalledTimes(1);
-            expect(consume).toHaveBeenCalledWith(
+            expect(result2).not.toHaveBeenCalled();
+            expect(result3).not.toHaveBeenCalled();
+            expect(result4).toHaveBeenCalledTimes(1);
+            expect(result5).toHaveBeenCalledWith(
                 expect.objectContaining({
                     incoming: INCOMING,
                     outbox: expect.objectContaining({
@@ -146,25 +178,31 @@ describe("NotificationCommands", () => {
                     }),
                 }),
             );
-            await expect(consume.mock.results[0]?.value).resolves.toEqual({ status: "processed", value: { messages } });
+            expect(result6).toEqual({ status: "processed", value: { messages } });
         });
 
-        it("propagates a registration failure without calling generic notification creation", async () => {
+        it("[case] - propagates a registration failure without calling generic notification creation", async () => {
+            // Arrange
             const { commands, notificationService, transaction } = helpers.commands();
             notificationService.register.mockRejectedValue(new Error("channel unavailable"));
-            await expect(
-                commands.register({
-                    input: {
-                        account: ACCOUNT,
-                        identifier: { id: ID, type: "email", value: "user@example.test" },
-                        title: "Verify account",
-                        body: "OTP",
-                    },
-                    context: CONTEXT,
-                    incoming: INCOMING,
-                }),
-            ).rejects.toThrow("channel unavailable");
-            expect(notificationService.create).not.toHaveBeenCalled();
+
+            // Act
+            const result = commands.register({
+                input: {
+                    account: ACCOUNT,
+                    identifier: { id: ID, type: "email", value: "user@example.test" },
+                    title: "Verify account",
+                    body: "OTP",
+                },
+                context: CONTEXT,
+                incoming: INCOMING,
+            });
+            await Promise.allSettled([result]);
+            const result1 = notificationService.create;
+
+            // Assert
+            await expect(result).rejects.toThrow("channel unavailable");
+            expect(result1).not.toHaveBeenCalled();
             expect(transaction.flush).not.toHaveBeenCalled();
         });
     });

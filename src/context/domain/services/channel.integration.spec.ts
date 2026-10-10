@@ -26,17 +26,19 @@ async function loadPreferences(suite: Integration.Domain.Channel.Suite, recipien
     );
 }
 
-describe("ChannelService integration", () => {
+describe("[DomainService] - Channel", () => {
     const suite = postgresSuite({
         repository: (context) => helpers.service(context),
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    describe("create", () => {
-        it("creates an email channel with one disabled preference per configurable category", async () => {
+    describe("[Method] - create", () => {
+        it("[case] - creates an email channel with one disabled preference per configurable category", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const sourceIdentifier = randomUUID();
 
+            // Act
             const created = await suite.transaction((transaction) =>
                 suite.repository().channelService.create({
                     input: {
@@ -49,11 +51,16 @@ describe("ChannelService integration", () => {
                     transaction,
                 }),
             );
-
             const channel = await loadChannel(suite, created.id);
             const preferences = await loadPreferences(suite, recipient.id);
+            const result = channel;
+            const result1 = preferences;
+            const result2 = preferences.map(({ category }) => category).sort();
+            const result3 = preferences.every(({ channelType }) => channelType === ChannelType.EMAIL);
+            const result4 = preferences.every(({ isDuplicationEnabled }) => !isDuplicationEnabled);
 
-            expect(channel).toEqual(
+            // Assert
+            expect(result).toEqual(
                 expect.objectContaining({
                     recipient: expect.objectContaining({ id: recipient.id }),
                     address: "integration@example.test",
@@ -62,17 +69,17 @@ describe("ChannelService integration", () => {
                     isVerified: true,
                 }),
             );
-            expect(preferences).toHaveLength(CONFIGURABLE_NOTIFICATION_CATEGORIES.length);
-            expect(preferences.map(({ category }) => category).sort()).toEqual(
-                [...CONFIGURABLE_NOTIFICATION_CATEGORIES].sort(),
-            );
-            expect(preferences.every(({ channelType }) => channelType === ChannelType.EMAIL)).toBe(true);
-            expect(preferences.every(({ isDuplicationEnabled }) => !isDuplicationEnabled)).toBe(true);
+            expect(result1).toHaveLength(CONFIGURABLE_NOTIFICATION_CATEGORIES.length);
+            expect(result2).toEqual([...CONFIGURABLE_NOTIFICATION_CATEGORIES].sort());
+            expect(result3).toBe(true);
+            expect(result4).toBe(true);
         });
 
-        it("rolls back a duplicate email channel without adding preferences", async () => {
+        it("[case] - rolls back a duplicate email channel without adding preferences", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().channelService.create({
                     input: {
@@ -83,36 +90,36 @@ describe("ChannelService integration", () => {
                     transaction,
                 }),
             );
-
-            await expect(
-                suite.transaction((transaction) =>
-                    suite.repository().channelService.create({
-                        input: {
-                            address: "second@example.test",
-                            account: recipient.account,
-                            type: ChannelType.EMAIL,
-                        },
-                        transaction,
-                    }),
-                ),
-            ).rejects.toThrow("preference_recipient_channel_category_unique");
-
-            await expect(
-                suite.transaction((transaction) =>
-                    transaction.count(Channel, {
-                        recipient: recipient.id,
+            const result = suite.transaction((transaction) =>
+                suite.repository().channelService.create({
+                    input: {
+                        address: "second@example.test",
+                        account: recipient.account,
                         type: ChannelType.EMAIL,
-                    }),
-                ),
-            ).resolves.toBe(1);
-            await expect(loadPreferences(suite, recipient.id)).resolves.toHaveLength(
-                CONFIGURABLE_NOTIFICATION_CATEGORIES.length,
+                    },
+                    transaction,
+                }),
             );
+            await Promise.allSettled([result]);
+            const result1 = await suite.transaction((transaction) =>
+                transaction.count(Channel, {
+                    recipient: recipient.id,
+                    type: ChannelType.EMAIL,
+                }),
+            );
+            const result2 = await loadPreferences(suite, recipient.id);
+
+            // Assert
+            await expect(result).rejects.toThrow("preference_recipient_channel_category_unique");
+            expect(result1).toBe(1);
+            expect(result2).toHaveLength(CONFIGURABLE_NOTIFICATION_CATEGORIES.length);
         });
 
-        it("creates an sms channel without preferences", async () => {
+        it("[case] - creates an sms channel without preferences", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
 
+            // Act
             const created = await suite.transaction((transaction) =>
                 suite.repository().channelService.create({
                     input: {
@@ -123,31 +130,38 @@ describe("ChannelService integration", () => {
                     transaction,
                 }),
             );
+            const result = await loadChannel(suite, created.id);
+            const result1 = await loadPreferences(suite, recipient.id);
 
-            await expect(loadChannel(suite, created.id)).resolves.toEqual(
+            // Assert
+            expect(result).toEqual(
                 expect.objectContaining({
                     address: "+15550000001",
                     type: ChannelType.SMS,
                 }),
             );
-            await expect(loadPreferences(suite, recipient.id)).resolves.toHaveLength(0);
+            expect(result1).toHaveLength(0);
         });
     });
 
-    describe("markVerified", () => {
-        it("persists channel verification", async () => {
+    describe("[Method] - markVerified", () => {
+        it("[case] - persists channel verification", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const sourceIdentifier = randomUUID();
             const channel = await suite.fixtures().createChannel({ sourceIdentifier, isVerified: false, recipient });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().channelService.markVerified({
                     input: { sourceIdentifier },
                     transaction,
                 }),
             );
+            const result = await loadChannel(suite, channel.id);
 
-            await expect(loadChannel(suite, channel.id)).resolves.toEqual(
+            // Assert
+            expect(result).toEqual(
                 expect.objectContaining({
                     verifiedAt: expect.any(Date),
                     isVerified: true,
@@ -156,20 +170,24 @@ describe("ChannelService integration", () => {
         });
     });
 
-    describe("toggleSound", () => {
-        it("toggles the persisted in-app sound through the populated channel collection", async () => {
+    describe("[Method] - toggleSound", () => {
+        it("[case] - toggles the persisted in-app sound through the populated channel collection", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const inApp = await suite.fixtures().createChannel({ recipient, type: ChannelType.IN_APP });
             await suite.fixtures().createChannel({ recipient, type: ChannelType.EMAIL });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().channelService.toggleSound({
                     input: { account: recipient.account },
                     transaction,
                 }),
             );
+            const result = await loadChannel(suite, inApp.id);
 
-            await expect(loadChannel(suite, inApp.id)).resolves.toEqual(
+            // Assert
+            expect(result).toEqual(
                 expect.objectContaining({
                     updatedAt: expect.any(Date),
                     soundEnabled: false,
@@ -177,23 +195,27 @@ describe("ChannelService integration", () => {
             );
         });
 
-        it("throws the service error when the populated collection has no in-app channel", async () => {
+        it("[case] - throws the service error when the populated collection has no in-app channel", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             await suite.fixtures().createChannel({ recipient, type: ChannelType.EMAIL });
 
-            await expect(
-                suite.transaction((transaction) =>
-                    suite.repository().channelService.toggleSound({
-                        input: { account: recipient.account },
-                        transaction,
-                    }),
-                ),
-            ).rejects.toThrow("services.channel.IN_APP_CHANNEL_NOT_FOUND");
+            // Act
+            const result = suite.transaction((transaction) =>
+                suite.repository().channelService.toggleSound({
+                    input: { account: recipient.account },
+                    transaction,
+                }),
+            );
+
+            // Assert
+            await expect(result).rejects.toThrow("services.channel.IN_APP_CHANNEL_NOT_FOUND");
         });
     });
 
-    describe("purge", () => {
-        it("clears the otp default instead of deleting its channel", async () => {
+    describe("[Method] - purge", () => {
+        it("[case] - clears the otp default instead of deleting its channel", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const sourceIdentifier = randomUUID();
             const channel = await suite.fixtures().createChannel({
@@ -202,7 +224,6 @@ describe("ChannelService integration", () => {
                 isVerified: true,
                 recipient,
             });
-
             await suite.transaction(async (transaction) => {
                 const persisted = await transaction.findOneOrFail(Recipient, {
                     id: recipient.id,
@@ -210,20 +231,24 @@ describe("ChannelService integration", () => {
                 persisted.defaultOtpChannel = transaction.getReference(Channel, channel.id);
             });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().channelService.purge({
                     input: { sourceIdentifier },
                     transaction,
                 }),
             );
-
             const persisted = await loadRecipient(suite, recipient.account);
+            const result = persisted.defaultOtpChannel;
+            const result1 = persisted.channels.getItems().map(({ id }) => id);
 
-            expect(persisted.defaultOtpChannel).toBeNull();
-            expect(persisted.channels.getItems().map(({ id }) => id)).toContain(channel.id);
+            // Assert
+            expect(result).toBeNull();
+            expect(result1).toContain(channel.id);
         });
 
-        it("deletes a non-default channel and preserves related domain rows", async () => {
+        it("[case] - deletes a non-default channel and preserves related domain rows", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const sourceIdentifier = randomUUID();
             const target = await suite.fixtures().createChannel({
@@ -239,7 +264,6 @@ describe("ChannelService integration", () => {
             const preference = await suite.fixtures().createPreference({ recipient });
             const notification = await suite.fixtures().createNotification({ recipient });
             const message = await suite.fixtures().createMessage({ notification, channel: target });
-
             await suite.transaction(async (transaction) => {
                 const persisted = await transaction.findOneOrFail(Recipient, {
                     id: recipient.id,
@@ -247,27 +271,31 @@ describe("ChannelService integration", () => {
                 persisted.defaultOtpChannel = transaction.getReference(Channel, otp.id);
             });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().channelService.purge({
                     input: { sourceIdentifier },
                     transaction,
                 }),
             );
-
             const persisted = await loadRecipient(suite, recipient.account);
             const persistedMessage = await suite.transaction((transaction) =>
                 transaction.findOneOrFail(Message, { id: message.id }, { populate: ["channel"] }),
             );
+            const result = await loadChannel(suite, target.id);
+            const result1 = persisted.defaultOtpChannel?.id;
+            const result2 = persistedMessage.channel;
+            const result3 = await suite.transaction((transaction) => transaction.count(Preference, { id: preference.id }));
+            const result4 = await suite.transaction((transaction) =>
+                transaction.count(Notification, { id: notification.id }),
+            );
 
-            await expect(loadChannel(suite, target.id)).resolves.toBeNull();
-            expect(persisted.defaultOtpChannel?.id).toBe(otp.id);
-            expect(persistedMessage.channel).toBeNull();
-            await expect(
-                suite.transaction((transaction) => transaction.count(Preference, { id: preference.id })),
-            ).resolves.toBe(1);
-            await expect(
-                suite.transaction((transaction) => transaction.count(Notification, { id: notification.id })),
-            ).resolves.toBe(1);
+            // Assert
+            expect(result).toBeNull();
+            expect(result1).toBe(otp.id);
+            expect(result2).toBeNull();
+            expect(result3).toBe(1);
+            expect(result4).toBe(1);
         });
     });
 });

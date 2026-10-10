@@ -9,14 +9,15 @@ import { NotificationCategory, PlatformService } from "~context/enums";
 
 import { NotificationRepository } from "./notification.repository";
 
-describe("NotificationRepository", () => {
+describe("[Repository] - Notification", () => {
     const suite = postgresSuite({
         repository: ({ readManager }) => new NotificationRepository(readManager),
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    describe("findUniqueOrThrow", () => {
-        it("maps the persisted notification through the schema", async () => {
+    describe("[Method] - findUniqueOrThrow", () => {
+        it("[case] - maps the persisted notification through the schema", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const realm = randomUUID();
             const notification = await suite.fixtures().createNotification({
@@ -30,9 +31,12 @@ describe("NotificationRepository", () => {
                 realm,
             });
 
+            // Act
             const loaded = await suite.repository().findUniqueOrThrow({ where: { id: notification.id } });
+            const result = loaded;
 
-            expect(loaded).toMatchObject({
+            // Assert
+            expect(result).toMatchObject({
                 sourceService: PlatformService.IDENTITY_SERVICE,
                 category: NotificationCategory.SECURITY,
                 createdAt: notification.createdAt,
@@ -48,8 +52,9 @@ describe("NotificationRepository", () => {
         });
     });
 
-    describe("findMany", () => {
-        it("finds notifications by recipient and source mapper filters", async () => {
+    describe("[Method] - findMany", () => {
+        it("[case] - finds notifications by recipient and source mapper filters", async () => {
+            // Arrange
             const realm = randomUUID();
             const recipient = await suite.fixtures().createRecipient();
             const matched = await suite.fixtures().createNotification({
@@ -64,6 +69,7 @@ describe("NotificationRepository", () => {
                 realm,
             });
 
+            // Act
             const [notifications, total] = await suite.repository().findMany({
                 pagination: { currentPage: 1, elementsPerPage: 10 },
                 sort: { createdAt: QueryOrder.ASC },
@@ -78,9 +84,12 @@ describe("NotificationRepository", () => {
                     },
                 },
             });
+            const result = total;
+            const result1 = notifications.map(({ id }) => id);
 
-            expect(total).toBe(1);
-            expect(notifications.map(({ id }) => id)).toEqual([matched.id]);
+            // Assert
+            expect(result).toBe(1);
+            expect(result1).toEqual([matched.id]);
         });
     });
 });

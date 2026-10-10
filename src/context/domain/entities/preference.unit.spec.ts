@@ -17,61 +17,89 @@ function createPreference(overrides?: Partial<Entities.Preference.ConstructorPro
     });
 }
 
-describe("Preference Entity", () => {
-    describe("constructor", () => {
-        it("should assign required fields and relations", () => {
+describe("[Entity] - Preference", () => {
+    describe("[Method] - constructor", () => {
+        it("[case] - assigns required fields and relations", () => {
+            // Arrange
             const recipient = entities.createRecipient();
 
+            // Act
             const preference = createPreference({
                 category: NotificationCategory.INVITES,
                 channelType: ChannelType.SMS,
                 recipient,
             });
+            const result = preference.category;
+            const result1 = preference.channelType;
 
-            expect(preference.category).toBe(NotificationCategory.INVITES);
-            expect(preference.channelType).toBe(ChannelType.SMS);
+            // Assert
+            expect(result).toBe(NotificationCategory.INVITES);
+            expect(result1).toBe(ChannelType.SMS);
             expect(preference.recipient).toBe(recipient);
         });
 
-        it("should default isDuplicationEnabled to true", () => {
+        it("[case] - defaults isDuplicationEnabled to true", () => {
+            // Arrange
+
+            // Act
             const preference = createPreference();
 
+            // Assert
             expect(preference.isDuplicationEnabled).toBe(true);
         });
 
-        it("should respect explicit isDuplicationEnabled override", () => {
+        it("[case] - respects explicit isDuplicationEnabled override", () => {
+            // Arrange
+
+            // Act
             const preference = createPreference({ isDuplicationEnabled: false });
 
+            // Assert
             expect(preference.isDuplicationEnabled).toBe(false);
         });
 
-        it("should auto-generate id, createdAt, version", () => {
-            const preference = createPreference();
+        it("[case] - autos-generate id, createdAt, version", () => {
+            // Arrange
 
-            expect(isUUID(preference.id, "4")).toBe(true);
-            expect(preference.createdAt).toBeInstanceOf(Date);
-            expect(preference.version).toBe(1);
+            // Act
+            const preference = createPreference();
+            const result = isUUID(preference.id, "4");
+            const result1 = preference.createdAt;
+            const result2 = preference.version;
+
+            // Assert
+            expect(result).toBe(true);
+            expect(result1).toBeInstanceOf(Date);
+            expect(result2).toBe(1);
             expect(preference.updatedAt).toBeUndefined();
         });
     });
 
-    describe("toggle", () => {
-        it("should toggle duplication off", () => {
+    describe("[Method] - toggle", () => {
+        it("[case] - toggles duplication off", () => {
+            // Arrange
             const preference = createPreference();
 
+            // Act
             preference.toggle();
+            const result = preference.isDuplicationEnabled;
 
-            expect(preference.isDuplicationEnabled).toBe(false);
+            // Assert
+            expect(result).toBe(false);
             expect(preference.updatedAt).toBeInstanceOf(Date);
         });
 
-        it("should toggle duplication back on repeated call", () => {
+        it("[case] - toggles duplication back on repeated call", () => {
+            // Arrange
             const preference = createPreference();
 
+            // Act
             preference.toggle();
             preference.toggle();
+            const result = preference.isDuplicationEnabled;
 
-            expect(preference.isDuplicationEnabled).toBe(true);
+            // Assert
+            expect(result).toBe(true);
             expect(preference.updatedAt).toBeInstanceOf(Date);
         });
     });

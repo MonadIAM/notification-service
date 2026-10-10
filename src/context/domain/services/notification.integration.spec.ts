@@ -45,14 +45,15 @@ async function countRecipientNotifications(
     }));
 }
 
-describe("NotificationService integration", () => {
+describe("[DomainService] - Notification", () => {
     const suite = postgresSuite({
         repository: (context) => helpers.service(context),
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    describe("create", () => {
-        it("fans out a security notification to persisted in-app and email channels", async () => {
+    describe("[Method] - create", () => {
+        it("[case] - fans out a security notification to persisted in-app and email channels", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const inApp = await suite.fixtures().createChannel({
                 type: ChannelType.IN_APP,
@@ -67,16 +68,18 @@ describe("NotificationService integration", () => {
                 recipient,
             });
 
+            // Act
             const result = await suite.transaction((transaction) =>
                 suite.repository().notificationService.create({
                     input: createInput(recipient.account),
                     transaction,
                 }),
             );
-
             const messages = await loadMessages(suite, result.notification.id);
+            const result1 = messages;
 
-            expect(messages).toHaveLength(2);
+            // Assert
+            expect(result1).toHaveLength(2);
             expect(messages).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
@@ -99,7 +102,8 @@ describe("NotificationService integration", () => {
             );
         });
 
-        it("creates only an in-app message when the recipient has no email channel", async () => {
+        it("[case] - creates only an in-app message when the recipient has no email channel", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             await suite.fixtures().createChannel({
                 type: ChannelType.IN_APP,
@@ -107,14 +111,17 @@ describe("NotificationService integration", () => {
                 recipient,
             });
 
+            // Act
             const result = await suite.transaction((transaction) =>
                 suite.repository().notificationService.create({
                     input: createInput(recipient.account),
                     transaction,
                 }),
             );
+            const result1 = await loadMessages(suite, result.notification.id);
 
-            await expect(loadMessages(suite, result.notification.id)).resolves.toEqual([
+            // Assert
+            expect(result1).toEqual([
                 expect.objectContaining({
                     channelType: ChannelType.IN_APP,
                     status: MessageStatus.DELIVERED,
@@ -122,7 +129,8 @@ describe("NotificationService integration", () => {
             ]);
         });
 
-        it("ignores a disabled email preference for the security category", async () => {
+        it("[case] - ignores a disabled email preference for the security category", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             await suite.fixtures().createChannel({
                 type: ChannelType.IN_APP,
@@ -141,21 +149,22 @@ describe("NotificationService integration", () => {
                 recipient,
             });
 
+            // Act
             const result = await suite.transaction((transaction) =>
                 suite.repository().notificationService.create({
                     input: createInput(recipient.account),
                     transaction,
                 }),
             );
-
             const messages = await loadMessages(suite, result.notification.id);
+            const result1 = messages.map(({ channelType }) => channelType).sort();
 
-            expect(messages.map(({ channelType }) => channelType).sort()).toEqual(
-                [ChannelType.EMAIL, ChannelType.IN_APP].sort(),
-            );
+            // Assert
+            expect(result1).toEqual([ChannelType.EMAIL, ChannelType.IN_APP].sort());
         });
 
-        it("uses the persisted configurable preference when resolving email fan-out", async () => {
+        it("[case] - uses the persisted configurable preference when resolving email fan-out", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             await suite.fixtures().createChannel({
                 type: ChannelType.IN_APP,
@@ -174,6 +183,7 @@ describe("NotificationService integration", () => {
                 recipient,
             });
 
+            // Act
             const disabled = await suite.transaction((transaction) =>
                 suite.repository().notificationService.create({
                     input: createInput(recipient.account, {
@@ -183,18 +193,13 @@ describe("NotificationService integration", () => {
                     transaction,
                 }),
             );
-
-            await expect(loadMessages(suite, disabled.notification.id)).resolves.toEqual([
-                expect.objectContaining({ channelType: ChannelType.IN_APP }),
-            ]);
-
+            const disabledMessages = await loadMessages(suite, disabled.notification.id);
             await suite.transaction(async (transaction) => {
                 const persisted = await transaction.findOneOrFail(Preference, {
                     id: preference.id,
                 });
                 persisted.toggle();
             });
-
             const enabled = await suite.transaction((transaction) =>
                 suite.repository().notificationService.create({
                     input: createInput(recipient.account, {
@@ -204,15 +209,16 @@ describe("NotificationService integration", () => {
                     transaction,
                 }),
             );
-
             const messages = await loadMessages(suite, enabled.notification.id);
+            const enabledChannels = messages.map(({ channelType }) => channelType).sort();
 
-            expect(messages.map(({ channelType }) => channelType).sort()).toEqual(
-                [ChannelType.EMAIL, ChannelType.IN_APP].sort(),
-            );
+            // Assert
+            expect(disabledMessages).toEqual([expect.objectContaining({ channelType: ChannelType.IN_APP })]);
+            expect(enabledChannels).toEqual([ChannelType.EMAIL, ChannelType.IN_APP].sort());
         });
 
-        it("rolls back a duplicate dedup key for one recipient but allows it for another", async () => {
+        it("[case] - rolls back a duplicate dedup key for one recipient but allows it for another", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             await suite.fixtures().createChannel({
                 type: ChannelType.IN_APP,
@@ -232,43 +238,44 @@ describe("NotificationService integration", () => {
             });
             const dedupKey = randomUUID();
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().notificationService.create({
                     input: createInput(recipient.account, { dedupKey }),
                     transaction,
                 }),
             );
-
-            await expect(countRecipientNotifications(suite, recipient.id)).resolves.toEqual({
-                notifications: 1,
-                messages: 2,
-            });
-
-            await expect(
-                suite.transaction((transaction) =>
-                    suite.repository().notificationService.create({
-                        input: createInput(recipient.account, {
-                            title: "Duplicate",
-                            dedupKey,
-                        }),
-                        transaction,
+            const beforeDuplicate = await countRecipientNotifications(suite, recipient.id);
+            const duplicate = suite.transaction((transaction) =>
+                suite.repository().notificationService.create({
+                    input: createInput(recipient.account, {
+                        title: "Duplicate",
+                        dedupKey,
                     }),
-                ),
-            ).rejects.toThrow("notification_recipient_dedup_key_unique");
-
-            await expect(countRecipientNotifications(suite, recipient.id)).resolves.toEqual({
-                notifications: 1,
-                messages: 2,
-            });
-
+                    transaction,
+                }),
+            );
+            await Promise.allSettled([duplicate]);
+            const afterDuplicate = await countRecipientNotifications(suite, recipient.id);
             await suite.transaction((transaction) =>
                 suite.repository().notificationService.create({
                     input: createInput(other.account, { dedupKey }),
                     transaction,
                 }),
             );
+            const otherNotifications = await countRecipientNotifications(suite, other.id);
 
-            await expect(countRecipientNotifications(suite, other.id)).resolves.toEqual({
+            // Assert
+            expect(beforeDuplicate).toEqual({
+                notifications: 1,
+                messages: 2,
+            });
+            await expect(duplicate).rejects.toThrow("notification_recipient_dedup_key_unique");
+            expect(afterDuplicate).toEqual({
+                notifications: 1,
+                messages: 2,
+            });
+            expect(otherNotifications).toEqual({
                 notifications: 1,
                 messages: 1,
             });

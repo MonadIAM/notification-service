@@ -15,16 +15,18 @@ async function loadPreferences(
     return await suite.transaction((transaction) => transaction.find(Preference, { recipient }));
 }
 
-describe("PreferenceService integration", () => {
+describe("[DomainService] - Preference", () => {
     const suite = postgresSuite({
         repository: (context) => helpers.service(context),
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    describe("toggle", () => {
-        it("lazily creates a disabled configurable preference", async () => {
+    describe("[Method] - toggle", () => {
+        it("[case] - lazily creates a disabled configurable preference", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
 
+            // Act
             const created = await suite.transaction((transaction) =>
                 suite.repository().preferenceService.toggle({
                     input: {
@@ -35,9 +37,9 @@ describe("PreferenceService integration", () => {
                     transaction,
                 }),
             );
-
             const preferences = await loadPreferences(suite, recipient.id);
 
+            // Assert
             expect(preferences).toEqual([
                 expect.objectContaining({
                     category: NotificationCategory.INVITES,
@@ -48,7 +50,8 @@ describe("PreferenceService integration", () => {
             ]);
         });
 
-        it("toggles the existing row without creating a duplicate", async () => {
+        it("[case] - toggles the existing row without creating a duplicate", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const existing = await suite.fixtures().createPreference({
                 category: NotificationCategory.SYSTEM,
@@ -57,6 +60,7 @@ describe("PreferenceService integration", () => {
                 recipient,
             });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().preferenceService.toggle({
                     input: {
@@ -67,31 +71,28 @@ describe("PreferenceService integration", () => {
                     transaction,
                 }),
             );
+            const enabledPreferences = await loadPreferences(suite, recipient.id);
+            await suite.transaction((transaction) =>
+                suite.repository().preferenceService.toggle({
+                    input: {
+                        category: NotificationCategory.SYSTEM,
+                        channelType: ChannelType.EMAIL,
+                        account: recipient.account,
+                    },
+                    transaction,
+                }),
+            );
+            const disabledPreferences = await loadPreferences(suite, recipient.id);
 
-            let preferences = await loadPreferences(suite, recipient.id);
-
-            expect(preferences).toEqual([
+            // Assert
+            expect(enabledPreferences).toEqual([
                 expect.objectContaining({
                     updatedAt: expect.any(Date),
                     isDuplicationEnabled: true,
                     id: existing.id,
                 }),
             ]);
-
-            await suite.transaction((transaction) =>
-                suite.repository().preferenceService.toggle({
-                    input: {
-                        category: NotificationCategory.SYSTEM,
-                        channelType: ChannelType.EMAIL,
-                        account: recipient.account,
-                    },
-                    transaction,
-                }),
-            );
-
-            preferences = await loadPreferences(suite, recipient.id);
-
-            expect(preferences).toEqual([
+            expect(disabledPreferences).toEqual([
                 expect.objectContaining({
                     isDuplicationEnabled: false,
                     id: existing.id,
@@ -100,8 +101,9 @@ describe("PreferenceService integration", () => {
         });
     });
 
-    describe("create", () => {
-        it("rolls back a duplicate preference created through the service", async () => {
+    describe("[Method] - create", () => {
+        it("[case] - rolls back a duplicate preference created through the service", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const existing = await suite.fixtures().createPreference({
                 category: NotificationCategory.OTHER,
@@ -109,25 +111,26 @@ describe("PreferenceService integration", () => {
                 recipient,
             });
 
-            await expect(
-                suite.transaction(async (transaction) => {
-                    await Promise.resolve(
-                        suite.repository().preferenceService.create({
-                            input: {
-                                category: NotificationCategory.OTHER,
-                                channelType: ChannelType.EMAIL,
-                                isDuplicationEnabled: false,
-                                recipient,
-                            },
-                            transaction,
-                        }),
-                    );
-                }),
-            ).rejects.toThrow("preference_recipient_channel_category_unique");
+            // Act
+            const result = suite.transaction(async (transaction) => {
+                await Promise.resolve(
+                    suite.repository().preferenceService.create({
+                        input: {
+                            category: NotificationCategory.OTHER,
+                            channelType: ChannelType.EMAIL,
+                            isDuplicationEnabled: false,
+                            recipient,
+                        },
+                        transaction,
+                    }),
+                );
+            });
+            await Promise.allSettled([result]);
+            const result1 = await loadPreferences(suite, recipient.id);
 
-            await expect(loadPreferences(suite, recipient.id)).resolves.toEqual([
-                expect.objectContaining({ id: existing.id }),
-            ]);
+            // Assert
+            await expect(result).rejects.toThrow("preference_recipient_channel_category_unique");
+            expect(result1).toEqual([expect.objectContaining({ id: existing.id })]);
         });
     });
 });

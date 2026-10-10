@@ -1,7 +1,6 @@
 # @monadiam/notification-service
 
-Notification Service handles email, SMS, in-app delivery, recipient preferences,
-delivery tracking, audit log, and change log.
+Platform | Notifications: email via AWS SES, SMS via AWS SNS, in-app notifications, recipient preferences, dispatch retries and message status tracking.
 
 ----
 

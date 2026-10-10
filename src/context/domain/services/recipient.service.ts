@@ -3,8 +3,8 @@ import { Inject, Injectable, Scope } from "@nestjs/common";
 import { RECIPIENT_REPOSITORY, CHANNEL_REPOSITORY } from "~context/infrastructure/repositories";
 import { ChannelType } from "~context/enums";
 
-import { CHANNEL_SERVICE } from "./tokens";
 import { Recipient, Channel } from "../entities";
+import { CHANNEL_SERVICE } from "./tokens";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class RecipientService implements Services.Recipient.Contract {

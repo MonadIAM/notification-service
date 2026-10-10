@@ -9,14 +9,15 @@ import { ChannelType } from "~context/enums";
 
 import { ChannelRepository } from "./channel.repository";
 
-describe("ChannelRepository", () => {
+describe("[Repository] - Channel", () => {
     const suite = postgresSuite({
         repository: ({ readManager }) => new ChannelRepository(readManager),
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    describe("findUniqueOrThrow", () => {
-        it("maps the persisted channel through the schema", async () => {
+    describe("[Method] - findUniqueOrThrow", () => {
+        it("[case] - maps the persisted channel through the schema", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const sourceIdentifier = randomUUID();
             const channel = await suite.fixtures().createChannel({
@@ -27,9 +28,12 @@ describe("ChannelRepository", () => {
                 recipient,
             });
 
+            // Act
             const loaded = await suite.repository().findUniqueOrThrow({ where: { id: channel.id } });
+            const result = loaded;
 
-            expect(loaded).toMatchObject({
+            // Assert
+            expect(result).toMatchObject({
                 verifiedAt: channel.verifiedAt,
                 createdAt: channel.createdAt,
                 address: "in-app:mapping",
@@ -44,8 +48,9 @@ describe("ChannelRepository", () => {
         });
     });
 
-    describe("findMany", () => {
-        it("finds channels by recipient and type mapper filters", async () => {
+    describe("[Method] - findMany", () => {
+        it("[case] - finds channels by recipient and type mapper filters", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const matched = await suite.fixtures().createChannel({
                 type: ChannelType.EMAIL,
@@ -53,6 +58,7 @@ describe("ChannelRepository", () => {
             });
             await suite.fixtures().createChannel({ recipient, type: ChannelType.SMS });
 
+            // Act
             const [channels, total] = await suite.repository().findMany({
                 pagination: { currentPage: 1, elementsPerPage: 10 },
                 sort: { createdAt: QueryOrder.ASC },
@@ -67,9 +73,12 @@ describe("ChannelRepository", () => {
                     },
                 },
             });
+            const result = total;
+            const result1 = channels.map(({ id }) => id);
 
-            expect(total).toBe(1);
-            expect(channels.map(({ id }) => id)).toEqual([matched.id]);
+            // Assert
+            expect(result).toBe(1);
+            expect(result1).toEqual([matched.id]);
         });
     });
 });

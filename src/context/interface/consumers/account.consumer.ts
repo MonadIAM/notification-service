@@ -6,10 +6,10 @@ import { escapeUTF8 } from "entities";
 import { lastValueFrom } from "rxjs";
 
 import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE, KafkaIncomingMapper } from "~infrastructure/kafka";
-import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { RECIPIENT_COMMANDS, NOTIFICATION_COMMANDS } from "~context/application/commands";
-import { MessageTemplate } from "~context/enums";
+import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { CONSUMER_META } from "~context/constants";
+import { MessageTemplate } from "~context/enums";
 
 @Controller()
 export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit {

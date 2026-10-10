@@ -30,67 +30,101 @@ function createChangeLog(props: Partial<ChangeLog>): ChangeLog {
     });
 }
 
-describe("LogMaskingService", () => {
+describe("[CommonService] - LogMasking", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    describe("normalize", () => {
-        it("normalizes camelCase, snake_case and mixed case names", () => {
+    describe("[Method] - normalize", () => {
+        it("[case] - normalizes camelCase, snake_case and mixed case names", () => {
+            // Arrange
             const { service } = helpers.service();
 
-            expect(service.normalize("already_snake_case")).toBe("_already_snake_case_");
-            expect(service.normalize("recoveryCode")).toBe("_recovery_code_");
-            expect(service.normalize("TokenTtl")).toBe("_token_ttl_");
-            expect(service.normalize("email")).toBe("_email_");
+            // Act
+            const result = service.normalize("already_snake_case");
+            const result2 = service.normalize("recoveryCode");
+            const result3 = service.normalize("TokenTtl");
+            const result4 = service.normalize("email");
+
+            // Assert
+            expect(result).toBe("_already_snake_case_");
+            expect(result2).toBe("_recovery_code_");
+            expect(result3).toBe("_token_ttl_");
+            expect(result4).toBe("_email_");
         });
     });
 
-    describe("mask", () => {
-        it("masks phone numbers while preserving country code and last two digits", () => {
+    describe("[Method] - mask", () => {
+        it("[case] - masks phone numbers while preserving country code and last two digits", () => {
+            // Arrange
             const { service } = helpers.service();
 
-            expect(service.mask("+79991234567")).toBe("+7********67");
+            // Act
+            const result = service.mask("+79991234567");
+
+            // Assert
+            expect(result).toBe("+7********67");
         });
 
-        it("masks emails while preserving the domain", () => {
+        it("[case] - masks emails while preserving the domain", () => {
+            // Arrange
             const { service } = helpers.service();
 
-            expect(service.mask("user@example.com")).toBe("us********@example.com");
+            // Act
+            const result = service.mask("user@example.com");
+
+            // Assert
+            expect(result).toBe("us********@example.com");
         });
 
-        it("masks ordinary strings with a fixed replacement", () => {
+        it("[case] - masks ordinary strings with a fixed replacement", () => {
+            // Arrange
             const { service } = helpers.service();
 
-            expect(service.mask("opaque-secret")).toBe("****************");
+            // Act
+            const result = service.mask("opaque-secret");
+
+            // Assert
+            expect(result).toBe("****************");
         });
 
-        it("does not return one-character local-part emails in clear text", () => {
+        it("[case] - does not return one-character local-part emails in clear text", () => {
+            // Arrange
             const { service } = helpers.service();
 
-            expect(service.mask("a@example.com")).not.toBe("a@example.com");
+            // Act
+            const result = service.mask("a@example.com");
+
+            // Assert
+            expect(result).not.toBe("a@example.com");
         });
     });
 
-    describe("flatten", () => {
-        it("collects flat sensitive strings", () => {
+    describe("[Method] - flatten", () => {
+        it("[case] - collects flat sensitive strings", () => {
+            // Arrange
             const { service } = helpers.service();
             const targets = helpers.auditTargets();
 
+            // Act
             service.flatten({ node: { password: "secret" }, targets });
 
+            // Assert
             expect(targets).toEqual([{ path: ["password"], value: "secret" }]);
         });
 
-        it("collects nested sensitive strings with a full path", () => {
+        it("[case] - collects nested sensitive strings with a full path", () => {
+            // Arrange
             const { service } = helpers.service();
             const targets = helpers.auditTargets();
 
+            // Act
             service.flatten({
                 node: { credentials: { recoveryCode: "recovery-code" } },
                 targets,
             });
 
+            // Assert
             expect(targets).toEqual([
                 {
                     path: ["credentials", "recoveryCode"],
@@ -99,10 +133,12 @@ describe("LogMaskingService", () => {
             ]);
         });
 
-        it("collects compound fields ending with sensitive names", () => {
+        it("[case] - collects compound fields ending with sensitive names", () => {
+            // Arrange
             const { service } = helpers.service();
             const targets = helpers.auditTargets();
 
+            // Act
             service.flatten({
                 node: {
                     primaryEmail: "user@example.com",
@@ -112,6 +148,7 @@ describe("LogMaskingService", () => {
                 targets,
             });
 
+            // Assert
             expect(targets).toEqual([
                 { path: ["primaryEmail"], value: "user@example.com" },
                 { path: ["refreshToken"], value: "refresh-token" },
@@ -119,25 +156,30 @@ describe("LogMaskingService", () => {
             ]);
         });
 
-        it("collects each string from a sensitive array", () => {
+        it("[case] - collects each string from a sensitive array", () => {
+            // Arrange
             const { service } = helpers.service();
             const targets = helpers.auditTargets();
 
+            // Act
             service.flatten({
                 node: { tokens: ["first-token", "second-token"] },
                 targets,
             });
 
+            // Assert
             expect(targets).toEqual([
                 { path: ["tokens", 0], value: "first-token" },
                 { path: ["tokens", 1], value: "second-token" },
             ]);
         });
 
-        it("collects strings nested inside objects under a sensitive array", () => {
+        it("[case] - collects strings nested inside objects under a sensitive array", () => {
+            // Arrange
             const { service } = helpers.service();
             const targets = helpers.auditTargets();
 
+            // Act
             service.flatten({
                 node: {
                     tokens: [{ value: "first-token" }, { value: "second-token" }],
@@ -145,28 +187,34 @@ describe("LogMaskingService", () => {
                 targets,
             });
 
+            // Assert
             expect(targets).toEqual([
                 { path: ["tokens", 0, "value"], value: "first-token" },
                 { path: ["tokens", 1, "value"], value: "second-token" },
             ]);
         });
 
-        it("does not skip objects under sensitive keys", () => {
+        it("[case] - does not skip objects under sensitive keys", () => {
+            // Arrange
             const { service } = helpers.service();
             const targets = helpers.auditTargets();
 
+            // Act
             service.flatten({
                 node: { secret: { value: "nested-secret" } },
                 targets,
             });
 
+            // Assert
             expect(targets).toEqual([{ path: ["secret", "value"], value: "nested-secret" }]);
         });
 
-        it("does not classify safe technical fields by sensitive substrings", () => {
+        it("[case] - does not classify safe technical fields by sensitive substrings", () => {
+            // Arrange
             const { service } = helpers.service();
             const targets = helpers.auditTargets();
 
+            // Act
             service.flatten({
                 node: {
                     hashAlgorithm: "sha256",
@@ -176,80 +224,103 @@ describe("LogMaskingService", () => {
                 targets,
             });
 
+            // Assert
             expect(targets).toEqual([]);
         });
 
-        it("preserves recursion through safe objects whose names contain sensitive substrings", () => {
+        it("[case] - preserves recursion through safe objects whose names contain sensitive substrings", () => {
+            // Arrange
             const { service } = helpers.service();
             const targets = helpers.auditTargets();
 
+            // Act
             service.flatten({
                 node: { tokenPolicy: { description: "keep for audit" } },
                 targets,
             });
 
+            // Assert
             expect(targets).toEqual([]);
         });
     });
 
-    describe("unflatten", () => {
-        it("sets a flat value", () => {
+    describe("[Method] - unflatten", () => {
+        it("[case] - sets a flat value", () => {
+            // Arrange
             const { service } = helpers.service();
             const node = { password: "secret" };
 
+            // Act
             service.unflatten({ node, path: ["password"], value: "masked" });
 
+            // Assert
             expect(node).toEqual({ password: "masked" });
         });
 
-        it("sets a nested array value", () => {
+        it("[case] - sets a nested array value", () => {
+            // Arrange
             const { service } = helpers.service();
             const node = { credentials: { tokens: ["first-token"] } };
 
+            // Act
             service.unflatten({
                 node,
                 path: ["credentials", "tokens", 0],
                 value: "masked",
             });
 
+            // Assert
             expect(node).toEqual({ credentials: { tokens: ["masked"] } });
         });
 
-        it("ignores missing branches", () => {
+        it("[case] - ignores missing branches", () => {
+            // Arrange
             const { service } = helpers.service();
             const node = { credentials: {} };
 
-            expect(() =>
+            // Act
+            const act = (): unknown =>
                 service.unflatten({
                     node,
                     path: ["credentials", "tokens", 0],
                     value: "masked",
-                }),
-            ).not.toThrow();
+                });
+
+            // Assert
+            expect(act).not.toThrow();
             expect(node).toEqual({ credentials: {} });
         });
     });
 
-    describe("maskAuditLog", () => {
-        it("does not call Vault when there are no sensitive fields", async () => {
+    describe("[Method] - maskAuditLog", () => {
+        it("[case] - does not call Vault when there are no sensitive fields", async () => {
+            // Arrange
             const { service, vault } = helpers.service();
             const input = { name: "Unit Notification" };
 
-            await expect(service.maskAuditLog({ input })).resolves.toBe(input);
+            // Act
+            const result = await service.maskAuditLog({ input });
+
+            // Assert
+            expect(result).toBe(input);
             expect(vault.hmacBatch).not.toHaveBeenCalled();
         });
 
-        it("masks sensitive values using one Vault batch", async () => {
+        it("[case] - masks sensitive values using one Vault batch", async () => {
+            // Arrange
             const { service, vault } = helpers.service();
 
+            // Act
             const result = await service.maskAuditLog({
                 input: {
                     password: "first-secret",
                     nested: { token: "second-secret" },
                 },
             });
+            const result1 = vault.hmacBatch;
 
-            expect(vault.hmacBatch).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 inputs: ["first-secret", "second-secret"],
                 name: "audit-mask-key",
             });
@@ -267,17 +338,21 @@ describe("LogMaskingService", () => {
             });
         });
 
-        it("does not mutate input when sensitive fields are masked", async () => {
+        it("[case] - does not mutate input when sensitive fields are masked", async () => {
+            // Arrange
             const { service } = helpers.service();
             const input = { password: "first-secret" };
 
+            // Act
             const result = await service.maskAuditLog({ input });
 
+            // Assert
             expect(result).not.toBe(input);
             expect(input).toEqual({ password: "first-secret" });
         });
 
-        it("does not mask false-positive technical fields", async () => {
+        it("[case] - does not mask false-positive technical fields", async () => {
+            // Arrange
             const { service, vault } = helpers.service();
             const input = {
                 hashAlgorithm: "sha256",
@@ -286,9 +361,12 @@ describe("LogMaskingService", () => {
                 password: "first-secret",
             };
 
+            // Act
             const result = await service.maskAuditLog({ input });
+            const result1 = vault.hmacBatch;
 
-            expect(vault.hmacBatch).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 inputs: ["first-secret"],
                 name: "audit-mask-key",
             });
@@ -303,9 +381,11 @@ describe("LogMaskingService", () => {
             });
         });
 
-        it("masks plural PII keys", async () => {
+        it("[case] - masks plural PII keys", async () => {
+            // Arrange
             const { service, vault } = helpers.service();
 
+            // Act
             const result = await service.maskAuditLog({
                 input: {
                     emails: ["user@example.com"],
@@ -313,8 +393,10 @@ describe("LogMaskingService", () => {
                     phones: ["+79991234567"],
                 },
             });
+            const result1 = vault.hmacBatch;
 
-            expect(vault.hmacBatch).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 inputs: ["user@example.com", "passport-number", "+79991234567"],
                 name: "audit-mask-key",
             });
@@ -337,13 +419,16 @@ describe("LogMaskingService", () => {
             });
         });
 
-        it("preserves object structure under sensitive keys", async () => {
+        it("[case] - preserves object structure under sensitive keys", async () => {
+            // Arrange
             const { service } = helpers.service();
 
+            // Act
             const result = await service.maskAuditLog({
                 input: { secret: { value: "nested-secret", enabled: true } },
             });
 
+            // Assert
             expect(result).toEqual({
                 secret: {
                     value: {
@@ -355,15 +440,18 @@ describe("LogMaskingService", () => {
             });
         });
 
-        it("masks arrays of objects through the full audit log flow", async () => {
+        it("[case] - masks arrays of objects through the full audit log flow", async () => {
+            // Arrange
             const { service } = helpers.service();
 
+            // Act
             const result = await service.maskAuditLog({
                 input: {
                     tokens: [{ value: "first-token" }, { value: "second-token" }],
                 },
             });
 
+            // Assert
             expect(result).toEqual({
                 tokens: [
                     {
@@ -382,30 +470,40 @@ describe("LogMaskingService", () => {
             });
         });
 
-        it("throws when Vault returns fewer hashes than targets", async () => {
+        it("[case] - throws when Vault returns fewer hashes than targets", async () => {
+            // Arrange
             const vault = helpers.vault({
                 hmacBatch: () => Promise.resolve([]),
             });
             const { service } = helpers.service({ vault });
 
-            await expect(service.maskAuditLog({ input: { password: "first-secret" } })).rejects.toThrow();
+            // Act
+            const result = service.maskAuditLog({ input: { password: "first-secret" } });
+
+            // Assert
+            await expect(result).rejects.toThrow();
         });
     });
 
-    describe("maskChangeLog", () => {
-        it("masks old and new sensitive values independently", async () => {
+    describe("[Method] - maskChangeLog", () => {
+        it("[case] - masks old and new sensitive values independently", async () => {
+            // Arrange
             const { service, vault } = helpers.service();
             const delta = new DeltaChanges({
                 token: { old: "old-token", new: "new-token" },
             });
 
+            // Act
             const result = await service.maskChangeLog({ delta });
+            const result1 = vault.hmacBatch;
+            const result2 = result.token.old;
 
-            expect(vault.hmacBatch).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 inputs: ["old-token", "new-token"],
                 name: "audit-mask-key",
             });
-            expect(result.token.old).toEqual({
+            expect(result2).toEqual({
                 value: "****************",
                 hash: "hmac:old-token",
             });
@@ -415,19 +513,24 @@ describe("LogMaskingService", () => {
             });
         });
 
-        it("masks compound fields ending with sensitive names", async () => {
+        it("[case] - masks compound fields ending with sensitive names", async () => {
+            // Arrange
             const { service, vault } = helpers.service();
             const delta = new DeltaChanges({
                 refreshToken: { old: "old-token", new: "new-token" },
             });
 
+            // Act
             const result = await service.maskChangeLog({ delta });
+            const result1 = vault.hmacBatch;
+            const result2 = result.refreshToken.old;
 
-            expect(vault.hmacBatch).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 inputs: ["old-token", "new-token"],
                 name: "audit-mask-key",
             });
-            expect(result.refreshToken.old).toEqual({
+            expect(result2).toEqual({
                 value: "****************",
                 hash: "hmac:old-token",
             });
@@ -437,18 +540,24 @@ describe("LogMaskingService", () => {
             });
         });
 
-        it("preserves safe fields when sensitive fields are masked", async () => {
+        it("[case] - preserves safe fields when sensitive fields are masked", async () => {
+            // Arrange
             const { service } = helpers.service();
             const delta = new DeltaChanges({
                 token: { old: "old-token", new: "new-token" },
                 name: { old: "Old Name", new: "New Name" },
             });
 
+            // Act
             const result = await service.maskChangeLog({ delta });
+            const result1 = result;
+            const result2 = result.name;
+            const result3 = result.token.old;
 
-            expect(result).not.toBe(delta);
-            expect(result.name).toEqual({ old: "Old Name", new: "New Name" });
-            expect(result.token.old).toEqual({
+            // Assert
+            expect(result1).not.toBe(delta);
+            expect(result2).toEqual({ old: "Old Name", new: "New Name" });
+            expect(result3).toEqual({
                 value: "****************",
                 hash: "hmac:old-token",
             });
@@ -458,57 +567,73 @@ describe("LogMaskingService", () => {
             });
         });
 
-        it("masks only string sides of sensitive changes", async () => {
+        it("[case] - masks only string sides of sensitive changes", async () => {
+            // Arrange
             const { service, vault } = helpers.service();
             const delta = new DeltaChanges({
                 token: { old: null, new: "new-token" },
                 password: { old: "old-password", new: null },
             });
 
+            // Act
             const result = await service.maskChangeLog({ delta });
+            const result1 = vault.hmacBatch;
+            const result2 = result.token.old;
+            const result3 = result.token.new;
+            const result4 = result.password.old;
 
-            expect(vault.hmacBatch).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 inputs: ["new-token", "old-password"],
                 name: "audit-mask-key",
             });
-            expect(result.token.old).toBeNull();
-            expect(result.token.new).toEqual({
+            expect(result2).toBeNull();
+            expect(result3).toEqual({
                 value: "****************",
                 hash: "hmac:new-token",
             });
-            expect(result.password.old).toEqual({
+            expect(result4).toEqual({
                 value: "****************",
                 hash: "hmac:old-password",
             });
             expect(result.password.new).toBeNull();
         });
 
-        it("does not call Vault when delta has no sensitive fields", async () => {
+        it("[case] - does not call Vault when delta has no sensitive fields", async () => {
+            // Arrange
             const { service, vault } = helpers.service();
             const delta = new DeltaChanges({
                 name: { old: "Old Name", new: "New Name" },
             });
 
-            await expect(service.maskChangeLog({ delta })).resolves.toBe(delta);
+            // Act
+            const result = await service.maskChangeLog({ delta });
+
+            // Assert
+            expect(result).toBe(delta);
             expect(vault.hmacBatch).not.toHaveBeenCalled();
         });
 
-        it("does not mask false-positive technical fields", async () => {
+        it("[case] - does not mask false-positive technical fields", async () => {
+            // Arrange
             const { service, vault } = helpers.service();
             const delta = new DeltaChanges({
                 hashAlgorithm: { old: "sha1", new: "sha256" },
                 tokenTtl: { old: 300, new: 3600 },
             });
 
+            // Act
             const result = await service.maskChangeLog({ delta });
 
+            // Assert
             expect(result).toBe(delta);
             expect(vault.hmacBatch).not.toHaveBeenCalled();
         });
     });
 
-    describe("sign", () => {
-        it("passes Vault key version through", async () => {
+    describe("[Method] - sign", () => {
+        it("[case] - passes Vault key version through", async () => {
+            // Arrange
             const { service } = helpers.service({
                 vault: helpers.vault({
                     sign: () =>
@@ -519,20 +644,25 @@ describe("LogMaskingService", () => {
                 }),
             });
 
-            await expect(
-                service.sign({
-                    entity: createAuditLog({
-                        input: { name: "Unit Notification" },
-                    }),
+            // Act
+            const result = await service.sign({
+                entity: createAuditLog({
+                    input: { name: "Unit Notification" },
                 }),
-            ).resolves.toEqual({
+            });
+
+            // Assert
+            expect(result).toEqual({
                 signature: "vault-signature",
                 keyVersion: 7,
             });
         });
 
-        it("covers nested audit input", async () => {
+        it("[case] - covers nested audit input", async () => {
+            // Arrange
             const { service } = helpers.service();
+
+            // Act
             const first = await service.sign({
                 entity: createAuditLog({ input: { name: "First" } }),
             });
@@ -540,11 +670,15 @@ describe("LogMaskingService", () => {
                 entity: createAuditLog({ input: { name: "Second" } }),
             });
 
+            // Assert
             expect(first.signature).not.toBe(second.signature);
         });
 
-        it("covers nested change delta", async () => {
+        it("[case] - covers nested change delta", async () => {
+            // Arrange
             const { service } = helpers.service();
+
+            // Act
             const first = await service.sign({
                 entity: createChangeLog({
                     delta: new DeltaChanges({
@@ -560,23 +694,31 @@ describe("LogMaskingService", () => {
                 }),
             });
 
+            // Assert
             expect(first.signature).not.toBe(second.signature);
         });
 
-        it("is reproducible after the entity has been signed", async () => {
+        it("[case] - is reproducible after the entity has been signed", async () => {
+            // Arrange
             const { service } = helpers.service();
             const entity = createAuditLog({
                 input: { name: "Unit Notification" },
             });
+
+            // Act
             const first = await service.sign({ entity });
             entity.sign(first);
             const second = await service.sign({ entity });
 
+            // Assert
             expect(second).toEqual(first);
         });
 
-        it("uses a canonical key order for equivalent payloads", async () => {
+        it("[case] - uses a canonical key order for equivalent payloads", async () => {
+            // Arrange
             const { service } = helpers.service();
+
+            // Act
             const first = await service.sign({
                 entity: createAuditLog({ input: { first: "1", second: "2" } }),
             });
@@ -584,6 +726,7 @@ describe("LogMaskingService", () => {
                 entity: createAuditLog({ input: { second: "2", first: "1" } }),
             });
 
+            // Assert
             expect(second).toEqual(first);
         });
     });

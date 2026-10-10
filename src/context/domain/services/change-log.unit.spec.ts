@@ -6,31 +6,37 @@ const EXPIRATION_DATE = new Date("2026-01-01T00:00:00.000Z");
 
 const helpers = new ChangeLogUnitHelpers();
 
-describe("ChangeLogService", () => {
+describe("[DomainService] - ChangeLog", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    describe("purgeExpired", () => {
-        it("finds entries older than the expiration date within the batch and removes them", async () => {
+    describe("[Method] - purgeExpired", () => {
+        it("[case] - finds entries older than the expiration date within the batch and removes them", async () => {
+            // Arrange
             const first = helpers.createChangeLog();
             const second = helpers.createChangeLog({ entityType: "MESSAGE" });
             const { service, repositories, transaction } = helpers.service();
             repositories.changeLogs.find.mockImplementation(() => Promise.resolve([first, second]));
 
+            // Act
             const result = await service.purgeExpired({
                 transaction: transaction.entityManager,
                 expirationDate: EXPIRATION_DATE,
                 batchSize: 50,
             });
+            const result1 = repositories.changeLogs.find;
+            const result2 = transaction.remove;
+            const result3 = transaction.remove;
 
-            expect(repositories.changeLogs.find).toHaveBeenCalledWith({
+            // Assert
+            expect(result1).toHaveBeenCalledWith({
                 where: { createdAt: { $lt: EXPIRATION_DATE } },
                 transaction: transaction.entityManager,
                 options: { limit: 50 },
             });
-            expect(transaction.remove).toHaveBeenNthCalledWith(1, first);
-            expect(transaction.remove).toHaveBeenNthCalledWith(2, second);
+            expect(result2).toHaveBeenNthCalledWith(1, first);
+            expect(result3).toHaveBeenNthCalledWith(2, second);
             expect(result).toEqual([first, second]);
         });
     });

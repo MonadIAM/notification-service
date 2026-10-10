@@ -6,24 +6,27 @@ const EXPIRATION_DATE = new Date("2026-01-01T00:00:00.000Z");
 
 const helpers = new AuditLogUnitHelpers();
 
-describe("AuditLogService", () => {
+describe("[DomainService] - AuditLog", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    describe("purgeExpired", () => {
-        it("finds entries older than the expiration date within the batch and removes them", async () => {
+    describe("[Method] - purgeExpired", () => {
+        it("[case] - finds entries older than the expiration date within the batch and removes them", async () => {
+            // Arrange
             const first = helpers.createAuditLog();
             const second = helpers.createAuditLog({ actionType: "DELETE" });
             const { service, repositories, transaction } = helpers.service();
             repositories.auditLogs.find.mockImplementation(() => Promise.resolve([first, second]));
 
+            // Act
             const result = await service.purgeExpired({
                 transaction: transaction.entityManager,
                 expirationDate: EXPIRATION_DATE,
                 batchSize: 100,
             });
 
+            // Assert
             expect(repositories.auditLogs.find).toHaveBeenCalledWith({
                 where: { createdAt: { $lt: EXPIRATION_DATE } },
                 transaction: transaction.entityManager,

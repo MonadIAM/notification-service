@@ -29,16 +29,18 @@ async function countRecipientGraph(suite: Integration.Domain.Recipient.Suite, re
     });
 }
 
-describe("RecipientService integration", () => {
+describe("[DomainService] - Recipient", () => {
     const suite = postgresSuite({
         repository: (context) => helpers.service(context),
         fixture: (entityManager) => new CoreFixture(entityManager),
     });
 
-    describe("create", () => {
-        it("creates a persisted recipient with a verified in-app channel", async () => {
+    describe("[Method] - create", () => {
+        it("[case] - creates a persisted recipient with a verified in-app channel", async () => {
+            // Arrange
             const account = randomUUID();
 
+            // Act
             const created = await suite.transaction(
                 async (transaction) =>
                     await Promise.resolve(
@@ -48,54 +50,60 @@ describe("RecipientService integration", () => {
                         }),
                     ),
             );
-
             const recipient = await loadRecipient(suite, account);
+            const result = recipient.channels.getItems().map(({ type, isVerified, soundEnabled, address }) => ({
+                soundEnabled,
+                isVerified,
+                address,
+                type,
+            }));
 
+            // Assert
             expect({
                 id: recipient.id,
                 account: recipient.account,
                 timezone: recipient.timezone,
                 locale: recipient.locale,
             }).toEqual({ id: created.id, account, timezone: "Europe/Moscow", locale: "ru" });
-            expect(
-                recipient.channels.getItems().map(({ type, isVerified, soundEnabled, address }) => ({
-                    soundEnabled,
-                    isVerified,
-                    address,
-                    type,
-                })),
-            ).toEqual([{ type: ChannelType.IN_APP, isVerified: true, soundEnabled: true, address: null }]);
+            expect(result).toEqual([{ type: ChannelType.IN_APP, isVerified: true, soundEnabled: true, address: null }]);
         });
 
-        it("rolls back both recipient and in-app channel on a duplicate account", async () => {
+        it("[case] - rolls back both recipient and in-app channel on a duplicate account", async () => {
+            // Arrange
             const account = randomUUID();
             const existing = await suite.fixtures().createRecipient({ account });
             const existingChannel = await suite.fixtures().createChannel({ recipient: existing, type: ChannelType.IN_APP });
 
-            await expect(
-                suite.transaction(async (transaction) => {
-                    await Promise.resolve(
-                        suite.repository().recipientService.create({
-                            input: { account, timezone: "UTC", locale: "en-US" },
-                            transaction,
-                        }),
-                    );
-                }),
-            ).rejects.toThrow("recipient_account_unique");
-
+            // Act
+            const duplicate = suite.transaction(async (transaction) => {
+                await Promise.resolve(
+                    suite.repository().recipientService.create({
+                        input: { account, timezone: "UTC", locale: "en-US" },
+                        transaction,
+                    }),
+                );
+            });
+            await Promise.allSettled([duplicate]);
             const recipient = await loadRecipient(suite, account);
+            const recipientId = recipient.id;
+            const channelIds = recipient.channels.getItems().map(({ id }) => id);
+            const recipientCount = await suite.transaction((transaction) => transaction.count(Recipient, { account }));
 
-            expect(recipient.id).toBe(existing.id);
-            expect(recipient.channels.getItems().map(({ id }) => id)).toEqual([existingChannel.id]);
-            await expect(suite.transaction((transaction) => transaction.count(Recipient, { account }))).resolves.toBe(1);
+            // Assert
+            await expect(duplicate).rejects.toThrow("recipient_account_unique");
+            expect(recipientId).toBe(existing.id);
+            expect(channelIds).toEqual([existingChannel.id]);
+            expect(recipientCount).toBe(1);
         });
     });
 
-    describe("update", () => {
-        it("updates only the recipient selected by account", async () => {
+    describe("[Method] - update", () => {
+        it("[case] - updates only the recipient selected by account", async () => {
+            // Arrange
             const target = await suite.fixtures().createRecipient({ timezone: "UTC", locale: "en-US" });
             const untouched = await suite.fixtures().createRecipient({ timezone: "Asia/Tokyo", locale: "ja" });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().recipientService.update({
                     input: {
@@ -105,10 +113,10 @@ describe("RecipientService integration", () => {
                     transaction,
                 }),
             );
-
             const persistedTarget = await loadRecipient(suite, target.account);
             const persistedUntouched = await loadRecipient(suite, untouched.account);
 
+            // Assert
             expect({
                 updatedAt: persistedTarget.updatedAt,
                 timezone: persistedTarget.timezone,
@@ -122,10 +130,11 @@ describe("RecipientService integration", () => {
         });
     });
 
-    describe("selectOtpChannel", () => {
+    describe("[Method] - selectOtpChannel", () => {
         it.each([ChannelType.EMAIL, ChannelType.SMS])(
-            "persists a verified owned %s channel as the otp default",
+            "[case] - persists a verified owned %s channel as the otp default",
             async (type) => {
+                // Arrange
                 const recipient = await suite.fixtures().createRecipient();
                 const channel = await suite.fixtures().createChannel({
                     sourceIdentifier: randomUUID(),
@@ -134,15 +143,16 @@ describe("RecipientService integration", () => {
                     recipient,
                 });
 
+                // Act
                 await suite.transaction((transaction) =>
                     suite.repository().recipientService.selectOtpChannel({
                         input: { account: recipient.account, channel: channel.id },
                         transaction,
                     }),
                 );
-
                 const persisted = await loadRecipient(suite, recipient.account);
 
+                // Assert
                 expect({ id: persisted.defaultOtpChannel?.id, type: persisted.defaultOtpChannel?.type }).toEqual({
                     type,
                     id: channel.id,
@@ -150,7 +160,8 @@ describe("RecipientService integration", () => {
             },
         );
 
-        it("rejects a verified channel owned by another recipient without changing the otp default", async () => {
+        it("[case] - rejects a verified channel owned by another recipient without changing the otp default", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const owner = await suite.fixtures().createRecipient();
             const foreignChannel = await suite.fixtures().createChannel({
@@ -160,19 +171,22 @@ describe("RecipientService integration", () => {
                 recipient: owner,
             });
 
-            await expect(
-                suite.transaction((transaction) =>
-                    suite.repository().recipientService.selectOtpChannel({
-                        input: {
-                            account: recipient.account,
-                            channel: foreignChannel.id,
-                        },
-                        transaction,
-                    }),
-                ),
-            ).rejects.toThrow("entities.recipient.NOT_OWN_CHANNEL");
+            // Act
+            const result = suite.transaction((transaction) =>
+                suite.repository().recipientService.selectOtpChannel({
+                    input: {
+                        account: recipient.account,
+                        channel: foreignChannel.id,
+                    },
+                    transaction,
+                }),
+            );
+            await Promise.allSettled([result]);
+            const result1 = (await loadRecipient(suite, recipient.account)).defaultOtpChannel;
 
-            expect((await loadRecipient(suite, recipient.account)).defaultOtpChannel).toBeNull();
+            // Assert
+            await expect(result).rejects.toThrow("entities.recipient.NOT_OWN_CHANNEL");
+            expect(result1).toBeNull();
         });
 
         it.each([
@@ -188,7 +202,8 @@ describe("RecipientService integration", () => {
                 type: ChannelType.IN_APP,
                 isVerified: true,
             },
-        ])("rejects $label without changing the existing otp default", async ({ type, isVerified, error }) => {
+        ])("[case] - rejects $label without changing the existing otp default", async ({ type, isVerified, error }) => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const currentDefault = await suite.fixtures().createChannel({
                 sourceIdentifier: randomUUID(),
@@ -203,46 +218,53 @@ describe("RecipientService integration", () => {
                 recipient,
             });
 
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().recipientService.selectOtpChannel({
                     input: { account: recipient.account, channel: currentDefault.id },
                     transaction,
                 }),
             );
+            const result = suite.transaction((transaction) =>
+                suite.repository().recipientService.selectOtpChannel({
+                    input: { account: recipient.account, channel: rejected.id },
+                    transaction,
+                }),
+            );
+            await Promise.allSettled([result]);
+            const result1 = (await loadRecipient(suite, recipient.account)).defaultOtpChannel?.id;
 
-            await expect(
-                suite.transaction((transaction) =>
-                    suite.repository().recipientService.selectOtpChannel({
-                        input: { account: recipient.account, channel: rejected.id },
-                        transaction,
-                    }),
-                ),
-            ).rejects.toThrow(error);
-
-            expect((await loadRecipient(suite, recipient.account)).defaultOtpChannel?.id).toBe(currentDefault.id);
+            // Assert
+            await expect(result).rejects.toThrow(error);
+            expect(result1).toBe(currentDefault.id);
         });
     });
 
-    describe("purge", () => {
-        it("purges the recipient aggregate without touching another recipient", async () => {
+    describe("[Method] - purge", () => {
+        it("[case] - purges the recipient aggregate without touching another recipient", async () => {
+            // Arrange
             const recipient = await suite.fixtures().createRecipient();
             const channel = await suite.fixtures().createChannel({ recipient, type: ChannelType.EMAIL });
             await suite.fixtures().createPreference({ recipient });
             const notification = await suite.fixtures().createNotification({ recipient });
             await suite.fixtures().createMessage({ notification, channel });
             const untouched = await suite.fixtures().createRecipient();
+            const rowsBeforePurge = await countRecipientGraph(suite, recipient.id);
 
-            await expect(countRecipientGraph(suite, recipient.id)).resolves.toBe(5);
-
+            // Act
             await suite.transaction((transaction) =>
                 suite.repository().recipientService.purge({
                     input: { account: recipient.account },
                     transaction,
                 }),
             );
+            const rowsAfterPurge = await countRecipientGraph(suite, recipient.id);
+            const remainingRecipientId = (await loadRecipient(suite, untouched.account)).id;
 
-            await expect(countRecipientGraph(suite, recipient.id)).resolves.toBe(0);
-            expect((await loadRecipient(suite, untouched.account)).id).toBe(untouched.id);
+            // Assert
+            expect(rowsBeforePurge).toBe(5);
+            expect(rowsAfterPurge).toBe(0);
+            expect(remainingRecipientId).toBe(untouched.id);
         });
     });
 });

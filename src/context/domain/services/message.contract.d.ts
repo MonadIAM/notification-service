@@ -1,94 +1,92 @@
 import { FailureReason } from "~context/enums";
 
 declare global {
-    namespace Services {
-        namespace Message {
-            interface Contract extends CommandContract {}
+    namespace Services.Message {
+        interface Contract extends CommandContract {}
 
-            interface CommandContract {
-                cancelDispatch: CancelDispatch.Signature;
-                markCancelled: MarkCancelled.Signature;
-                markDelivered: MarkDelivered.Signature;
-                markFailed: MarkFailed.Signature;
-                markSent: MarkSent.Signature;
-                markRead: MarkRead.Signature;
-            }
+        interface CommandContract {
+            cancelDispatch: CancelDispatch.Signature;
+            markCancelled: MarkCancelled.Signature;
+            markDelivered: MarkDelivered.Signature;
+            markFailed: MarkFailed.Signature;
+            markSent: MarkSent.Signature;
+            markRead: MarkRead.Signature;
+        }
 
-            namespace CancelDispatch {
-                type Props = MarkCancelled.Props;
+        namespace CancelDispatch {
+            type Props = MarkCancelled.Props;
 
-                type Result = Promise<boolean>;
+            type Result = Promise<boolean>;
 
-                type Signature = (props: Props) => Result;
-            }
+            type Signature = (props: Props) => Result;
+        }
 
-            namespace MarkCancelled {
-                type Props = {
-                    transaction: ORM.EntityManager;
-                    input: {
-                        messages: Entities.Message[];
-                    };
+        namespace MarkCancelled {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: {
+                    messages: Entities.Message[];
                 };
+            };
 
-                type Result = void;
+            type Result = void;
 
-                type Signature = (props: Props) => Result;
-            }
+            type Signature = (props: Props) => Result;
+        }
 
-            namespace MarkDelivered {
-                type Props = {
-                    transaction: ORM.EntityManager;
-                    input: {
-                        message: string;
-                    };
+        namespace MarkDelivered {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: {
+                    message: string;
                 };
+            };
 
-                type Result = Promise<void>;
+            type Result = Promise<void>;
 
-                type Signature = (props: Props) => Result;
-            }
+            type Signature = (props: Props) => Result;
+        }
 
-            namespace MarkFailed {
-                type Props = {
-                    transaction: ORM.EntityManager;
-                    input: {
-                        reason: FailureReason;
-                        message: string;
-                        error?: string;
-                    };
+        namespace MarkFailed {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: {
+                    reason: FailureReason;
+                    message: string;
+                    error?: string;
                 };
+            };
 
-                type Result = Promise<void>;
+            type Result = Promise<void>;
 
-                type Signature = (props: Props) => Result;
-            }
+            type Signature = (props: Props) => Result;
+        }
 
-            namespace MarkSent {
-                type Props = {
-                    transaction: ORM.EntityManager;
-                    input: {
-                        message: string;
-                    };
+        namespace MarkSent {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: {
+                    message: string;
                 };
+            };
 
-                type Result = Promise<void>;
+            type Result = Promise<void>;
 
-                type Signature = (props: Props) => Result;
-            }
+            type Signature = (props: Props) => Result;
+        }
 
-            namespace MarkRead {
-                type Props = {
-                    transaction: ORM.EntityManager;
-                    input: {
-                        message: string;
-                        actor: string;
-                    };
+        namespace MarkRead {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: {
+                    message: string;
+                    actor: string;
                 };
+            };
 
-                type Result = Promise<void>;
+            type Result = Promise<void>;
 
-                type Signature = (props: Props) => Result;
-            }
+            type Signature = (props: Props) => Result;
         }
     }
 }

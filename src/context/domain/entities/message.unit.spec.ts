@@ -17,137 +17,205 @@ function createMessage(overrides?: Partial<Entities.Message.ConstructorProps>): 
     });
 }
 
-describe("Message Entity", () => {
-    describe("constructor", () => {
-        it("should assign required fields and relations", () => {
+describe("[Entity] - Message", () => {
+    describe("[Method] - constructor", () => {
+        it("[case] - assigns required fields and relations", () => {
+            // Arrange
             const notification = entities.createNotification();
             const channel = entities.createChannel({ recipient: notification.recipient });
 
+            // Act
             const message = createMessage({
                 address: "+15551234567",
                 channelType: ChannelType.SMS,
                 notification,
                 channel,
             });
+            const result = message.address;
+            const result1 = message.channelType;
+            const result2 = message.notification;
 
-            expect(message.address).toBe("+15551234567");
-            expect(message.channelType).toBe(ChannelType.SMS);
-            expect(message.notification).toBe(notification);
+            // Assert
+            expect(result).toBe("+15551234567");
+            expect(result1).toBe(ChannelType.SMS);
+            expect(result2).toBe(notification);
             expect(message.channel).toBe(channel);
         });
 
-        it("should default status and retryCount", () => {
-            const message = createMessage();
+        it("[case] - defaults status and retryCount", () => {
+            // Arrange
 
-            expect(message.status).toBe(MessageStatus.QUEUED);
+            // Act
+            const message = createMessage();
+            const result = message.status;
+
+            // Assert
+            expect(result).toBe(MessageStatus.QUEUED);
             expect(message.retryCount).toBe(0);
         });
 
-        it("should auto-generate id, createdAt, version", () => {
-            const message = createMessage();
+        it("[case] - autos-generate id, createdAt, version", () => {
+            // Arrange
 
-            expect(isUUID(message.id, "4")).toBe(true);
-            expect(message.createdAt).toBeInstanceOf(Date);
-            expect(message.version).toBe(1);
-            expect(message.sentAt).toBeUndefined();
-            expect(message.deliveredAt).toBeUndefined();
-            expect(message.failedAt).toBeUndefined();
-            expect(message.cancelledAt).toBeUndefined();
+            // Act
+            const message = createMessage();
+            const result = isUUID(message.id, "4");
+            const result1 = message.createdAt;
+            const result2 = message.version;
+            const result3 = message.sentAt;
+            const result4 = message.deliveredAt;
+            const result5 = message.failedAt;
+            const result6 = message.cancelledAt;
+
+            // Assert
+            expect(result).toBe(true);
+            expect(result1).toBeInstanceOf(Date);
+            expect(result2).toBe(1);
+            expect(result3).toBeUndefined();
+            expect(result4).toBeUndefined();
+            expect(result5).toBeUndefined();
+            expect(result6).toBeUndefined();
             expect(message.readAt).toBeUndefined();
         });
     });
 
-    describe("markSent", () => {
-        it("should mark a queued message as sent", () => {
+    describe("[Method] - markSent", () => {
+        it("[case] - marks a queued message as sent", () => {
+            // Arrange
             const message = createMessage();
 
+            // Act
             message.markSent();
+            const result = message.status;
 
-            expect(message.status).toBe(MessageStatus.SENT);
+            // Assert
+            expect(result).toBe(MessageStatus.SENT);
             expect(message.sentAt).toBeInstanceOf(Date);
         });
 
-        it("should throw when message is not queued", () => {
+        it("[case] - throws when message is not queued", () => {
+            // Arrange
             const message = createMessage();
-            message.markSent();
 
-            expect(() => message.markSent()).toThrow("CANNOT_SEND_FROM_STATE");
+            // Act
+            message.markSent();
+            const act = (): unknown => message.markSent();
+
+            // Assert
+            expect(act).toThrow("CANNOT_SEND_FROM_STATE");
         });
     });
 
-    describe("markDelivered", () => {
-        it("should mark a sent message as delivered", () => {
+    describe("[Method] - markDelivered", () => {
+        it("[case] - marks a sent message as delivered", () => {
+            // Arrange
             const message = createMessage();
             message.markSent();
 
+            // Act
             message.markDelivered();
+            const result = message.status;
 
-            expect(message.status).toBe(MessageStatus.DELIVERED);
+            // Assert
+            expect(result).toBe(MessageStatus.DELIVERED);
             expect(message.deliveredAt).toBeInstanceOf(Date);
         });
 
-        it("should throw when message is not sent", () => {
+        it("[case] - throws when message is not sent", () => {
+            // Arrange
             const message = createMessage();
 
-            expect(() => message.markDelivered()).toThrow("CANNOT_DELIVER_FROM_STATE");
+            // Act
+            const act = (): unknown => message.markDelivered();
+
+            // Assert
+            expect(act).toThrow("CANNOT_DELIVER_FROM_STATE");
         });
     });
 
-    describe("markCancelled", () => {
-        it("should mark message as cancelled", () => {
+    describe("[Method] - markCancelled", () => {
+        it("[case] - marks message as cancelled", () => {
+            // Arrange
             const message = createMessage();
 
+            // Act
             message.markCancelled();
+            const result = message.status;
 
-            expect(message.status).toBe(MessageStatus.CANCELLED);
+            // Assert
+            expect(result).toBe(MessageStatus.CANCELLED);
             expect(message.cancelledAt).toBeInstanceOf(Date);
         });
     });
 
-    describe("markFailed", () => {
+    describe("[Method] - markFailed", () => {
         it.each([
             { reason: FailureReason.PROVIDER, error: "provider timeout" },
             { reason: FailureReason.INTERNAL, error: undefined },
-        ])("should record failure $reason with error $error", ({ reason, error }) => {
+        ])("[case] - records failure $reason with error $error", ({ reason, error }) => {
+            // Arrange
             const message = createMessage();
 
+            // Act
             message.markFailed({ reason, error });
+            const result = message.status;
+            const result1 = message.failedAt;
+            const result2 = message.failureReason;
 
-            expect(message.status).toBe(MessageStatus.FAILED);
-            expect(message.failedAt).toBeInstanceOf(Date);
-            expect(message.failureReason).toBe(reason);
+            // Assert
+            expect(result).toBe(MessageStatus.FAILED);
+            expect(result1).toBeInstanceOf(Date);
+            expect(result2).toBe(reason);
             expect(message.error).toBe(error);
         });
 
-        it("should throw when delivered message is failed", () => {
+        it("[case] - throws when delivered message is failed", () => {
+            // Arrange
             const message = createMessage();
             message.markSent();
             message.markDelivered();
 
-            expect(() => message.markFailed({ reason: FailureReason.PROVIDER })).toThrow("CANNOT_FAIL_DELIVERED");
+            // Act
+            const act = (): unknown => message.markFailed({ reason: FailureReason.PROVIDER });
+
+            // Assert
+            expect(act).toThrow("CANNOT_FAIL_DELIVERED");
         });
     });
 
-    describe("markRead", () => {
-        it("should mark in-app message as read", () => {
+    describe("[Method] - markRead", () => {
+        it("[case] - marks in-app message as read", () => {
+            // Arrange
             const message = createMessage({ channelType: ChannelType.IN_APP, address: "account-id" });
 
+            // Act
             message.markRead();
 
+            // Assert
             expect(message.readAt).toBeInstanceOf(Date);
         });
 
-        it.each([ChannelType.EMAIL, ChannelType.SMS])("should reject read state for %s", (channelType) => {
+        it.each([ChannelType.EMAIL, ChannelType.SMS])("[case] - rejects read state for %s", (channelType) => {
+            // Arrange
             const message = createMessage({ channelType });
 
-            expect(() => message.markRead()).toThrow("READ_STATE_IN_APP_ONLY");
+            // Act
+            const act = (): unknown => message.markRead();
+
+            // Assert
+            expect(act).toThrow("READ_STATE_IN_APP_ONLY");
         });
 
-        it("should throw when message is already read", () => {
+        it("[case] - throws when message is already read", () => {
+            // Arrange
             const message = createMessage({ channelType: ChannelType.IN_APP, address: "account-id" });
-            message.markRead();
 
-            expect(() => message.markRead()).toThrow("ALREADY_READ");
+            // Act
+            message.markRead();
+            const act = (): unknown => message.markRead();
+
+            // Assert
+            expect(act).toThrow("ALREADY_READ");
         });
     });
 });

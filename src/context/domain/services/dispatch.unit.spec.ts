@@ -11,19 +11,23 @@ function createMessage(channelType: ChannelType): Entities.Message {
     return helpers.createMessage({ notification, channelType, address: "user@example.com" });
 }
 
-describe("DispatchService", () => {
+describe("[DomainService] - Dispatch", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    describe("send", () => {
-        it("routes an email message to the email adapter with subject and html", async () => {
+    describe("[Method] - send", () => {
+        it("[case] - routes an email message to the email adapter with subject and html", async () => {
+            // Arrange
             const { service, services } = helpers.service();
             const message = createMessage(ChannelType.EMAIL);
 
+            // Act
             await service.send({ message });
+            const result = services.email.send;
 
-            expect(services.email.send).toHaveBeenCalledWith({
+            // Assert
+            expect(result).toHaveBeenCalledWith({
                 to: "user@example.com",
                 subject: "Unit Title",
                 html: "Unit Body",
@@ -31,13 +35,17 @@ describe("DispatchService", () => {
             expect(services.sms.send).not.toHaveBeenCalled();
         });
 
-        it("routes any non-email message to the sms adapter with the body only", async () => {
+        it("[case] - routes any non-email message to the sms adapter with the body only", async () => {
+            // Arrange
             const { service, services } = helpers.service();
             const message = createMessage(ChannelType.SMS);
 
+            // Act
             await service.send({ message });
+            const result = services.sms.send;
 
-            expect(services.sms.send).toHaveBeenCalledWith({
+            // Assert
+            expect(result).toHaveBeenCalledWith({
                 to: "user@example.com",
                 body: "Unit Body",
             });

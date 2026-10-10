@@ -17,24 +17,28 @@ function createOwnedMessage(): Entities.Message {
     return helpers.createMessage({ id: MESSAGE_ID, notification });
 }
 
-describe("MessageService", () => {
+describe("[DomainService] - Message", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    describe("markSent", () => {
-        it("finds the message and marks it sent", async () => {
+    describe("[Method] - markSent", () => {
+        it("[case] - finds the message and marks it sent", async () => {
+            // Arrange
             const message = helpers.createMessage({ id: MESSAGE_ID });
             const { service, repositories, transaction } = helpers.service();
             const markSpy = jest.spyOn(message, "markSent");
             repositories.messages.findUniqueOrThrow.mockImplementation(() => Promise.resolve(message));
 
+            // Act
             await service.markSent({
                 transaction: transaction.entityManager,
                 input: { message: MESSAGE_ID },
             });
+            const result = repositories.messages.findUniqueOrThrow;
 
-            expect(repositories.messages.findUniqueOrThrow).toHaveBeenCalledWith({
+            // Assert
+            expect(result).toHaveBeenCalledWith({
                 transaction: transaction.entityManager,
                 where: { id: MESSAGE_ID },
             });
@@ -42,30 +46,35 @@ describe("MessageService", () => {
         });
     });
 
-    describe("markDelivered", () => {
-        it("finds the message and marks it delivered", async () => {
+    describe("[Method] - markDelivered", () => {
+        it("[case] - finds the message and marks it delivered", async () => {
+            // Arrange
             const message = helpers.createMessage({ id: MESSAGE_ID });
             message.markSent();
             const { service, repositories, transaction } = helpers.service();
             const markSpy = jest.spyOn(message, "markDelivered");
             repositories.messages.findUniqueOrThrow.mockImplementation(() => Promise.resolve(message));
 
+            // Act
             await service.markDelivered({
                 transaction: transaction.entityManager,
                 input: { message: MESSAGE_ID },
             });
 
+            // Assert
             expect(markSpy).toHaveBeenCalledTimes(1);
         });
     });
 
-    describe("markFailed", () => {
-        it("passes the failure reason and error through to the entity", async () => {
+    describe("[Method] - markFailed", () => {
+        it("[case] - passes the failure reason and error through to the entity", async () => {
+            // Arrange
             const message = helpers.createMessage({ id: MESSAGE_ID });
             const { service, repositories, transaction } = helpers.service();
             const markSpy = jest.spyOn(message, "markFailed");
             repositories.messages.findUniqueOrThrow.mockImplementation(() => Promise.resolve(message));
 
+            // Act
             await service.markFailed({
                 transaction: transaction.entityManager,
                 input: {
@@ -75,6 +84,7 @@ describe("MessageService", () => {
                 },
             });
 
+            // Assert
             expect(markSpy).toHaveBeenCalledWith({
                 error: "provider rejected the request",
                 reason: FailureReason.PROVIDER,
@@ -82,19 +92,23 @@ describe("MessageService", () => {
         });
     });
 
-    describe("markRead", () => {
-        it("marks the message read for the owning account", async () => {
+    describe("[Method] - markRead", () => {
+        it("[case] - marks the message read for the owning account", async () => {
+            // Arrange
             const message = createOwnedMessage();
             const { service, repositories, transaction } = helpers.service();
             const markSpy = jest.spyOn(message, "markRead");
             repositories.messages.findUniqueOrThrow.mockImplementation(() => Promise.resolve(message));
 
+            // Act
             await service.markRead({
                 input: { message: MESSAGE_ID, actor: ACCOUNT_ID },
                 transaction: transaction.entityManager,
             });
+            const result = repositories.messages.findUniqueOrThrow;
 
-            expect(repositories.messages.findUniqueOrThrow).toHaveBeenCalledWith({
+            // Assert
+            expect(result).toHaveBeenCalledWith({
                 options: { populate: ["notification", "notification.recipient"] },
                 transaction: transaction.entityManager,
                 where: { id: MESSAGE_ID },
@@ -102,39 +116,48 @@ describe("MessageService", () => {
             expect(markSpy).toHaveBeenCalledTimes(1);
         });
 
-        it("hides the message behind a not-found error for any other actor", async () => {
+        it("[case] - hides the message behind a not-found error for any other actor", async () => {
+            // Arrange
             const message = createOwnedMessage();
             const { service, repositories, transaction } = helpers.service();
             const markSpy = jest.spyOn(message, "markRead");
             repositories.messages.findUniqueOrThrow.mockImplementation(() => Promise.resolve(message));
 
-            await expect(
-                service.markRead({
-                    input: { message: MESSAGE_ID, actor: OTHER_ACCOUNT_ID },
-                    transaction: transaction.entityManager,
-                }),
-            ).rejects.toThrow("services.message.NOT_FOUND");
+            // Act
+            const result = service.markRead({
+                input: { message: MESSAGE_ID, actor: OTHER_ACCOUNT_ID },
+                transaction: transaction.entityManager,
+            });
+            await Promise.allSettled([result]);
 
+            // Assert
+            await expect(result).rejects.toThrow("services.message.NOT_FOUND");
             expect(markSpy).not.toHaveBeenCalled();
         });
     });
 
-    describe("markCancelled", () => {
-        it("merges and cancels each given message", () => {
+    describe("[Method] - markCancelled", () => {
+        it("[case] - merges and cancels each given message", () => {
+            // Arrange
             const first = helpers.createMessage({ id: MESSAGE_ID });
             const second = helpers.createMessage({ id: SECOND_MESSAGE_ID });
             const { service, transaction } = helpers.service();
             const firstSpy = jest.spyOn(first, "markCancelled");
             const secondSpy = jest.spyOn(second, "markCancelled");
 
+            // Act
             service.markCancelled({
                 transaction: transaction.entityManager,
                 input: { messages: [first, second] },
             });
+            const result = transaction.merge;
+            const result1 = transaction.merge;
+            const result2 = firstSpy;
 
-            expect(transaction.merge).toHaveBeenNthCalledWith(1, first);
-            expect(transaction.merge).toHaveBeenNthCalledWith(2, second);
-            expect(firstSpy).toHaveBeenCalledTimes(1);
+            // Assert
+            expect(result).toHaveBeenNthCalledWith(1, first);
+            expect(result1).toHaveBeenNthCalledWith(2, second);
+            expect(result2).toHaveBeenCalledTimes(1);
             expect(secondSpy).toHaveBeenCalledTimes(1);
         });
     });

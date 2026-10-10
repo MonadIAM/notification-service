@@ -8,12 +8,14 @@ const helpers = new MessageQueriesUnitHelpers();
 const ACTOR = "actor-account";
 const ID = "entity-a";
 
-describe("MessageQueries", () => {
-    describe("findMany", () => {
-        it("exposes only delivered in-app messages belonging to the actor's notification", async () => {
+describe("[Queries] - Message", () => {
+    describe("[Method] - findMany", () => {
+        it("[case] - exposes only delivered in-app messages belonging to the actor's notification", async () => {
+            // Arrange
             const { queries, messageRepository } = helpers.queries();
             messageRepository.findMany.mockResolvedValue([[], 0]);
 
+            // Act
             await queries.findMany({
                 mode: QueryMode.DEFAULT,
                 pagination: PAGINATION,
@@ -22,6 +24,7 @@ describe("MessageQueries", () => {
                 sort: {},
             });
 
+            // Assert
             expect(messageRepository.findMany.mock.calls).toEqual([
                 [
                     expect.objectContaining({
@@ -37,18 +40,23 @@ describe("MessageQueries", () => {
         });
     });
 
-    describe("findMany / findUnique", () => {
-        it("allows management to retrieve delivery records independently of inbox visibility", async () => {
+    describe("[Behavior] - record lookup", () => {
+        it("[case] - allows management to retrieve delivery records independently of inbox visibility", async () => {
+            // Arrange
             const { queries, messageRepository } = helpers.queries();
             messageRepository.findMany.mockResolvedValue([[], 0]);
             const message = helpers.createMessage();
             messageRepository.findUniqueOrThrow.mockResolvedValue(message);
 
+            // Act
             await queries.findMany({ mode: QueryMode.MANAGE, pagination: PAGINATION, filters: {}, sort: {} });
             const result = await queries.findUnique({ mode: QueryMode.MANAGE, message: ID });
+            const result1 = messageRepository.findMany.mock.calls;
+            const result2 = result;
 
-            expect(messageRepository.findMany.mock.calls).toEqual([[{ pagination: PAGINATION, filters: {}, sort: {} }]]);
-            expect(result).toBe(message);
+            // Assert
+            expect(result1).toEqual([[{ pagination: PAGINATION, filters: {}, sort: {} }]]);
+            expect(result2).toBe(message);
             expect(messageRepository.findUniqueOrThrow.mock.calls).toEqual([[{ where: { id: ID } }]]);
         });
     });

@@ -5,9 +5,9 @@ import { lastValueFrom } from "rxjs";
 import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { FailureReason, KafkaTopic, MessageStatus } from "~context/enums";
 import { CONSUMER_META, DEBOUNCED_CATEGORIES } from "~context/constants";
-import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues";
 import { MESSAGE_COMMANDS } from "~context/application/commands";
+import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { DISPATCH_SERVICE } from "~context/domain/services";
 import { Exception } from "~common/exceptions";
 import {
