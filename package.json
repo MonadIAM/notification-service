@@ -3,7 +3,7 @@
   "description": "Platform | Notifications: email via AWS SES, SMS via AWS SNS, in-app notifications, recipient preferences, dispatch retries and message status tracking.",
   "author": "Daniil Egorov (https://github.com/Lambdius)",
   "license": "SEE LICENSE IN LICENSE",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "dist/index.js",
   "engines": {
     "node": "24.18.0"
