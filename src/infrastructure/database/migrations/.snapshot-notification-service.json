@@ -757,9 +757,11 @@
           "enumItems": [
             "access-control-service",
             "notification-service",
+            "organization-service",
             "certificate-service",
             "identity-service",
-            "template-service"
+            "template-service",
+            "hr-service"
           ],
           "mappedType": "enum",
           "nativeEnumName": "notification_source_service"
@@ -2015,9 +2017,11 @@
       "items": [
         "access-control-service",
         "notification-service",
+        "organization-service",
         "certificate-service",
         "identity-service",
-        "template-service"
+        "template-service",
+        "hr-service"
       ]
     }
   }
