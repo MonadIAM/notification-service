@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { LockMode } from "@mikro-orm/core";
 
 import { MessageUnitHelpers } from "~testing/unit/domain-service/message.helpers";
 import { FailureReason } from "~context/enums";
@@ -109,7 +110,10 @@ describe("[DomainService] - Message", () => {
 
             // Assert
             expect(result).toHaveBeenCalledWith({
-                options: { populate: ["notification", "notification.recipient"] },
+                options: {
+                    populate: ["notification", "notification.recipient"],
+                    lockMode: LockMode.PESSIMISTIC_WRITE,
+                },
                 transaction: transaction.entityManager,
                 where: { id: MESSAGE_ID },
             });

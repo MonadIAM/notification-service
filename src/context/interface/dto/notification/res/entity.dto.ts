@@ -1,8 +1,10 @@
 import { ApiProperty, ApiSchema } from "@nestjs/swagger";
-import { Expose } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 
-import { NotificationCategory, PlatformService } from "~context/enums";
+import { NotificationCategory, PlatformService, ChannelType } from "~context/enums";
 import { Validator } from "~common/validator";
+
+import { MessageDTO } from "../../message";
 
 @ApiSchema({ name: "Notification" })
 export class NotificationDTO {
@@ -42,4 +44,17 @@ export class NotificationDTO {
     @Validator.IsDate()
     @ApiProperty({ required: true, type: Date })
     declare public createdAt: Date;
+
+    @Expose()
+    @Type(() => MessageDTO)
+    @Validator.IsOptional()
+    @Validator.ValidateNested()
+    @ApiProperty({ required: true, type: MessageDTO, nullable: true })
+    declare public message: Nullable<MessageDTO>;
+
+    @Expose()
+    @Validator.IsArray()
+    @Validator.IsEnum(ChannelType, { each: true })
+    @ApiProperty({ required: true, enum: ChannelType, enumName: "ChannelType", isArray: true })
+    declare public duplicatedTo: ChannelType[];
 }

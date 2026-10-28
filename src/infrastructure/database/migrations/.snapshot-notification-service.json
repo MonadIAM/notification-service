@@ -562,6 +562,17 @@
         },
         {
           "columnNames": [
+            "notification_id",
+            "channel_type"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "message_notification_channel_type_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
             "id"
           ],
           "composite": false,

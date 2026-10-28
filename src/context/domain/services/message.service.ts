@@ -1,4 +1,5 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
+import { LockMode } from "@mikro-orm/core";
 
 import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { DISPATCH_DELAY_QUEUE } from "~context/infrastructure/queues/tokens";
@@ -49,7 +50,10 @@ export class MessageService implements Services.Message.Contract {
     public async markRead(props: Services.Message.MarkRead.Props): Services.Message.MarkRead.Result {
         const { transaction, input } = props;
         const message = await this.messageRepository.findUniqueOrThrow({
-            options: { populate: ["notification", "notification.recipient"] },
+            options: {
+                populate: ["notification", "notification.recipient"],
+                lockMode: LockMode.PESSIMISTIC_WRITE,
+            },
             where: { id: input.message },
             transaction,
         });

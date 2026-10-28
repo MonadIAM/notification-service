@@ -8,6 +8,13 @@ export const MessageSchema = new EntitySchema<Message>({
     tableName: "message",
     schema: "notification",
 
+    uniques: [
+        {
+            name: "message_notification_channel_type_unique",
+            properties: ["notification", "channelType"],
+        },
+    ],
+
     indexes: [
         {
             name: "message_notification_idx",

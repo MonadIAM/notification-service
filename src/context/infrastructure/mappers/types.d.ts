@@ -110,6 +110,7 @@ declare global {
                 realm?: LinkFilterDTO;
                 sourceService?: StringFilterDTO;
                 createdAt?: OrdinalFilterDTO<Date>;
+                isRead?: boolean;
             };
 
             type Sort = {
