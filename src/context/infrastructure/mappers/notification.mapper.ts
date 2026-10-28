@@ -1,6 +1,6 @@
 import { QueryOrder } from "@mikro-orm/postgresql";
 
-import { NotificationCategory, PlatformService } from "~context/enums";
+import { NotificationCategory, PlatformService, ChannelType } from "~context/enums";
 import { ORMAdapter } from "~infrastructure/database/utils";
 
 export class NotificationMapper implements Repositories.Mappers.Contract<
@@ -31,6 +31,18 @@ export class NotificationMapper implements Repositories.Mappers.Contract<
         if (filters.createdAt) {
             where.createdAt = ORMAdapter.applyOrdinalFilter<Date>(filters.createdAt);
         }
+        if (filters.isRead !== undefined) {
+            where.$and = [
+                {
+                    messages: {
+                        $some: {
+                            readAt: filters.isRead ? { $ne: null } : null,
+                            channelType: ChannelType.IN_APP,
+                        },
+                    },
+                },
+            ];
+        }
 
         return where;
     }
@@ -42,7 +54,7 @@ export class NotificationMapper implements Repositories.Mappers.Contract<
     ): ORM.FindOptions<Entities.Notification, P, F> {
         return {
             ...basic,
-            orderBy: ORMAdapter.orderBy<Entities.Notification>(sort, { createdAt: QueryOrder.ASC }),
+            orderBy: ORMAdapter.orderBy<Entities.Notification>(sort, { createdAt: QueryOrder.DESC, id: QueryOrder.DESC }),
             ...ORMAdapter.pagination(pagination),
         };
     }

@@ -1,8 +1,25 @@
-import { QueryMode } from "~context/enums";
+import { QueryMode, ChannelType } from "~context/enums";
 
 declare global {
     namespace Queries.Notification {
-        interface Contract extends ControllerContract {}
+        type Data = Entities.Notification & {
+            message: Nullable<Entities.Message>;
+            duplicatedTo: ChannelType[];
+        };
+
+        interface Contract extends InternalContract, ControllerContract {}
+
+        interface InternalContract {
+            mapNotification: MapNotification.Signature;
+        }
+
+        namespace MapNotification {
+            type Props = { notification: Entities.Notification };
+
+            type Result = Data;
+
+            type Signature = (props: Props) => Result;
+        }
 
         interface ControllerContract {
             countUnread: CountUnread.Signature;
@@ -32,7 +49,7 @@ declare global {
 
             type Props = DefaultProps | ManageProps;
 
-            type Result = Promise<Entities.Notification>;
+            type Result = Promise<Data>;
 
             type Signature = (props: Props) => Result;
         }
@@ -55,7 +72,7 @@ declare global {
 
             type Props = DefaultProps | ManageProps;
 
-            type Result = Promise<[Entities.Notification[], number]>;
+            type Result = Promise<[Data[], number]>;
 
             type Signature = (props: Props) => Result;
         }

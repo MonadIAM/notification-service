@@ -71,9 +71,10 @@ describe("[Repository] - Message", () => {
                 notification,
                 channel,
             });
+            const otherNotification = await suite.fixtures().createNotification({ recipient });
             await suite.fixtures().createMessage({
                 channelType: ChannelType.EMAIL,
-                notification,
+                notification: otherNotification,
                 channel,
             });
 

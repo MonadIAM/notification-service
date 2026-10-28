@@ -35,6 +35,12 @@ export class DefaultFiltersDTO implements Omit<Repositories.Mappers.Notification
     public sourceService?: StringFilterDTO;
 
     @Expose()
+    @Validator.IsBoolean()
+    @Validator.IsOptional()
+    @ApiProperty({ required: false, type: Boolean })
+    public isRead?: boolean;
+
+    @Expose()
     @Validator.IsOptional()
     @Validator.ValidateNested()
     @Type(() => OrdinalFilterDTO)

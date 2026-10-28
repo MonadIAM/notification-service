@@ -1,4 +1,5 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
+import { LoadStrategy } from "@mikro-orm/core";
 
 import { NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
 import { ChannelType, MessageStatus, QueryMode } from "~context/enums";
@@ -29,7 +30,12 @@ export class NotificationQueries implements Queries.Notification.Contract {
         return { count };
     }
 
-    public findUnique(props: Queries.Notification.FindUnique.Props): Queries.Notification.FindUnique.Result {
+    public async findUnique(props: Queries.Notification.FindUnique.Props): Queries.Notification.FindUnique.Result {
+        const options: ORM.FindOptions<Entities.Notification, "messages"> = {
+            strategy: LoadStrategy.JOINED,
+            populate: ["messages"],
+        };
+
         const where: ORM.FilterQuery<Entities.Notification> = {
             id: props.notification,
         };
@@ -45,10 +51,17 @@ export class NotificationQueries implements Queries.Notification.Contract {
             };
         }
 
-        return this.notificationRepository.findUniqueOrThrow({ where });
+        const notification = await this.notificationRepository.findUniqueOrThrow({ where, options });
+
+        return this.mapNotification({ notification });
     }
 
-    public findMany(props: Queries.Notification.FindMany.Props): Queries.Notification.FindMany.Result {
+    public async findMany(props: Queries.Notification.FindMany.Props): Queries.Notification.FindMany.Result {
+        const options: ORM.FindOptions<Entities.Notification, "messages"> = {
+            strategy: LoadStrategy.JOINED,
+            populate: ["messages"],
+        };
+
         const prefilter: ORM.ObjectQuery<Entities.Notification> = {};
 
         if (props.mode === QueryMode.DEFAULT) {
@@ -62,11 +75,30 @@ export class NotificationQueries implements Queries.Notification.Contract {
             };
         }
 
-        return this.notificationRepository.findMany({
+        const [notifications, count] = await this.notificationRepository.findMany({
             pagination: props.pagination,
             filters: props.filters,
             sort: props.sort,
             prefilter,
+            options,
         });
+
+        return [notifications.map((notification) => this.mapNotification({ notification })), count];
+    }
+
+    public mapNotification({
+        notification,
+    }: Queries.Notification.MapNotification.Props): Queries.Notification.MapNotification.Result {
+        const result: Queries.Notification.Data = { ...notification, message: null, duplicatedTo: [] };
+
+        for (const message of notification.messages.getItems()) {
+            if (message.channelType === ChannelType.IN_APP) {
+                result.message = message;
+            } else if (message.status === MessageStatus.DELIVERED) {
+                result.duplicatedTo.push(message.channelType);
+            }
+        }
+
+        return result;
     }
 }
