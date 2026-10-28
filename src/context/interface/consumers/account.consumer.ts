@@ -1,7 +1,8 @@
 import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/microservices";
+import { I18nService, I18N_OPTIONS, type I18nOptions } from "nestjs-i18n";
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
 import { AccountTopicAction, KafkaTopic } from "@monadiam/shared";
-import { I18nService } from "nestjs-i18n";
+import { match } from "@formatjs/intl-localematcher";
 import { escapeUTF8 } from "entities";
 import { lastValueFrom } from "rxjs";
 
@@ -19,6 +20,8 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
 
     public constructor(
         private readonly i18nService: I18nService,
+        @Inject(I18N_OPTIONS)
+        private readonly i18nOptions: I18nOptions,
         @Inject(NOTIFICATION_COMMANDS)
         private readonly notificationCommands: Commands.Notification.ConsumerContract,
         @Inject(RECIPIENT_COMMANDS)
@@ -66,21 +69,32 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
         this.schemaRegistry.validate({ topic: KafkaTopic.ACCOUNT, value: message });
         switch (message.actionType) {
             case AccountTopicAction.CREATE: {
+                const language = match(
+                    [this.i18nService.resolveLanguage(message.payload.locale ?? this.i18nOptions.fallbackLanguage)],
+                    this.i18nService.getSupportedLanguages(),
+                    this.i18nOptions.fallbackLanguage,
+                    { algorithm: "lookup" },
+                );
+
                 const args = { otp: escapeUTF8(message.payload.otp) };
                 const [title, body] = await Promise.all<[string, string]>([
                     this.i18nService.translate(`templates.${MessageTemplate.ACCOUNT_VERIFICATION_OTP}.subject`, {
-                        lang: "en",
+                        lang: language,
                         args,
                     }),
                     this.i18nService.translate(`templates.${MessageTemplate.ACCOUNT_VERIFICATION_OTP}.body`, {
-                        lang: "en",
+                        lang: language,
                         args,
                     }),
                 ]);
+
                 await this.notificationCommands.register({
                     input: {
-                        account: message.payload.account,
                         identifier: message.payload.identifier,
+                        timezone: message.payload.timezone,
+                        account: message.payload.account,
+                        locale: message.payload.locale,
+                        language,
                         title,
                         body,
                     },
@@ -90,13 +104,16 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
                 break;
             }
             case AccountTopicAction.VERIFY:
-                if (message.payload.identifier) {
-                    await this.recipientCommands.confirm({
-                        input: { account: message.payload.account, identifier: message.payload.identifier },
-                        incoming: props.incoming,
-                        context: CONSUMER_META,
-                    });
-                }
+                await this.recipientCommands.confirm({
+                    input: {
+                        identifier: message.payload.identifier,
+                        timezone: message.payload.timezone,
+                        account: message.payload.account,
+                        locale: message.payload.locale,
+                    },
+                    incoming: props.incoming,
+                    context: CONSUMER_META,
+                });
                 break;
             case AccountTopicAction.PURGE:
                 await this.recipientCommands.purge({

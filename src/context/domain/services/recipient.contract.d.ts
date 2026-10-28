@@ -48,7 +48,13 @@ declare namespace Services.Recipient {
     }
 
     namespace EnsureChannel {
-        type Props = Services.Channel.Create.Props;
+        type Props = {
+            transaction: ORM.EntityManager;
+            input: Services.Channel.Create.Props["input"] & {
+                timezone?: string;
+                locale?: string;
+            };
+        };
 
         type Result = Promise<{
             recipient: Entities.Recipient;

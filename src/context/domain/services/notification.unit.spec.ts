@@ -30,6 +30,7 @@ function createInput(
         account: ACCOUNT_ID,
         title: "Unit Title",
         body: "Unit Body",
+        locale: "en",
         ...overrides,
     };
 }
@@ -177,10 +178,11 @@ describe("[DomainService] - Notification", () => {
                     input: {
                         account: ACCOUNT_ID,
                         sourceIdentifier: "identifier-id",
-                        address: "destination",
-                        type,
                         title: "Verify account",
+                        address: "destination",
+                        language: "en",
                         body: "OTP",
+                        type,
                     },
                 });
                 const result1 = result.notification;
@@ -248,6 +250,7 @@ describe("[DomainService] - Notification", () => {
                     type: ChannelType.SMS,
                     title: "Verify account",
                     body: "New OTP",
+                    language: "en",
                 },
             });
             const result1 = result.notification.recipient;
@@ -276,9 +279,10 @@ describe("[DomainService] - Notification", () => {
                 input: {
                     account: ACCOUNT_ID,
                     sourceIdentifier: "different",
-                    type: ChannelType.EMAIL,
                     address: "user@example.test",
+                    type: ChannelType.EMAIL,
                     title: "Verify account",
+                    language: "en",
                     body: "OTP",
                 },
                 transaction: transaction.entityManager,

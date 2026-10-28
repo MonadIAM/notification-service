@@ -56,6 +56,7 @@ export class EntityFactoryRegistry implements Testing.EntityFactory.Contract {
                 template: props.template ?? "unit.template",
                 title: props.title ?? "Unit Title",
                 body: props.body ?? "Unit Body",
+                locale: props.locale ?? null,
             }),
             props,
         );

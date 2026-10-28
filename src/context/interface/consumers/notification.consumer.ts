@@ -1,14 +1,15 @@
 import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/microservices";
 import { NotificationTopicAction, NotificationContentKind } from "@monadiam/shared";
+import { I18nService, I18N_OPTIONS, type I18nOptions } from "nestjs-i18n";
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
-import { I18nService } from "nestjs-i18n";
+import { match } from "@formatjs/intl-localematcher";
 import { escapeUTF8 } from "entities";
 import { lastValueFrom } from "rxjs";
 
 import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE, KafkaIncomingMapper } from "~infrastructure/kafka";
+import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { NOTIFICATION_COMMANDS } from "~context/application/commands";
 import { CONSUMER_META, CUSTOM_TEMPLATE } from "~context/constants";
-import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { KafkaTopic } from "~context/enums";
 
 @Controller()
@@ -19,6 +20,8 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
 
     public constructor(
         private readonly i18nService: I18nService,
+        @Inject(I18N_OPTIONS)
+        private readonly i18nOptions: I18nOptions,
         @Inject(NOTIFICATION_COMMANDS)
         private readonly notificationCommands: Commands.Notification.ConsumerContract,
         @Inject(KAFKA_METRICS_RECORDER)
@@ -114,24 +117,33 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
     public async render(props: Consumers.Notification.Render.Props): Consumers.Notification.Render.Result {
         const { realm, input } = props.payload;
 
+        let locale: Nullable<string>;
         let title: string;
         let body: string;
 
         if (input.kind === NotificationContentKind.TEMPLATE) {
+            locale = match(
+                [this.i18nService.resolveLanguage(input.language)],
+                this.i18nService.getSupportedLanguages(),
+                this.i18nOptions.fallbackLanguage,
+                { algorithm: "lookup" },
+            );
+
             const args = input.params
                 ? Object.fromEntries(Object.entries(input.params).map(([key, value]) => [key, escapeUTF8(value)]))
                 : undefined;
             [title, body] = await Promise.all<[string, string]>([
                 this.i18nService.translate(`templates.${input.template}.subject`, {
-                    lang: input.language,
+                    lang: locale,
                     args,
                 }),
                 this.i18nService.translate(`templates.${input.template}.body`, {
-                    lang: input.language,
+                    lang: locale,
                     args,
                 }),
             ]);
         } else {
+            locale = input.language ?? null;
             [title, body] = [input.title, input.text];
         }
 
@@ -141,6 +153,7 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
             account: input.recipient,
             category: input.category,
             dedupKey: input.dedupKey,
+            locale,
             realm,
             title,
             body,

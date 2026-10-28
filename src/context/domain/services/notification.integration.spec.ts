@@ -19,6 +19,7 @@ function createInput(
         template: "integration.template",
         title: "Integration title",
         body: "Integration body",
+        locale: "en",
         account,
         ...overrides,
     };

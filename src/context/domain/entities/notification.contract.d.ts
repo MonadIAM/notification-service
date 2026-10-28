@@ -12,6 +12,7 @@ declare global {
 
                 category: NotificationCategory;
                 sourceService: PlatformService;
+                locale: Nullable<string>;
                 dedupKey?: string;
                 template: string;
                 realm?: string;
@@ -23,12 +24,13 @@ declare global {
             }
 
             type ConstructorProps = {
-                recipient: Entities.Recipient;
                 category: NotificationCategory;
                 sourceService: PlatformService;
-                realm?: string;
+                recipient: Entities.Recipient;
+                locale: Nullable<string>;
                 dedupKey?: string;
                 template: string;
+                realm?: string;
                 title?: string;
                 body?: string;
             };

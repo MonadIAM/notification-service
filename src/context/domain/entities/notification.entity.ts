@@ -10,6 +10,7 @@ export class Notification implements Entities.Notification.Contract {
 
     public category: NotificationCategory;
     public sourceService: PlatformService;
+    public locale: Nullable<string>;
     public dedupKey?: string;
     public template: string;
     public realm?: string;
@@ -28,6 +29,7 @@ export class Notification implements Entities.Notification.Contract {
         this.realm = props.realm;
         this.dedupKey = props.dedupKey;
         this.template = props.template;
+        this.locale = props.locale;
         this.title = props.title;
         this.body = props.body;
 

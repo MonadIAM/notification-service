@@ -26,10 +26,13 @@ declare global {
             type Props = {
                 transaction: ORM.EntityManager;
                 input: {
-                    account: string;
                     sourceIdentifier: string;
+                    timezone?: string;
                     type: ChannelType;
+                    language: string;
+                    account: string;
                     address: string;
+                    locale?: string;
                     title: string;
                     body: string;
                 };
@@ -62,6 +65,7 @@ declare global {
                     category: NotificationCategory;
                     dedupKey?: string;
                     template: string;
+                    locale: Nullable<string>;
                     account: string;
                     realm?: string;
                     title?: string;

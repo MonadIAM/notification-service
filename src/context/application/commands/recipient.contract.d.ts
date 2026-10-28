@@ -27,8 +27,10 @@ declare namespace Commands.Recipient {
             incoming: TransactionManager.Service.IncomingMessage;
             context: Extract.Meta;
             input: {
+                identifier?: Topics.Account.Identifier;
+                timezone?: string;
+                locale?: string;
                 account: string;
-                identifier: Topics.Account.Identifier;
             };
         };
 

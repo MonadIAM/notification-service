@@ -35,6 +35,7 @@ export class NotificationService implements Services.Notification.Contract {
             dedupKey: input.dedupKey,
             category: input.category,
             template: input.template,
+            locale: input.locale,
             realm: input.realm,
             title: input.title,
             body: input.body,
@@ -78,9 +79,11 @@ export class NotificationService implements Services.Notification.Contract {
 
         const { recipient, channel } = await this.recipientService.ensureChannel({
             input: {
-                account: input.account,
                 sourceIdentifier: input.sourceIdentifier,
+                timezone: input.timezone,
                 address: input.address,
+                account: input.account,
+                locale: input.locale,
                 type: input.type,
             },
             transaction,
@@ -90,6 +93,7 @@ export class NotificationService implements Services.Notification.Contract {
             template: MessageTemplate.ACCOUNT_VERIFICATION_OTP,
             sourceService: PlatformService.IDENTITY_SERVICE,
             category: NotificationCategory.SECURITY,
+            locale: input.language,
             title: input.title,
             body: input.body,
             recipient,

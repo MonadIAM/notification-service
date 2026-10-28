@@ -29,6 +29,7 @@ export const NotificationSchema = new EntitySchema<Notification>({
         category: { enum: true, items: () => NotificationCategory, nativeEnumName: "notification_category" },
 
         dedupKey: { type: "text", nullable: true },
+        locale: { type: "text", nullable: true },
         realm: { type: "uuid", nullable: true },
         title: { type: "text", nullable: true },
         body: { type: "text", nullable: true },
