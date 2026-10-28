@@ -2,6 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 
 import { NotificationQueriesUnitHelpers } from "~testing/unit/query-services/notification.helpers";
 import { QueryMode, ChannelType, MessageStatus } from "~context/enums";
+import { OTP_MESSAGE_TEMPLATES } from "~context/constants";
 
 const PAGINATION: Pagination = { currentPage: 2, elementsPerPage: 10 };
 const helpers = new NotificationQueriesUnitHelpers();
@@ -15,7 +16,12 @@ describe("[Queries] - Notification", () => {
                 mode: QueryMode.DEFAULT,
                 scope: {
                     recipient: { account: ACTOR },
-                    messages: { channelType: ChannelType.IN_APP, status: MessageStatus.DELIVERED },
+                    template: {
+                        $nin: [...OTP_MESSAGE_TEMPLATES],
+                    },
+                    messages: {
+                        $some: { channelType: ChannelType.IN_APP, status: MessageStatus.DELIVERED },
+                    },
                 },
             },
             { mode: QueryMode.MANAGE, scope: {} },

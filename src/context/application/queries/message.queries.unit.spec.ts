@@ -2,6 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 
 import { MessageQueriesUnitHelpers } from "~testing/unit/query-services/message.helpers";
 import { QueryMode, ChannelType, MessageStatus } from "~context/enums";
+import { OTP_MESSAGE_TEMPLATES } from "~context/constants";
 
 const PAGINATION: Pagination = { currentPage: 2, elementsPerPage: 10 };
 const helpers = new MessageQueriesUnitHelpers();
@@ -30,7 +31,13 @@ describe("[Queries] - Message", () => {
                     expect.objectContaining({
                         filters: {},
                         prefilter: {
-                            notification: { id: ID, recipient: { account: ACTOR } },
+                            notification: {
+                                id: ID,
+                                recipient: { account: ACTOR },
+                                template: {
+                                    $nin: [...OTP_MESSAGE_TEMPLATES],
+                                },
+                            },
                             channelType: ChannelType.IN_APP,
                             status: MessageStatus.DELIVERED,
                         },

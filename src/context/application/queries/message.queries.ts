@@ -2,6 +2,7 @@ import { Inject, Injectable, Scope } from "@nestjs/common";
 
 import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { ChannelType, MessageStatus, QueryMode } from "~context/enums";
+import { OTP_MESSAGE_TEMPLATES } from "~context/constants";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class MessageQueries implements Queries.Message.Contract {
@@ -18,7 +19,11 @@ export class MessageQueries implements Queries.Message.Contract {
         if (props.mode === QueryMode.DEFAULT) {
             return this.messageRepository.findMany({
                 prefilter: {
-                    notification: { id: props.notification, recipient: { account: props.actor } },
+                    notification: {
+                        template: { $nin: [...OTP_MESSAGE_TEMPLATES] },
+                        recipient: { account: props.actor },
+                        id: props.notification,
+                    },
                     channelType: ChannelType.IN_APP,
                     status: MessageStatus.DELIVERED,
                 },

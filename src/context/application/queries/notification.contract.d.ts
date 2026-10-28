@@ -5,8 +5,17 @@ declare global {
         interface Contract extends ControllerContract {}
 
         interface ControllerContract {
+            countUnread: CountUnread.Signature;
             findUnique: FindUnique.Signature;
             findMany: FindMany.Signature;
+        }
+
+        namespace CountUnread {
+            type Props = { actor: string };
+
+            type Result = Promise<{ count: number }>;
+
+            type Signature = (props: Props) => Result;
         }
 
         namespace FindUnique {
