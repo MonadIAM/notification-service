@@ -52,7 +52,11 @@ export class RecipientService implements Services.Recipient.Contract {
     public async ensureChannel(props: Services.Recipient.EnsureChannel.Props): Services.Recipient.EnsureChannel.Result {
         const { input, transaction } = props;
         const recipient = await this.ensure({
-            input: { account: input.account, locale: input.locale ?? "en", timezone: "UTC" },
+            input: {
+                timezone: input.timezone ?? "UTC",
+                locale: input.locale ?? "en",
+                account: input.account,
+            },
             transaction,
         });
         const channel = this.channelService.ensure({

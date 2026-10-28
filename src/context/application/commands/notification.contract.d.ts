@@ -39,6 +39,7 @@ declare global {
                 context: Extract.Meta;
                 input: {
                     identifier: Topics.Account.Identifier;
+                    timezone?: string;
                     account: string;
                     locale?: string;
                     title: string;

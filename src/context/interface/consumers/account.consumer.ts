@@ -80,6 +80,7 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
                 await this.notificationCommands.register({
                     input: {
                         identifier: message.payload.identifier,
+                        timezone: message.payload.timezone,
                         account: message.payload.account,
                         locale: message.payload.locale,
                         title,
@@ -94,6 +95,7 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
                 await this.recipientCommands.confirm({
                     input: {
                         identifier: message.payload.identifier,
+                        timezone: message.payload.timezone,
                         account: message.payload.account,
                         locale: message.payload.locale,
                     },

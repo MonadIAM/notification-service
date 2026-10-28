@@ -51,6 +51,7 @@ declare namespace Services.Recipient {
         type Props = {
             transaction: ORM.EntityManager;
             input: Services.Channel.Create.Props["input"] & {
+                timezone?: string;
                 locale?: string;
             };
         };

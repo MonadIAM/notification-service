@@ -80,6 +80,7 @@ export class NotificationCommands implements Commands.Notification.Contract {
                         type: input.identifier.type === "email" ? ChannelType.EMAIL : ChannelType.SMS,
                         sourceIdentifier: input.identifier.id,
                         address: input.identifier.value,
+                        timezone: input.timezone,
                         account: input.account,
                         locale: input.locale,
                         title: input.title,

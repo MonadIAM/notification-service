@@ -27,6 +27,7 @@ declare global {
                 transaction: ORM.EntityManager;
                 input: {
                     sourceIdentifier: string;
+                    timezone?: string;
                     type: ChannelType;
                     account: string;
                     address: string;

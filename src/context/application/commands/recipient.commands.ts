@@ -95,6 +95,7 @@ export class RecipientCommands implements Commands.Recipient.Contract {
                             type: input.identifier.type === "email" ? ChannelType.EMAIL : ChannelType.SMS,
                             sourceIdentifier: input.identifier.id,
                             address: input.identifier.value,
+                            timezone: input.timezone,
                             account: input.account,
                             locale: input.locale,
                             isVerified: true,
@@ -103,7 +104,7 @@ export class RecipientCommands implements Commands.Recipient.Contract {
                     });
                 } else {
                     await this.recipientService.ensure({
-                        input: { account: input.account, locale: input.locale ?? "en", timezone: "UTC" },
+                        input: { account: input.account, locale: input.locale ?? "en", timezone: input.timezone ?? "UTC" },
                         transaction,
                     });
                 }
