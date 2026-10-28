@@ -28,7 +28,8 @@ declare namespace Commands.Recipient {
             context: Extract.Meta;
             input: {
                 account: string;
-                identifier: Topics.Account.Identifier;
+                identifier?: Topics.Account.Identifier;
+                locale?: string;
             };
         };
 

@@ -81,6 +81,7 @@ export class NotificationCommands implements Commands.Notification.Contract {
                         sourceIdentifier: input.identifier.id,
                         address: input.identifier.value,
                         account: input.account,
+                        locale: input.locale,
                         title: input.title,
                         body: input.body,
                     },

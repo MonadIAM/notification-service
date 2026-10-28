@@ -26,10 +26,11 @@ declare global {
             type Props = {
                 transaction: ORM.EntityManager;
                 input: {
-                    account: string;
                     sourceIdentifier: string;
                     type: ChannelType;
+                    account: string;
                     address: string;
+                    locale?: string;
                     title: string;
                     body: string;
                 };

@@ -78,9 +78,10 @@ export class NotificationService implements Services.Notification.Contract {
 
         const { recipient, channel } = await this.recipientService.ensureChannel({
             input: {
-                account: input.account,
                 sourceIdentifier: input.sourceIdentifier,
                 address: input.address,
+                account: input.account,
+                locale: input.locale,
                 type: input.type,
             },
             transaction,

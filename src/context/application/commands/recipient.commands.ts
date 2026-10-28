@@ -89,16 +89,24 @@ export class RecipientCommands implements Commands.Recipient.Contract {
             audit: { entityType: EntityType.RECIPIENT, actionType: ActionType.UPDATE, context, input },
             changeLog: true,
             execute: async (transaction) => {
-                await this.recipientService.ensureChannel({
-                    input: {
-                        type: input.identifier.type === "email" ? ChannelType.EMAIL : ChannelType.SMS,
-                        sourceIdentifier: input.identifier.id,
-                        address: input.identifier.value,
-                        account: input.account,
-                        isVerified: true,
-                    },
-                    transaction,
-                });
+                if (input.identifier) {
+                    await this.recipientService.ensureChannel({
+                        input: {
+                            type: input.identifier.type === "email" ? ChannelType.EMAIL : ChannelType.SMS,
+                            sourceIdentifier: input.identifier.id,
+                            address: input.identifier.value,
+                            account: input.account,
+                            locale: input.locale,
+                            isVerified: true,
+                        },
+                        transaction,
+                    });
+                } else {
+                    await this.recipientService.ensure({
+                        input: { account: input.account, locale: input.locale ?? "en", timezone: "UTC" },
+                        transaction,
+                    });
+                }
             },
         });
     }

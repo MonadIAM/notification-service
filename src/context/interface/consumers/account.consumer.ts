@@ -69,18 +69,19 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
                 const args = { otp: escapeUTF8(message.payload.otp) };
                 const [title, body] = await Promise.all<[string, string]>([
                     this.i18nService.translate(`templates.${MessageTemplate.ACCOUNT_VERIFICATION_OTP}.subject`, {
-                        lang: "en",
+                        lang: message.payload.locale ?? "en",
                         args,
                     }),
                     this.i18nService.translate(`templates.${MessageTemplate.ACCOUNT_VERIFICATION_OTP}.body`, {
-                        lang: "en",
+                        lang: message.payload.locale ?? "en",
                         args,
                     }),
                 ]);
                 await this.notificationCommands.register({
                     input: {
-                        account: message.payload.account,
                         identifier: message.payload.identifier,
+                        account: message.payload.account,
+                        locale: message.payload.locale,
                         title,
                         body,
                     },
@@ -90,13 +91,15 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
                 break;
             }
             case AccountTopicAction.VERIFY:
-                if (message.payload.identifier) {
-                    await this.recipientCommands.confirm({
-                        input: { account: message.payload.account, identifier: message.payload.identifier },
-                        incoming: props.incoming,
-                        context: CONSUMER_META,
-                    });
-                }
+                await this.recipientCommands.confirm({
+                    input: {
+                        identifier: message.payload.identifier,
+                        account: message.payload.account,
+                        locale: message.payload.locale,
+                    },
+                    incoming: props.incoming,
+                    context: CONSUMER_META,
+                });
                 break;
             case AccountTopicAction.PURGE:
                 await this.recipientCommands.purge({

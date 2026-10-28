@@ -38,8 +38,9 @@ declare global {
                 incoming: TransactionManager.Service.IncomingMessage;
                 context: Extract.Meta;
                 input: {
-                    account: string;
                     identifier: Topics.Account.Identifier;
+                    account: string;
+                    locale?: string;
                     title: string;
                     body: string;
                 };
