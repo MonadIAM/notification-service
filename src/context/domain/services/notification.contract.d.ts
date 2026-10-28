@@ -29,6 +29,7 @@ declare global {
                     sourceIdentifier: string;
                     timezone?: string;
                     type: ChannelType;
+                    language: string;
                     account: string;
                     address: string;
                     locale?: string;
@@ -64,6 +65,7 @@ declare global {
                     category: NotificationCategory;
                     dedupKey?: string;
                     template: string;
+                    locale: Nullable<string>;
                     account: string;
                     realm?: string;
                     title?: string;

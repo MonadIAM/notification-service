@@ -33,6 +33,12 @@ export class NotificationDTO {
     declare public template: string;
 
     @Expose()
+    @Validator.IsOptional()
+    @Validator.IsString()
+    @ApiProperty({ required: true, type: String, nullable: true })
+    declare public locale: Nullable<string>;
+
+    @Expose()
     @ApiProperty({ required: false, type: String })
     declare public title?: string;
 

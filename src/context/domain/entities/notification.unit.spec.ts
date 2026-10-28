@@ -14,6 +14,7 @@ function createNotification(overrides?: Partial<Entities.Notification.Constructo
         category: NotificationCategory.SECURITY,
         recipient: entities.createRecipient(),
         template: "LOGIN_ALERT",
+        locale: null,
         ...overrides,
     });
 }
