@@ -2,7 +2,7 @@ import { Inject, Injectable, Scope } from "@nestjs/common";
 
 import { NotificationCategory, ChannelType, MessageTemplate, PlatformService } from "~context/enums";
 import { RECIPIENT_REPOSITORY, NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
-import { DUPLICATABLE_CHANNEL_TYPES } from "~context/constants";
+import { DUPLICATABLE_CHANNEL_TYPES, OTP_MESSAGE_TEMPLATES } from "~context/constants";
 
 import { RECIPIENT_SERVICE, MESSAGE_SERVICE } from "./tokens";
 import { Notification, Message } from "../entities";
@@ -43,7 +43,9 @@ export class NotificationService implements Services.Notification.Contract {
 
         transaction.persist(notification);
 
-        const channelTypes = this.resolveChannelTypes({ recipient, category: input.category });
+        const channelTypes = OTP_MESSAGE_TEMPLATES.includes(input.template)
+            ? [ChannelType.EMAIL]
+            : this.resolveChannelTypes({ recipient, category: input.category });
         const channels = recipient.channels.getItems();
         const messages: Entities.Message[] = [];
 

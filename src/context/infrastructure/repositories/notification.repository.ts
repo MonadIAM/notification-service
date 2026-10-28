@@ -3,6 +3,7 @@ import { Injectable, Scope } from "@nestjs/common";
 
 import { Notification } from "~context/domain/entities";
 import { BaseRepository } from "~common/mixins";
+import { ExceptionMapper } from "~common/exceptions";
 
 import { NotificationMapper } from "../mappers";
 
@@ -19,5 +20,16 @@ export class NotificationRepository
         protected readonly readManager: ORM.EntityManager,
     ) {
         super();
+    }
+
+    public async count(props: Repositories.Notification.Count.Props): Repositories.Notification.Count.Result {
+        try {
+            const { transaction, where } = props;
+            const entityManager = transaction ?? this.readManager.fork();
+
+            return await entityManager.count(Notification, where);
+        } catch (error) {
+            throw ExceptionMapper.fromORM(error, this.resource);
+        }
     }
 }

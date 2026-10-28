@@ -5,7 +5,14 @@ import { Extract, FormatResponse, RequirePermission, Swagger } from "~common/dec
 import { NOTIFICATION_QUERIES } from "~context/application/queries";
 import { PermissionCode } from "~context/enums";
 
-import { GetByIdQueryDTO, GetListQueryDTO, GetListBodyDTO, NotificationDTO, ListDTO } from "../dto/notification";
+import {
+    GetByIdQueryDTO,
+    GetListQueryDTO,
+    NotificationDTO,
+    GetListBodyDTO,
+    UnreadCountDTO,
+    ListDTO,
+} from "../dto/notification";
 
 const { NOTIFICATION_READ_PERSONAL } = PermissionCode;
 const {
@@ -26,6 +33,28 @@ export class NotificationController {
         @Inject(NOTIFICATION_QUERIES)
         private readonly notificationQueries: Queries.Notification.ControllerContract,
     ) {}
+
+    @HttpCode(OK)
+    @Get("unread-count")
+    @FormatResponse(UnreadCountDTO)
+    @RequirePermission(NOTIFICATION_READ_PERSONAL)
+    @ApiOperation({
+        summary: "Returns the number of unread in-app notifications for the current account",
+        security: [{ identity: [] }],
+    })
+    @Swagger.Exceptions(
+        INTERNAL_SERVER_ERROR,
+        UNPROCESSABLE_ENTITY,
+        SERVICE_UNAVAILABLE,
+        REQUEST_TIMEOUT,
+        UNAUTHORIZED,
+        FORBIDDEN,
+    )
+    public countUnread(
+        @Extract.Session() { account: actor }: Extract.Session.Auth,
+    ): Queries.Notification.CountUnread.Result {
+        return this.notificationQueries.countUnread({ actor });
+    }
 
     @Get()
     @HttpCode(OK)
