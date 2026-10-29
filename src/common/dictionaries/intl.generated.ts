@@ -177,6 +177,10 @@ export type I18nTranslations = {
             "subject": string;
             "body": string;
         };
+        "REAUTHENTICATION_OTP": {
+            "subject": string;
+            "body": string;
+        };
     };
     "validator": {
         "REQUIRED": string;
