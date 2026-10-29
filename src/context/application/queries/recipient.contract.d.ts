@@ -2,7 +2,11 @@ import { QueryMode } from "~context/enums";
 
 declare global {
     namespace Queries.Recipient {
-        interface Contract extends ControllerContract {}
+        interface Contract extends ControllerContract, ConsumerContract {}
+
+        interface ConsumerContract {
+            findUnique: FindUnique.Signature;
+        }
 
         interface ControllerContract {
             findUnique: FindUnique.Signature;
