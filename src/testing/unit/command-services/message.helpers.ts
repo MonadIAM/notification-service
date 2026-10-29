@@ -20,6 +20,10 @@ export class MessageCommandsUnitHelpers extends ApplicationCommandUnitHelpers im
             messageService,
             commands: new MessageCommands(
                 execution.transactional,
+                this.contract<InfrastructureServices.NotificationStream.PublicContract>({
+                    publishMessages: jest.fn<InfrastructureServices.NotificationStream.PublishMessages.Signature>(),
+                    publish: jest.fn<InfrastructureServices.NotificationStream.Publish.Signature>(),
+                }),
                 this.contract<Services.Message.CommandContract>(messageService),
             ),
         };

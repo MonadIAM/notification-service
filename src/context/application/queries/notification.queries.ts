@@ -12,24 +12,6 @@ export class NotificationQueries implements Queries.Notification.Contract {
         private readonly notificationRepository: Repositories.Notification.QueryContract,
     ) {}
 
-    public async countUnread(props: Queries.Notification.CountUnread.Props): Queries.Notification.CountUnread.Result {
-        const count = await this.notificationRepository.count({
-            where: {
-                template: { $nin: [...OTP_MESSAGE_TEMPLATES] },
-                recipient: { account: props.actor },
-                messages: {
-                    $some: {
-                        channelType: ChannelType.IN_APP,
-                        status: MessageStatus.DELIVERED,
-                        readAt: null,
-                    },
-                },
-            },
-        });
-
-        return { count };
-    }
-
     public async findUnique(props: Queries.Notification.FindUnique.Props): Queries.Notification.FindUnique.Result {
         const options: ORM.FindOptions<Entities.Notification, "messages"> = {
             strategy: LoadStrategy.JOINED,

@@ -1,8 +1,9 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
 import { MessageDispatchAction, ChannelType, ActionType, EntityType, KafkaTopic } from "~context/enums";
-import { NOTIFICATION_SERVICE } from "~context/domain/services";
+import { NOTIFICATION_STREAM_SERVICE } from "~context/infrastructure/services/tokens";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
+import { NOTIFICATION_SERVICE } from "~context/domain/services";
 
 import { NotificationMapper } from "../mappers";
 
@@ -14,6 +15,8 @@ export class NotificationCommands implements Commands.Notification.Contract {
     public constructor(
         @Inject(TRANSACTIONAL_SERVICE)
         private readonly transactionalService: TransactionManager.Service.PublicContract,
+        @Inject(NOTIFICATION_STREAM_SERVICE)
+        private readonly notificationStream: InfrastructureServices.NotificationStream.PublicContract,
         @Inject(NOTIFICATION_SERVICE)
         private readonly notificationService: Services.Notification.CommandContract,
     ) {
@@ -22,7 +25,7 @@ export class NotificationCommands implements Commands.Notification.Contract {
 
     public async create(props: Commands.Notification.Create.Props): Commands.Notification.Create.Result {
         const { incoming, context, actor, realm, input } = props;
-        await this.transactionalService.consume({
+        const result = await this.transactionalService.consume({
             resource: this.resource,
             outbox: {
                 payloadMapper: this.mapper.messageDispatchPayload,
@@ -58,6 +61,12 @@ export class NotificationCommands implements Commands.Notification.Contract {
                 return { messages };
             },
         });
+
+        if (result.status === "processed" && result.value) {
+            await this.notificationStream.publishMessages(result.value);
+        } else {
+            await this.notificationStream.publish({ account: input.account, message: null });
+        }
     }
 
     public async register(props: Commands.Notification.Register.Props): Commands.Notification.Register.Result {
@@ -99,7 +108,7 @@ export class NotificationCommands implements Commands.Notification.Contract {
     public async cancel(props: Commands.Notification.Cancel.Props): Commands.Notification.Cancel.Result {
         const { incoming, context, actor, realm, input } = props;
 
-        await this.transactionalService.consume({
+        const result = await this.transactionalService.consume({
             resource: this.resource,
             outbox: {
                 payloadMapper: this.mapper.messageDispatchPayload,
@@ -121,5 +130,11 @@ export class NotificationCommands implements Commands.Notification.Contract {
                 return { messages };
             },
         });
+
+        if (result.status === "processed" && result.value) {
+            await this.notificationStream.publishMessages(result.value);
+        }
+
+        await this.notificationStream.publish({ account: input.override.account, message: null });
     }
 }
