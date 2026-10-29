@@ -61,11 +61,12 @@ declare global {
             type Props = {
                 transaction: ORM.EntityManager;
                 input: {
+                    delivery?: Topics.Notification.Delivery;
                     sourceService: PlatformService;
                     category: NotificationCategory;
+                    locale: Nullable<string>;
                     dedupKey?: string;
                     template: string;
-                    locale: Nullable<string>;
                     account: string;
                     realm?: string;
                     title?: string;

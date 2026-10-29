@@ -123,7 +123,7 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
 
         if (input.kind === NotificationContentKind.TEMPLATE) {
             locale = match(
-                [this.i18nService.resolveLanguage(input.language)],
+                [this.i18nService.resolveLanguage(input.language ?? this.i18nOptions.fallbackLanguage)],
                 this.i18nService.getSupportedLanguages(),
                 this.i18nOptions.fallbackLanguage,
                 { algorithm: "lookup" },
@@ -150,6 +150,7 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         return {
             template: input.kind === NotificationContentKind.TEMPLATE ? input.template : CUSTOM_TEMPLATE,
             sourceService: input.sourceService,
+            delivery: input.delivery,
             account: input.recipient,
             category: input.category,
             dedupKey: input.dedupKey,
