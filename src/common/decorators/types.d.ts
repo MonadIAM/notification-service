@@ -14,6 +14,7 @@ declare namespace Extract {
         };
 
         type Auth = {
+            expiresAt?: number;
             realms: string[];
             account: string;
             session: string;

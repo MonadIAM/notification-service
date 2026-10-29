@@ -1,5 +1,6 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 
+import { NOTIFICATION_STREAM_SERVICE } from "~context/infrastructure/services/tokens";
 import { TRANSACTIONAL_SERVICE } from "~common/transaction-manager";
 import { MESSAGE_SERVICE } from "~context/domain/services";
 import { ActionType, EntityType } from "~context/enums";
@@ -12,6 +13,8 @@ export class MessageCommands implements Commands.Message.Contract {
     public constructor(
         @Inject(TRANSACTIONAL_SERVICE)
         private readonly transactionalService: TransactionManager.Service.PublicContract,
+        @Inject(NOTIFICATION_STREAM_SERVICE)
+        private readonly notificationStream: InfrastructureServices.NotificationStream.PublicContract,
         @Inject(MESSAGE_SERVICE)
         private readonly messageService: Services.Message.CommandContract,
     ) {}
@@ -30,6 +33,8 @@ export class MessageCommands implements Commands.Message.Contract {
                 await this.messageService.markRead({ input: { message: input.message, actor }, transaction });
             },
         });
+
+        await this.notificationStream.publish({ account: actor, message: null });
 
         return { message: `${this.dictionaryPath}.READ` };
     }

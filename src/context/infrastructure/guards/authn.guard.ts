@@ -50,6 +50,7 @@ export class AuthnGuard implements CanActivate {
                 realms: payload.realms as string[],
                 session: payload.sid as string,
                 account: payload.sub as string,
+                expiresAt: payload.exp,
             };
 
             return true;

@@ -22,6 +22,10 @@ export class NotificationCommandsUnitHelpers
             notificationService,
             commands: new NotificationCommands(
                 execution.transactional,
+                this.contract<InfrastructureServices.NotificationStream.PublicContract>({
+                    publishMessages: jest.fn<InfrastructureServices.NotificationStream.PublishMessages.Signature>(),
+                    publish: jest.fn<InfrastructureServices.NotificationStream.Publish.Signature>(),
+                }),
                 this.contract<Services.Notification.CommandContract>(notificationService),
             ),
         };
