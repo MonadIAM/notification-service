@@ -70,6 +70,9 @@ export type I18nTranslations = {
         };
     };
     "services": {
+        "notification": {
+            "DELIVERY_REQUIRED": string;
+        };
         "channel": {
             "IDENTIFIER_MISMATCH": string;
             "IN_APP_CHANNEL_NOT_FOUND": string;

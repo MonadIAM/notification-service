@@ -3,12 +3,15 @@ import { Inject, Injectable, Scope } from "@nestjs/common";
 import { NotificationCategory, ChannelType, MessageTemplate, PlatformService } from "~context/enums";
 import { RECIPIENT_REPOSITORY, NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
 import { DUPLICATABLE_CHANNEL_TYPES, OTP_MESSAGE_TEMPLATES } from "~context/constants";
+import { Exception } from "~common/exceptions";
 
 import { RECIPIENT_SERVICE, MESSAGE_SERVICE } from "./tokens";
 import { Notification, Message } from "../entities";
 
 @Injectable({ scope: Scope.DEFAULT })
 export class NotificationService implements Services.Notification.Contract {
+    private readonly dictionaryPath = "services.notification";
+
     public constructor(
         @Inject(RECIPIENT_REPOSITORY)
         private readonly recipientRepository: Repositories.Recipient.Contract,
@@ -22,6 +25,11 @@ export class NotificationService implements Services.Notification.Contract {
 
     public async create(props: Services.Notification.Create.Props): Services.Notification.Create.Result {
         const { transaction, input } = props;
+
+        if (input.template === MessageTemplate.IDENTIFIER_VERIFICATION_OTP && !input.delivery) {
+            throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.DELIVERY_REQUIRED` });
+        }
+
         const recipient = await this.recipientRepository.findUniqueOrThrow({
             options: {
                 populate: ["channels", "preferences", "defaultOtpChannel"],
@@ -44,31 +52,41 @@ export class NotificationService implements Services.Notification.Contract {
 
         transaction.persist(notification);
 
-        const channelTypes = OTP_MESSAGE_TEMPLATES.includes(input.template)
-            ? [ChannelType.EMAIL]
-            : this.resolveChannelTypes({ recipient, category: input.category });
-        const channels = recipient.channels.getItems();
         const messages: Entities.Message[] = [];
 
-        const selectedChannels = channelTypes.flatMap((type) => channels.filter((item) => item.type === type));
-
-        for (const channel of selectedChannels) {
-            const channelType = channel.type;
-
+        if (input.delivery) {
             const message = new Message({
-                address: channel.address ?? recipient.account,
+                channelType: input.delivery.channelType,
+                address: input.delivery.address,
                 notification,
-                channelType,
-                channel,
             });
-
-            if (channelType === ChannelType.IN_APP) {
-                message.markSent();
-                message.markDelivered();
-            }
 
             transaction.persist(message);
             messages.push(message);
+        } else {
+            const channelTypes = OTP_MESSAGE_TEMPLATES.includes(input.template)
+                ? [ChannelType.EMAIL]
+                : this.resolveChannelTypes({ recipient, category: input.category });
+            const channels = recipient.channels.getItems();
+            const selectedChannels = channelTypes.flatMap((type) => channels.filter((item) => item.type === type));
+
+            for (const channel of selectedChannels) {
+                const channelType = channel.type;
+                const message = new Message({
+                    address: channel.address ?? recipient.account,
+                    notification,
+                    channelType,
+                    channel,
+                });
+
+                if (channelType === ChannelType.IN_APP) {
+                    message.markSent();
+                    message.markDelivered();
+                }
+
+                transaction.persist(message);
+                messages.push(message);
+            }
         }
 
         return { notification, messages };

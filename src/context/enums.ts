@@ -1,13 +1,5 @@
 export * from "@monadiam/shared";
 
-export enum ChannelType {
-    /* eslint-disable prettier/prettier */
-    IN_APP = "IN_APP",
-    EMAIL  = "EMAIL",
-    SMS    = "SMS",
-    /* eslint-enable prettier/prettier */
-}
-
 export enum MessageStatus {
     /* eslint-disable prettier/prettier */
     QUEUED    = "QUEUED",

@@ -42,6 +42,7 @@ export class NotificationCommands implements Commands.Notification.Contract {
                 const { messages } = await this.notificationService.create({
                     input: {
                         sourceService: input.sourceService,
+                        delivery: input.delivery,
                         dedupKey: input.dedupKey,
                         category: input.category,
                         template: input.template,

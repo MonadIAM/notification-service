@@ -1,4 +1,7 @@
 {
+  "notification": {
+    "DELIVERY_REQUIRED": "A delivery address and channel type are required to verify an identifier."
+  },
   "channel": {
     "IDENTIFIER_MISMATCH": "The identifier does not match the existing delivery channel.",
     "IN_APP_CHANNEL_NOT_FOUND": "In-app channel not found for this recipient."

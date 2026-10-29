@@ -17,6 +17,7 @@ declare global {
                 actor?: string;
                 realm?: string;
                 input: {
+                    delivery?: Topics.Notification.Delivery;
                     category: NotificationCategory;
                     sourceService: PlatformService;
                     locale: Nullable<string>;

@@ -9,8 +9,9 @@ import { lastValueFrom } from "rxjs";
 import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE, KafkaIncomingMapper } from "~infrastructure/kafka";
 import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { NOTIFICATION_COMMANDS } from "~context/application/commands";
+import { RECIPIENT_QUERIES } from "~context/application/queries";
 import { CONSUMER_META, CUSTOM_TEMPLATE } from "~context/constants";
-import { KafkaTopic } from "~context/enums";
+import { KafkaTopic, QueryMode } from "~context/enums";
 
 @Controller()
 export class NotificationConsumer implements Consumers.Notification.Contract, OnModuleInit {
@@ -24,6 +25,8 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         private readonly i18nOptions: I18nOptions,
         @Inject(NOTIFICATION_COMMANDS)
         private readonly notificationCommands: Commands.Notification.ConsumerContract,
+        @Inject(RECIPIENT_QUERIES)
+        private readonly recipientQueries: Queries.Recipient.ConsumerContract,
         @Inject(KAFKA_METRICS_RECORDER)
         private readonly kafkaMetrics: Observability.Metrics.Kafka.PublicContract,
         @Inject(KAFKA_SCHEMA_REGISTRY)
@@ -122,8 +125,19 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         let body: string;
 
         if (input.kind === NotificationContentKind.TEMPLATE) {
+            let language = input.language;
+
+            if (!language) {
+                const recipient = await this.recipientQueries.findUnique({
+                    account: input.recipient,
+                    mode: QueryMode.MANAGE,
+                });
+
+                language = recipient.locale;
+            }
+
             locale = match(
-                [this.i18nService.resolveLanguage(input.language)],
+                [this.i18nService.resolveLanguage(language)],
                 this.i18nService.getSupportedLanguages(),
                 this.i18nOptions.fallbackLanguage,
                 { algorithm: "lookup" },
@@ -150,6 +164,7 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         return {
             template: input.kind === NotificationContentKind.TEMPLATE ? input.template : CUSTOM_TEMPLATE,
             sourceService: input.sourceService,
+            delivery: input.delivery,
             account: input.recipient,
             category: input.category,
             dedupKey: input.dedupKey,
