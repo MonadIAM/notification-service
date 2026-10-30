@@ -14,7 +14,8 @@
   },
   "preference": {
     "CATEGORY_NOT_CONFIGURABLE": "Security notifications cannot be reconfigured.",
-    "CHANNEL_NOT_CONFIGURABLE": "This channel does not support per-category notification preferences."
+    "CHANNEL_NOT_CONFIGURABLE": "This channel does not support per-category notification preferences.",
+    "CHANNEL_UNAVAILABLE": "A verified delivery address is required to change this channel’s preferences."
   },
   "kafka-retry": {
     "HANDLER_NOT_REGISTERED": "No retry handler is registered for topic {topic}.",

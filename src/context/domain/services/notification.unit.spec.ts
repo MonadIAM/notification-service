@@ -95,8 +95,10 @@ describe("[DomainService] - Notification", () => {
             const inApp = helpers.createChannel({ id: IN_APP_CHANNEL_ID, recipient, type: ChannelType.IN_APP });
             const email = helpers.createChannel({
                 address: "user@example.com",
+                sourceIdentifier: EMAIL_CHANNEL_ID,
                 type: ChannelType.EMAIL,
                 id: EMAIL_CHANNEL_ID,
+                isVerified: true,
                 recipient,
             });
             recipient.channels = helpers.collection({ owner: recipient, items: [inApp, email] });
@@ -127,7 +129,7 @@ describe("[DomainService] - Notification", () => {
             {
                 category: NotificationCategory.INVITES,
                 isDuplicationEnabled: undefined,
-                expected: [ChannelType.IN_APP, ChannelType.EMAIL],
+                expected: [ChannelType.IN_APP],
             },
             {
                 category: NotificationCategory.INVITES,
@@ -408,6 +410,23 @@ describe("[DomainService] - Notification", () => {
             expect(result1).toBe(MessageStatus.QUEUED);
             expect(result2).not.toHaveBeenCalled();
             expect(transaction.merge).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("[Behavior] - disabled email delivery", () => {
+        it("[case] - does not create security email messages after the channel loses its identifier", async () => {
+            // Arrange
+            const { recipient } = createRecipient();
+            const channel = helpers.createChannel({ recipient, type: ChannelType.EMAIL });
+            channel.clearIdentifier();
+            recipient.channels = helpers.collection({ owner: recipient, items: [channel] });
+            const { service, transaction } = helpers.service({ recipient });
+
+            // Act
+            const result = await service.create({ input: createInput(), transaction: transaction.entityManager });
+
+            // Assert
+            expect(result.messages).toHaveLength(0);
         });
     });
 });

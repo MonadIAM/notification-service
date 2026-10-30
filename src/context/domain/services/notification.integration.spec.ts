@@ -64,6 +64,7 @@ describe("[DomainService] - Notification", () => {
             });
             const email = await suite.fixtures().createChannel({
                 address: "recipient@example.test",
+                sourceIdentifier: randomUUID(),
                 type: ChannelType.EMAIL,
                 isVerified: true,
                 recipient,
@@ -140,6 +141,7 @@ describe("[DomainService] - Notification", () => {
             });
             await suite.fixtures().createChannel({
                 type: ChannelType.EMAIL,
+                sourceIdentifier: randomUUID(),
                 isVerified: true,
                 recipient,
             });
@@ -174,6 +176,7 @@ describe("[DomainService] - Notification", () => {
             });
             await suite.fixtures().createChannel({
                 type: ChannelType.EMAIL,
+                sourceIdentifier: randomUUID(),
                 isVerified: true,
                 recipient,
             });
@@ -228,6 +231,7 @@ describe("[DomainService] - Notification", () => {
             });
             await suite.fixtures().createChannel({
                 type: ChannelType.EMAIL,
+                sourceIdentifier: randomUUID(),
                 isVerified: true,
                 recipient,
             });

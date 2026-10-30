@@ -1,4 +1,5 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
+import { LockMode } from "@mikro-orm/postgresql";
 
 import { DUPLICATABLE_CHANNEL_TYPES, CONFIGURABLE_NOTIFICATION_CATEGORIES } from "~context/constants";
 import { PREFERENCE_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/infrastructure/repositories";
@@ -22,8 +23,8 @@ export class PreferenceService implements Services.Preference.Contract {
         const preference = new Preference({
             isDuplicationEnabled: input.isDuplicationEnabled,
             channelType: input.channelType,
-            category: input.category,
             recipient: input.recipient,
+            category: input.category,
         });
 
         transaction.persist(preference);
@@ -40,9 +41,15 @@ export class PreferenceService implements Services.Preference.Contract {
         }
 
         const recipient = await this.recipientRepository.findUniqueOrThrow({
+            options: { populate: ["channels"], lockMode: LockMode.PESSIMISTIC_WRITE },
             where: { account: input.account },
             transaction,
         });
+
+        const channel = recipient.channels.getItems().find((item) => item.type === input.channelType);
+        if (!channel?.isVerified || !channel.sourceIdentifier || !channel.address) {
+            throw Exception.conflict({ messageKey: `${this.dictionaryPath}.CHANNEL_UNAVAILABLE` });
+        }
 
         const existing = await this.preferenceRepository.findUnique({
             where: {

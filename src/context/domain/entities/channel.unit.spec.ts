@@ -160,4 +160,28 @@ describe("[Entity] - Channel", () => {
             expect(act).toThrow("SOUND_NOT_APPLICABLE");
         });
     });
+    describe("[Behavior] - identifier assignment", () => {
+        it("[case] - assigns a verified address and clears all delivery fields on removal", () => {
+            // Arrange
+            const channel = createChannel();
+
+            // Act
+            channel.assignIdentifier({ identifier: "selected", address: "selected@example.test" });
+
+            // Assert
+            expect(channel.sourceIdentifier).toBe("selected");
+            expect(channel.address).toBe("selected@example.test");
+            expect(channel.isVerified).toBe(true);
+            expect(channel.verifiedAt).toBeInstanceOf(Date);
+
+            // Act
+            channel.clearIdentifier();
+
+            // Assert
+            expect(channel.sourceIdentifier).toBeUndefined();
+            expect(channel.address).toBeUndefined();
+            expect(channel.isVerified).toBe(false);
+            expect(channel.verifiedAt).toBeUndefined();
+        });
+    });
 });

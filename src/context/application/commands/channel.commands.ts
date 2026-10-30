@@ -16,6 +16,60 @@ export class ChannelCommands implements Commands.Channel.Contract {
         private readonly channelService: Services.Channel.CommandContract,
     ) {}
 
+    public async confirmEmail(props: Commands.Channel.ConfirmEmail.Props): Commands.Channel.ConfirmEmail.Result {
+        const { incoming, input, context } = props;
+        await this.transactionalService.consume({
+            resource: this.resource,
+            incoming,
+            audit: {
+                entityType: EntityType.CHANNEL,
+                actionType: ActionType.UPDATE,
+                context,
+                input,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                await this.channelService.confirmEmail({ input, transaction });
+            },
+        });
+    }
+
+    public async selectEmail(props: Commands.Channel.SelectEmail.Props): Commands.Channel.SelectEmail.Result {
+        const { incoming, input, context } = props;
+        await this.transactionalService.consume({
+            resource: this.resource,
+            incoming,
+            audit: {
+                entityType: EntityType.CHANNEL,
+                actionType: ActionType.UPDATE,
+                context,
+                input,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                await this.channelService.selectEmail({ input, transaction });
+            },
+        });
+    }
+
+    public async purgeEmail(props: Commands.Channel.PurgeEmail.Props): Commands.Channel.PurgeEmail.Result {
+        const { incoming, input, context } = props;
+        await this.transactionalService.consume({
+            resource: this.resource,
+            incoming,
+            audit: {
+                entityType: EntityType.CHANNEL,
+                actionType: ActionType.UPDATE,
+                context,
+                input,
+            },
+            changeLog: true,
+            execute: async (transaction) => {
+                await this.channelService.purgeEmail({ input, transaction });
+            },
+        });
+    }
+
     public async create(props: Commands.Channel.Create.Props): Commands.Channel.Create.Result {
         const { input } = props;
         await this.transactionalService.run({

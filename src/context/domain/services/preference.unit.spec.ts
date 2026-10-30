@@ -77,6 +77,14 @@ describe("[DomainService] - Preference", () => {
         it("[case] - toggles an existing preference and returns it", async () => {
             // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
+            const channel = helpers.createChannel({
+                recipient,
+                type: ChannelType.EMAIL,
+                isVerified: true,
+                sourceIdentifier: ACCOUNT_ID,
+                address: "verified@example.test",
+            });
+            recipient.channels = helpers.collection({ owner: recipient, items: [channel] });
             const existing = helpers.createPreference({
                 category: NotificationCategory.INVITES,
                 channelType: ChannelType.EMAIL,
@@ -117,6 +125,14 @@ describe("[DomainService] - Preference", () => {
         it("[case] - lazily creates a disabled preference when none exists yet", async () => {
             // Arrange
             const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
+            const channel = helpers.createChannel({
+                recipient,
+                type: ChannelType.EMAIL,
+                isVerified: true,
+                sourceIdentifier: ACCOUNT_ID,
+                address: "verified@example.test",
+            });
+            recipient.channels = helpers.collection({ owner: recipient, items: [channel] });
             const { service, transaction } = helpers.service({ recipient });
 
             // Act
@@ -141,5 +157,37 @@ describe("[DomainService] - Preference", () => {
             );
             expect(transaction.persist).toHaveBeenCalledWith(result);
         });
+    });
+
+    describe("[Behavior] - unavailable delivery channel", () => {
+        it.each(["missing", "unverified", "unbound", "addressless"] as const)(
+            "[case] - rejects changes for a %s channel",
+            async (state) => {
+                // Arrange
+                const recipient = helpers.createRecipient({ account: ACCOUNT_ID });
+                if (state !== "missing") {
+                    const channel = helpers.createChannel({
+                        recipient,
+                        type: ChannelType.EMAIL,
+                        isVerified: state !== "unverified",
+                        sourceIdentifier: state === "unbound" ? undefined : ACCOUNT_ID,
+                        address: state === "addressless" ? undefined : "valid@example.test",
+                    });
+                    recipient.channels = helpers.collection({ owner: recipient, items: [channel] });
+                }
+                const { service, repositories, transaction } = helpers.service({ recipient });
+
+                // Act
+                const result = service.toggle({
+                    input: { account: ACCOUNT_ID, channelType: ChannelType.EMAIL, category: NotificationCategory.INVITES },
+                    transaction: transaction.entityManager,
+                });
+
+                // Assert
+                await expect(result).rejects.toThrow("services.preference.CHANNEL_UNAVAILABLE");
+                expect(repositories.preferences.findUnique).not.toHaveBeenCalled();
+                expect(transaction.persist).not.toHaveBeenCalled();
+            },
+        );
     });
 });

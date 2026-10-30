@@ -103,4 +103,20 @@ describe("[Entity] - Preference", () => {
             expect(preference.updatedAt).toBeInstanceOf(Date);
         });
     });
+    describe("[Method] - disable", () => {
+        it("[case] - disables an enabled preference and leaves it disabled on repeated calls", () => {
+            // Arrange
+            const preference = createPreference({ isDuplicationEnabled: true });
+
+            // Act
+            preference.disable();
+            const updatedAt = preference.updatedAt;
+            preference.disable();
+
+            // Assert
+            expect(preference.isDuplicationEnabled).toBe(false);
+            expect(updatedAt).toBeInstanceOf(Date);
+            expect(preference.updatedAt).toBe(updatedAt);
+        });
+    });
 });
