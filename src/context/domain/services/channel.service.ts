@@ -1,4 +1,5 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
+import { LockMode } from "@mikro-orm/postgresql";
 
 import { DUPLICATABLE_CHANNEL_TYPES, CONFIGURABLE_NOTIFICATION_CATEGORIES } from "~context/constants";
 import { CHANNEL_REPOSITORY, RECIPIENT_REPOSITORY } from "~context/infrastructure/repositories";
@@ -17,6 +18,87 @@ export class ChannelService implements Services.Channel.Contract {
         @Inject(CHANNEL_REPOSITORY)
         private readonly channelRepository: Repositories.Channel.Contract,
     ) {}
+
+    public async confirmEmail(props: Services.Channel.ConfirmEmail.Props): Services.Channel.ConfirmEmail.Result {
+        const { input, transaction } = props;
+        const recipient = await this.recipientRepository.findUniqueOrThrow({
+            options: { populate: ["channels"], lockMode: LockMode.PESSIMISTIC_WRITE },
+            where: { account: input.account },
+            transaction,
+        });
+
+        const channel = recipient.channels.getItems().find((item) => item.type === ChannelType.EMAIL);
+
+        if (!channel) {
+            this.createForRecipient({
+                input: {
+                    sourceIdentifier: input.identifier.id,
+                    address: input.identifier.value,
+                    type: ChannelType.EMAIL,
+                    isVerified: true,
+                    recipient,
+                },
+                transaction,
+            });
+        } else if (!channel.isVerified || !channel.sourceIdentifier || !channel.address) {
+            channel.assignIdentifier({
+                identifier: input.identifier.id,
+                address: input.identifier.value,
+            });
+        }
+    }
+
+    public async selectEmail(props: Services.Channel.SelectEmail.Props): Services.Channel.SelectEmail.Result {
+        const { input, transaction } = props;
+        const recipient = await this.recipientRepository.findUniqueOrThrow({
+            options: { populate: ["channels"], lockMode: LockMode.PESSIMISTIC_WRITE },
+            where: { account: input.account },
+            transaction,
+        });
+
+        const channel = recipient.channels.getItems().find((item) => item.type === ChannelType.EMAIL);
+
+        if (channel) {
+            channel.assignIdentifier({ identifier: input.identifier.id, address: input.identifier.value });
+        } else {
+            this.createForRecipient({
+                input: {
+                    sourceIdentifier: input.identifier.id,
+                    address: input.identifier.value,
+                    type: ChannelType.EMAIL,
+                    isVerified: true,
+                    recipient,
+                },
+                transaction,
+            });
+        }
+    }
+
+    public async purgeEmail(props: Services.Channel.PurgeEmail.Props): Services.Channel.PurgeEmail.Result {
+        const { input, transaction } = props;
+        const recipient = await this.recipientRepository.findUniqueOrThrow({
+            options: { populate: ["channels", "preferences", "defaultOtpChannel"], lockMode: LockMode.PESSIMISTIC_WRITE },
+            where: { account: input.account },
+            transaction,
+        });
+        const channel = recipient.channels.getItems().find((item) => item.type === ChannelType.EMAIL);
+
+        if (channel?.sourceIdentifier === input.identifier.id) {
+            if (input.replacement) {
+                channel?.assignIdentifier({ identifier: input.replacement.id, address: input.replacement.value });
+            } else {
+                channel?.clearIdentifier();
+                if (recipient.defaultOtpChannel?.id === channel?.id) {
+                    recipient.clearOtpChannel();
+                }
+                for (const preference of recipient.preferences.getItems()) {
+                    if (preference.channelType === ChannelType.EMAIL) {
+                        preference.disable();
+                    }
+                }
+            }
+        }
+    }
 
     public async create(props: Services.Channel.Create.Props): Services.Channel.Create.Result {
         const { transaction, input } = props;

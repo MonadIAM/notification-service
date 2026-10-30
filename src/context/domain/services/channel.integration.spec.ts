@@ -298,4 +298,71 @@ describe("[DomainService] - Channel", () => {
             expect(result4).toBe(1);
         });
     });
+
+    describe("[Behavior] - email lifecycle", () => {
+        it("[case] - assigns, selects, replaces, disables and restores an email channel without restoring preferences", async () => {
+            // Arrange
+            const recipient = await suite.fixtures().createRecipient();
+            const first: Topics.Account.EmailIdentifier = { id: randomUUID(), type: "email", value: "first@example.test" };
+            const second: Topics.Account.EmailIdentifier = {
+                id: randomUUID(),
+                type: "email",
+                value: "second@example.test",
+            };
+            const service = suite.repository().channelService;
+
+            // Act
+            await suite.transaction((transaction) =>
+                service.confirmEmail({ input: { account: recipient.account, identifier: first }, transaction }),
+            );
+            let channels = (await loadRecipient(suite, recipient.account)).channels.getItems();
+            const channelId = channels.find((item) => item.type === ChannelType.EMAIL)!.id;
+            await suite.transaction((transaction) =>
+                service.confirmEmail({ input: { account: recipient.account, identifier: second }, transaction }),
+            );
+            const preserved = await loadChannel(suite, channelId);
+            await suite.transaction((transaction) =>
+                service.selectEmail({ input: { account: recipient.account, identifier: second }, transaction }),
+            );
+            const selected = await loadChannel(suite, channelId);
+            await suite.transaction((transaction) =>
+                service.purgeEmail({
+                    input: { account: recipient.account, identifier: second, replacement: first },
+                    transaction,
+                }),
+            );
+            const replaced = await loadChannel(suite, channelId);
+            await suite.transaction(async (transaction) => {
+                await transaction.nativeUpdate(
+                    Preference,
+                    { recipient: recipient.id, channelType: ChannelType.EMAIL },
+                    { isDuplicationEnabled: true },
+                );
+            });
+            await suite.transaction((transaction) =>
+                service.purgeEmail({ input: { account: recipient.account, identifier: first }, transaction }),
+            );
+            const disabled = await loadChannel(suite, channelId);
+            const preferences = await loadPreferences(suite, recipient.id);
+            await suite.transaction((transaction) =>
+                service.confirmEmail({ input: { account: recipient.account, identifier: second }, transaction }),
+            );
+            const restored = await loadChannel(suite, channelId);
+            const restoredPreferences = await loadPreferences(suite, recipient.id);
+            channels = (await loadRecipient(suite, recipient.account)).channels.getItems();
+
+            // Assert
+            expect(preserved?.sourceIdentifier).toBe(first.id);
+            expect(selected?.sourceIdentifier).toBe(second.id);
+            expect(replaced?.sourceIdentifier).toBe(first.id);
+            expect(disabled?.isVerified).toBe(false);
+            expect(disabled?.sourceIdentifier).toBeFalsy();
+            expect(disabled?.address).toBeFalsy();
+            expect(preferences.every((item) => !item.isDuplicationEnabled)).toBe(true);
+            expect(restored?.sourceIdentifier).toBe(second.id);
+            expect(restored?.isVerified).toBe(true);
+            expect(restoredPreferences.every((item) => !item.isDuplicationEnabled)).toBe(true);
+            expect(channels.filter((item) => item.type === ChannelType.EMAIL)).toHaveLength(1);
+        });
+    });
 });

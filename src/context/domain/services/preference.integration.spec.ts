@@ -25,6 +25,12 @@ describe("[DomainService] - Preference", () => {
         it("[case] - lazily creates a disabled configurable preference", async () => {
             // Arrange
             const recipient = await suite.fixtures().createRecipient();
+            await suite.fixtures().createChannel({
+                sourceIdentifier: recipient.account,
+                type: ChannelType.EMAIL,
+                isVerified: true,
+                recipient,
+            });
 
             // Act
             const created = await suite.transaction((transaction) =>
@@ -53,6 +59,12 @@ describe("[DomainService] - Preference", () => {
         it("[case] - toggles the existing row without creating a duplicate", async () => {
             // Arrange
             const recipient = await suite.fixtures().createRecipient();
+            await suite.fixtures().createChannel({
+                sourceIdentifier: recipient.account,
+                type: ChannelType.EMAIL,
+                isVerified: true,
+                recipient,
+            });
             const existing = await suite.fixtures().createPreference({
                 category: NotificationCategory.SYSTEM,
                 channelType: ChannelType.EMAIL,
@@ -131,6 +143,37 @@ describe("[DomainService] - Preference", () => {
             // Assert
             await expect(result).rejects.toThrow("preference_recipient_channel_category_unique");
             expect(result1).toEqual([expect.objectContaining({ id: existing.id })]);
+        });
+    });
+
+    describe("[Behavior] - inactive channel", () => {
+        it("[case] - leaves stored preferences unchanged when there is no email channel", async () => {
+            // Arrange
+            const recipient = await suite.fixtures().createRecipient();
+            const preference = await suite.fixtures().createPreference({
+                recipient,
+                channelType: ChannelType.EMAIL,
+                category: NotificationCategory.INVITES,
+                isDuplicationEnabled: false,
+            });
+
+            // Act
+            const result = suite.transaction((transaction) =>
+                suite.repository().preferenceService.toggle({
+                    input: {
+                        account: recipient.account,
+                        channelType: ChannelType.EMAIL,
+                        category: NotificationCategory.INVITES,
+                    },
+                    transaction,
+                }),
+            );
+            await Promise.allSettled([result]);
+            const preferences = await loadPreferences(suite, recipient.id);
+
+            // Assert
+            await expect(result).rejects.toThrow("services.preference.CHANNEL_UNAVAILABLE");
+            expect(preferences).toEqual([expect.objectContaining({ id: preference.id, isDuplicationEnabled: false })]);
         });
     });
 });

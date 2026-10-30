@@ -18,6 +18,7 @@ declare global {
 
                 recipient: Entities.Recipient;
 
+                disable(): void;
                 toggle(): void;
             }
 

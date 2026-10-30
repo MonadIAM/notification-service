@@ -271,4 +271,57 @@ describe("[DomainService] - Channel", () => {
             expect(transaction.persist).not.toHaveBeenCalled();
         });
     });
+
+    describe("[Behavior] - email synchronization", () => {
+        it("[case] - preserves a selected verified email when another email is confirmed", async () => {
+            // Arrange
+            const recipient = helpers.createRecipient();
+            const channel = helpers.createChannel({
+                recipient,
+                type: ChannelType.EMAIL,
+                sourceIdentifier: "selected",
+                address: "selected@example.test",
+                isVerified: true,
+            });
+            recipient.channels = helpers.collection({ owner: recipient, items: [channel] });
+            const { service, transaction } = helpers.service({ recipient });
+
+            // Act
+            await service.confirmEmail({
+                input: { account: recipient.account, identifier: { id: "new", type: "email", value: "new@example.test" } },
+                transaction: transaction.entityManager,
+            });
+
+            // Assert
+            expect(channel.sourceIdentifier).toBe("selected");
+            expect(transaction.persist).not.toHaveBeenCalled();
+        });
+
+        it("[case] - ignores removal of an email that is not selected", async () => {
+            // Arrange
+            const recipient = helpers.createRecipient();
+            const channel = helpers.createChannel({
+                recipient,
+                type: ChannelType.EMAIL,
+                sourceIdentifier: "selected",
+                address: "selected@example.test",
+                isVerified: true,
+            });
+            recipient.channels = helpers.collection({ owner: recipient, items: [channel] });
+            const { service, transaction } = helpers.service({ recipient });
+
+            // Act
+            await service.purgeEmail({
+                input: {
+                    account: recipient.account,
+                    identifier: { id: "other", type: "email", value: "other@example.test" },
+                },
+                transaction: transaction.entityManager,
+            });
+
+            // Assert
+            expect(channel.sourceIdentifier).toBe("selected");
+            expect(channel.isVerified).toBe(true);
+        });
+    });
 });

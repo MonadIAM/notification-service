@@ -7,10 +7,46 @@ declare global {
         interface CommandContract {
             createForRecipient: CreateForRecipient.Signature;
             markVerified: MarkVerified.Signature;
+            confirmEmail: ConfirmEmail.Signature;
+            selectEmail: SelectEmail.Signature;
             toggleSound: ToggleSound.Signature;
+            purgeEmail: PurgeEmail.Signature;
             create: Create.Signature;
             ensure: Ensure.Signature;
             purge: Purge.Signature;
+        }
+
+        namespace ConfirmEmail {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: Topics.Account.EmailVerifiedMessage["payload"];
+            };
+
+            type Result = Promise<void>;
+
+            type Signature = (props: Props) => Result;
+        }
+
+        namespace SelectEmail {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: Topics.Account.EmailSelectedMessage["payload"];
+            };
+
+            type Result = Promise<void>;
+
+            type Signature = (props: Props) => Result;
+        }
+
+        namespace PurgeEmail {
+            type Props = {
+                transaction: ORM.EntityManager;
+                input: Topics.Account.EmailPurgedMessage["payload"];
+            };
+
+            type Result = Promise<void>;
+
+            type Signature = (props: Props) => Result;
         }
 
         namespace CreateForRecipient {

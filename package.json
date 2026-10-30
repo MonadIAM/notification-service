@@ -3,7 +3,7 @@
   "description": "Platform | Notifications: email via AWS SES, SMS via AWS SNS, in-app notifications, recipient preferences, dispatch retries and message status tracking.",
   "author": "Daniil Egorov (https://github.com/Lambdius)",
   "license": "SEE LICENSE IN LICENSE",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "main": "dist/index.js",
   "engines": {
     "node": "24.18.0"
@@ -70,7 +70,7 @@
     "@mikro-orm/nestjs": "7.0.2",
     "@mikro-orm/postgresql": "7.1.13",
     "@mikro-orm/seeder": "7.1.13",
-    "@monadiam/shared": "github:MonadIAM/shared#v3.1.5",
+    "@monadiam/shared": "github:MonadIAM/shared#v3.3.0",
     "@nest-lab/throttler-storage-redis": "1.2.0",
     "@nestjs/bullmq": "11.0.5",
     "@nestjs/common": "11.2.1",

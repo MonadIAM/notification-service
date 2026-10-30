@@ -17,6 +17,11 @@ export class ChannelDTO {
     declare public type: ChannelType;
 
     @Expose()
+    @Validator.IsUUID()
+    @ApiProperty({ required: false, type: String, format: "uuid" })
+    declare public sourceIdentifier?: string;
+
+    @Expose()
     @ApiProperty({ required: false, type: String })
     declare public address?: string;
 

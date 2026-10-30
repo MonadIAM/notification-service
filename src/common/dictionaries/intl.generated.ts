@@ -86,6 +86,7 @@ export type I18nTranslations = {
         "preference": {
             "CATEGORY_NOT_CONFIGURABLE": string;
             "CHANNEL_NOT_CONFIGURABLE": string;
+            "CHANNEL_UNAVAILABLE": string;
         };
         "kafka-retry": {
             "HANDLER_NOT_REGISTERED": string;
@@ -174,6 +175,10 @@ export type I18nTranslations = {
             "body": string;
         };
         "REALM_EXCLUDED": {
+            "subject": string;
+            "body": string;
+        };
+        "REAUTHENTICATION_OTP": {
             "subject": string;
             "body": string;
         };

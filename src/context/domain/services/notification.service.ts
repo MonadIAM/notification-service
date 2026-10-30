@@ -68,7 +68,13 @@ export class NotificationService implements Services.Notification.Contract {
                 ? [ChannelType.EMAIL]
                 : this.resolveChannelTypes({ recipient, category: input.category });
             const channels = recipient.channels.getItems();
-            const selectedChannels = channelTypes.flatMap((type) => channels.filter((item) => item.type === type));
+            const selectedChannels = channelTypes.flatMap((type) =>
+                channels.filter(
+                    (item) =>
+                        item.type === type &&
+                        (item.type === ChannelType.IN_APP || (item.isVerified && item.sourceIdentifier && item.address)),
+                ),
+            );
 
             for (const channel of selectedChannels) {
                 const channelType = channel.type;
@@ -169,7 +175,7 @@ export class NotificationService implements Services.Notification.Contract {
                     (item) => item.channelType === channelType && item.category === category,
                 );
 
-                if (preference ? preference.isDuplicationEnabled : true) {
+                if (preference?.isDuplicationEnabled) {
                     types.add(channelType);
                 }
             }

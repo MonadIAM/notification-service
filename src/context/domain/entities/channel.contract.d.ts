@@ -21,9 +21,16 @@ declare global {
 
                 recipient: Entities.Recipient;
 
+                assignIdentifier(props: AssignIdentifierProps): void;
+                clearIdentifier(): void;
                 markVerified(): void;
                 toggleSound(): void;
             }
+
+            type AssignIdentifierProps = {
+                identifier: string;
+                address: string;
+            };
 
             type ConstructorProps = {
                 type: ChannelType;

@@ -27,6 +27,13 @@ export class Preference implements Entities.Preference.Contract {
         this.recipient = props.recipient;
     }
 
+    public disable(): void {
+        if (this.isDuplicationEnabled) {
+            this.isDuplicationEnabled = false;
+            this.updatedAt = new Date();
+        }
+    }
+
     public toggle(): void {
         this.isDuplicationEnabled = !this.isDuplicationEnabled;
         this.updatedAt = new Date();

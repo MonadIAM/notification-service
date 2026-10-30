@@ -1,19 +1,18 @@
-import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/microservices";
+import { KafkaRetriableException, EventPattern, Payload, Ctx, KafkaContext } from "@nestjs/microservices";
 import { I18nService, I18N_OPTIONS, type I18nOptions } from "nestjs-i18n";
-import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
 import { AccountTopicAction, KafkaTopic } from "@monadiam/shared";
+import { Controller, Inject, Logger } from "@nestjs/common";
 import { match } from "@formatjs/intl-localematcher";
 import { escapeUTF8 } from "entities";
-import { lastValueFrom } from "rxjs";
 
-import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE, KafkaIncomingMapper } from "~infrastructure/kafka";
-import { RECIPIENT_COMMANDS, NOTIFICATION_COMMANDS } from "~context/application/commands";
+import { RECIPIENT_COMMANDS, NOTIFICATION_COMMANDS, CHANNEL_COMMANDS } from "~context/application/commands";
+import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KafkaIncomingMapper } from "~infrastructure/kafka";
 import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { CONSUMER_META } from "~context/constants";
 import { MessageTemplate } from "~context/enums";
 
 @Controller()
-export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit {
+export class AccountConsumer implements Consumers.Account.Contract {
     private readonly incomingMapper = new KafkaIncomingMapper();
     private readonly logger = new Logger(AccountConsumer.name);
     private readonly consumerKey = "notification.account.v1";
@@ -26,19 +25,15 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
         private readonly notificationCommands: Commands.Notification.ConsumerContract,
         @Inject(RECIPIENT_COMMANDS)
         private readonly recipientCommands: Commands.Recipient.ConsumerContract,
+        @Inject(CHANNEL_COMMANDS)
+        private readonly channelCommands: Commands.Channel.ConsumerContract,
         @Inject(KAFKA_METRICS_RECORDER)
         private readonly kafkaMetrics: Observability.Metrics.Kafka.PublicContract,
         @Inject(KAFKA_SCHEMA_REGISTRY)
         private readonly schemaRegistry: Kafka.SchemaRegistry.PublicContract,
         @Inject(KAFKA_RETRY_SERVICE)
         private readonly kafkaRetry: Kafka.Retry.Contract,
-        @Inject(KAFKA_SERVICE)
-        private readonly kafkaClient: ClientKafka,
     ) {}
-
-    public async onModuleInit(): Promise<void> {
-        await this.kafkaClient.connect();
-    }
 
     @EventPattern(KafkaTopic.ACCOUNT)
     public async handle(
@@ -115,6 +110,27 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
                     context: CONSUMER_META,
                 });
                 break;
+            case AccountTopicAction.EMAIL_VERIFIED:
+                await this.channelCommands.confirmEmail({
+                    incoming: props.incoming,
+                    context: CONSUMER_META,
+                    input: message.payload,
+                });
+                break;
+            case AccountTopicAction.EMAIL_SELECTED:
+                await this.channelCommands.selectEmail({
+                    incoming: props.incoming,
+                    context: CONSUMER_META,
+                    input: message.payload,
+                });
+                break;
+            case AccountTopicAction.EMAIL_PURGED:
+                await this.channelCommands.purgeEmail({
+                    incoming: props.incoming,
+                    context: CONSUMER_META,
+                    input: message.payload,
+                });
+                break;
             case AccountTopicAction.PURGE:
                 await this.recipientCommands.purge({
                     input: { account: message.payload.account },
@@ -125,21 +141,11 @@ export class AccountConsumer implements Consumers.Account.Contract, OnModuleInit
         }
     }
 
-    public async reject(props: Consumers.Account.Reject.Props): Consumers.Account.Reject.Result {
-        const { incoming, message, error } = props;
-        this.logger.warn(`Rejected message in account consumer: ${String(error)}`);
+    public reject(props: Consumers.Account.Reject.Props): Consumers.Account.Reject.Result {
+        const { error } = props;
+        this.logger.warn(`Account synchronization failed; keeping the partition offset: ${String(error)}`);
+        this.kafkaMetrics.recordRetry({ topic: KafkaTopic.ACCOUNT, error });
 
-        await lastValueFrom(
-            this.kafkaClient.emit(KafkaTopic.ACCOUNT_DEAD, {
-                key: incoming.event,
-                value: {
-                    originalTopic: KafkaTopic.ACCOUNT,
-                    error: String(error),
-                    payload: message,
-                },
-            }),
-        );
-
-        this.kafkaMetrics.recordDead({ topic: KafkaTopic.ACCOUNT, error });
+        return Promise.reject(new KafkaRetriableException(error instanceof Error ? error : String(error)));
     }
 }

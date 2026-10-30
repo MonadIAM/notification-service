@@ -36,6 +36,22 @@ export class Channel implements Entities.Channel.Contract {
         this.recipient = props.recipient;
     }
 
+    public assignIdentifier(props: Entities.Channel.AssignIdentifierProps): void {
+        this.sourceIdentifier = props.identifier;
+        this.address = props.address;
+        this.isVerified = true;
+        this.verifiedAt = new Date();
+        this.updatedAt = this.verifiedAt;
+    }
+
+    public clearIdentifier(): void {
+        this.sourceIdentifier = undefined;
+        this.address = undefined;
+        this.isVerified = false;
+        this.verifiedAt = undefined;
+        this.updatedAt = new Date();
+    }
+
     public markVerified(): void {
         if (this.isVerified) {
             throw Exception.invariantViolation({ messageKey: `${Channel.dictionaryPath}.ALREADY_VERIFIED` });

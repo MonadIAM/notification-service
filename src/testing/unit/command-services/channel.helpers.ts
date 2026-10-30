@@ -9,6 +9,9 @@ export class ChannelCommandsUnitHelpers extends ApplicationCommandUnitHelpers im
         const execution = this.execution();
 
         const channelService = {
+            purgeEmail: jest.fn<Services.Channel.CommandContract["purgeEmail"]>(),
+            selectEmail: jest.fn<Services.Channel.CommandContract["selectEmail"]>(),
+            confirmEmail: jest.fn<Services.Channel.CommandContract["confirmEmail"]>(),
             markVerified: jest.fn<Services.Channel.CommandContract["markVerified"]>(),
             toggleSound: jest.fn<Services.Channel.CommandContract["toggleSound"]>(),
             create: jest.fn<Services.Channel.CommandContract["create"]>(),

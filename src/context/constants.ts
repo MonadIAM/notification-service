@@ -15,8 +15,9 @@ export const CONFIGURABLE_NOTIFICATION_CATEGORIES: readonly NotificationCategory
 export const CUSTOM_TEMPLATE = "CUSTOM";
 
 export const OTP_MESSAGE_TEMPLATES: readonly string[] = [
-    MessageTemplate.ACCOUNT_VERIFICATION_OTP,
     MessageTemplate.IDENTIFIER_VERIFICATION_OTP,
+    MessageTemplate.ACCOUNT_VERIFICATION_OTP,
+    MessageTemplate.REAUTHENTICATION_OTP,
     MessageTemplate.RESET_PASSWORD_OTP,
     MessageTemplate.LOGIN_OTP,
 ];

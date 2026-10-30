@@ -66,5 +66,9 @@
   "REALM_EXCLUDED": {
     "subject": "You were removed from a realm",
     "body": "You were removed from {realm}."
+  },
+  "REAUTHENTICATION_OTP": {
+    "subject": "Confirm a sensitive account action",
+    "body": "Your confirmation code: {otp}. Do not share it. If you did not request this code, ignore this message."
   }
 }

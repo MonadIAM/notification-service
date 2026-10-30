@@ -7,7 +7,10 @@ declare namespace Unit.Commands.Channel {
         type Result = Core.Execution.Result & {
             commands: globalThis.Commands.Channel.Contract;
             channelService: Jest.Mocked<
-                Pick<Services.Channel.CommandContract, "markVerified" | "toggleSound" | "create" | "purge">
+                Pick<
+                    Services.Channel.CommandContract,
+                    "markVerified" | "toggleSound" | "create" | "purge" | "confirmEmail" | "selectEmail" | "purgeEmail"
+                >
             >;
         };
 

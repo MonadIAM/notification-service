@@ -53,4 +53,41 @@ describe("[Commands] - Channel", () => {
             ]);
         });
     });
+    describe("[Behavior] - email events", () => {
+        it.each(["confirmEmail", "selectEmail", "purgeEmail"] as const)(
+            "[case] - applies %s through the inbox transaction",
+            async (method) => {
+                // Arrange
+                const { commands, channelService, consume, transaction } = helpers.commands();
+                const incoming = { consumerKey: "notification.account.v1", event: "event-id" };
+                const input = {
+                    account: ACCOUNT,
+                    identifier: { id: ID, type: "email" as const, value: "mail@example.test" },
+                };
+
+                // Act
+                await commands[method]({ input, incoming, context: CONTEXT });
+
+                // Assert
+                expect(consume.mock.calls[0][0].incoming).toBe(incoming);
+                expect(channelService[method]).toHaveBeenCalledWith({ input, transaction: transaction.entityManager });
+            },
+        );
+
+        it("[case] - does not apply an event already claimed by the inbox", async () => {
+            // Arrange
+            const { commands, channelService, consume } = helpers.commands();
+            consume.mockResolvedValue({ status: "duplicate" });
+
+            // Act
+            await commands.selectEmail({
+                input: { account: ACCOUNT, identifier: { id: ID, type: "email", value: "mail@example.test" } },
+                incoming: { consumerKey: "notification.account.v1", event: "event-id" },
+                context: CONTEXT,
+            });
+
+            // Assert
+            expect(channelService.selectEmail).not.toHaveBeenCalled();
+        });
+    });
 });
