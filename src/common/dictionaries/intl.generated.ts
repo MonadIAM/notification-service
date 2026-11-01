@@ -150,6 +150,10 @@ export type I18nTranslations = {
             "subject": string;
             "body": string;
         };
+        "SECOND_FACTOR_PURGED": {
+            "subject": string;
+            "body": string;
+        };
         "SECOND_FACTOR_RESET": {
             "subject": string;
             "body": string;

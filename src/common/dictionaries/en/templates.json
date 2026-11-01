@@ -39,6 +39,10 @@
     "subject": "Two-factor authentication enabled",
     "body": "Two-factor authentication was enabled on your account. If this wasn't you, please contact support."
   },
+  "SECOND_FACTOR_PURGED": {
+    "subject": "A second factor was removed",
+    "body": "A second factor was removed from your account. If this wasn't you, please contact support."
+  },
   "SECOND_FACTOR_RESET": {
     "subject": "Two-factor authentication reset",
     "body": "Two-factor authentication was reset on your account. If this wasn't you, please contact support."
