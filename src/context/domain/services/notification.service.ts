@@ -1,6 +1,7 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
+import { LockMode } from "@mikro-orm/core";
 
-import { NotificationCategory, ChannelType, MessageTemplate, PlatformService } from "~context/enums";
+import { NotificationCategory, ChannelType, MessageTemplate, PlatformService, MessageStatus } from "~context/enums";
 import { RECIPIENT_REPOSITORY, NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
 import { DUPLICATABLE_CHANNEL_TYPES, OTP_MESSAGE_TEMPLATES } from "~context/constants";
 import { Exception } from "~common/exceptions";
@@ -30,13 +31,41 @@ export class NotificationService implements Services.Notification.Contract {
             throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.DELIVERY_REQUIRED` });
         }
 
-        const recipient = await this.recipientRepository.findUniqueOrThrow({
-            options: {
-                populate: ["channels", "preferences", "defaultOtpChannel"],
-            },
-            where: { account: input.account },
-            transaction,
-        });
+        let recipient: Entities.Recipient;
+        if (input.sourceService === PlatformService.HR_SERVICE) {
+            if (!input.dedupKey || !input.realm || input.delivery) {
+                throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.INVALID_HR_NOTIFICATION` });
+            }
+            recipient = await this.recipientRepository.findUniqueOrThrow({
+                options: { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true },
+                where: { account: input.account },
+                transaction,
+            });
+            const existing = await this.notificationRepository.findUnique({
+                where: { recipient: recipient.id, dedupKey: input.dedupKey },
+                transaction,
+            });
+            if (existing) {
+                if (existing.sourceService !== input.sourceService || existing.realm !== input.realm) {
+                    throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.INVALID_HR_NOTIFICATION` });
+                } else {
+                    return { notification: existing, messages: [] };
+                }
+            }
+            recipient = await this.recipientRepository.findUniqueOrThrow({
+                options: { populate: ["channels"] },
+                where: { id: recipient.id },
+                transaction,
+            });
+        } else {
+            recipient = await this.recipientRepository.findUniqueOrThrow({
+                options: {
+                    populate: ["channels", "preferences", "defaultOtpChannel"],
+                },
+                where: { account: input.account },
+                transaction,
+            });
+        }
 
         const notification = new Notification({
             sourceService: input.sourceService,
@@ -64,9 +93,12 @@ export class NotificationService implements Services.Notification.Contract {
             transaction.persist(message);
             messages.push(message);
         } else {
-            const channelTypes = OTP_MESSAGE_TEMPLATES.includes(input.template)
-                ? [ChannelType.EMAIL]
-                : this.resolveChannelTypes({ recipient, category: input.category });
+            const channelTypes =
+                input.sourceService === PlatformService.HR_SERVICE
+                    ? [ChannelType.IN_APP]
+                    : OTP_MESSAGE_TEMPLATES.includes(input.template)
+                      ? [ChannelType.EMAIL]
+                      : this.resolveChannelTypes({ recipient, category: input.category });
             const channels = recipient.channels.getItems();
             const selectedChannels = channelTypes.flatMap((type) =>
                 channels.filter(
@@ -138,6 +170,41 @@ export class NotificationService implements Services.Notification.Contract {
 
     public async cancel(props: Services.Notification.Cancel.Props): Services.Notification.Cancel.Result {
         const { input, transaction } = props;
+        if ("invalidate" in input) {
+            const recipient = await this.recipientRepository.findUniqueOrThrow({
+                options: { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true },
+                where: { account: input.recipient },
+                transaction,
+            });
+            const existing = await this.notificationRepository.findUnique({
+                options: { populate: ["messages"], refresh: true },
+                where: { recipient: recipient.id, dedupKey: input.dedupKey },
+                transaction,
+            });
+            if (existing) {
+                if (existing.sourceService !== input.sourceService || existing.realm !== input.realm) {
+                    throw Exception.invariantViolation({ messageKey: `${this.dictionaryPath}.INVALID_HR_NOTIFICATION` });
+                }
+                for (const message of existing.messages.getItems()) {
+                    if (message.channelType === ChannelType.IN_APP && message.status !== MessageStatus.CANCELLED) {
+                        message.markCancelled();
+                    }
+                }
+                return { messages: [] };
+            } else {
+                const notification = new Notification({
+                    sourceService: input.sourceService,
+                    category: NotificationCategory.SYSTEM,
+                    template: MessageTemplate.HR_APPROVAL_REQUIRED,
+                    dedupKey: input.dedupKey,
+                    realm: input.realm,
+                    locale: null,
+                    recipient,
+                });
+                transaction.persist(notification);
+                return { messages: [] };
+            }
+        }
         const notification = await this.notificationRepository.findUnique({
             options: { populate: ["messages"] },
             where: { dedupKey: input.dedupKey },

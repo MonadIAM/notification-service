@@ -72,6 +72,7 @@ export type I18nTranslations = {
     "services": {
         "notification": {
             "DELIVERY_REQUIRED": string;
+            "INVALID_HR_NOTIFICATION": string;
         };
         "channel": {
             "IDENTIFIER_MISMATCH": string;
@@ -185,6 +186,45 @@ export type I18nTranslations = {
         "REAUTHENTICATION_OTP": {
             "subject": string;
             "body": string;
+        };
+        "HR_APPROVAL_REQUIRED": {
+            "subject": string;
+            "body": string;
+        };
+        "HR_APPROVAL_REASSIGNED": {
+            "subject": string;
+            "body": string;
+        };
+        "HR_REQUEST_RETURNED": {
+            "subject": string;
+            "body": string;
+        };
+        "HR_REQUEST_REJECTED": {
+            "subject": string;
+            "body": string;
+        };
+        "HR_REQUEST_APPROVED": {
+            "subject": string;
+            "body": string;
+        };
+        "HR_REQUEST_APPLIED": {
+            "subject": string;
+            "body": string;
+        };
+        "HR_REQUEST_FAILED": {
+            "subject": string;
+            "body": string;
+        };
+        "HR_REQUEST_TYPES": {
+            "HIRE": string;
+            "REHIRE": string;
+            "TRANSFER": string;
+            "CHANGE_TERMS": string;
+            "TERMINATE": string;
+            "ABSENCE": string;
+            "OVERTIME": string;
+            "LEAVE_ADJUSTMENT": string;
+            "CANCEL_REQUEST": string;
         };
     };
     "validator": {

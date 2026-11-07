@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 
 import { NotificationQueriesUnitHelpers } from "~testing/unit/query-services/notification.helpers";
-import { QueryMode, ChannelType, MessageStatus } from "~context/enums";
+import { QueryMode, ChannelType, MessageStatus, PlatformService } from "~context/enums";
 import { OTP_MESSAGE_TEMPLATES } from "~context/constants";
 
 const PAGINATION: Pagination = { currentPage: 2, elementsPerPage: 10 };
@@ -40,5 +40,19 @@ describe("[Queries] - Notification", () => {
             expect(result).toEqual([[expect.objectContaining({ where: { id: ID, ...scope } })]]);
             expect(repository.findMany.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ prefilter: scope }));
         });
+    });
+    it("[case] - exposes HR navigation identifiers without additional database reads", () => {
+        // Arrange
+        const { queries } = helpers.queries();
+        const notification = helpers.createNotification({
+            sourceService: PlatformService.HR_SERVICE,
+            dedupKey: "hr:organization-id:request-id:ABSENCE:1:HR_REQUEST_APPROVED",
+        });
+
+        // Act
+        const result = queries.mapNotification({ notification });
+
+        // Assert
+        expect(result).toMatchObject({ organizationId: "organization-id", requestId: "request-id" });
     });
 });

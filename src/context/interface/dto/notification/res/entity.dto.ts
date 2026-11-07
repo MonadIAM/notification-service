@@ -9,6 +9,14 @@ import { MessageDTO } from "../../message";
 @ApiSchema({ name: "Notification" })
 export class NotificationDTO {
     @Expose()
+    @ApiProperty({ required: false, type: String, format: "uuid" })
+    declare public requestId?: string;
+
+    @Expose()
+    @ApiProperty({ required: false, type: String, format: "uuid" })
+    declare public organizationId?: string;
+
+    @Expose()
     @Validator.IsUUID()
     @ApiProperty({ required: true, type: String, format: "uuid" })
     declare public id: string;

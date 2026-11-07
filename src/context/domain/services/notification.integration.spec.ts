@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@jest/globals";
 import { randomUUID } from "node:crypto";
 
+import { NotificationCategory, PlatformService, MessageStatus, ChannelType, MessageTemplate } from "~context/enums";
 import { NotificationIntegrationHelpers } from "~testing/integration/domain-service/notification.helpers";
-import { NotificationCategory, PlatformService, MessageStatus, ChannelType } from "~context/enums";
 import { postgresSuite } from "~testing/integration/containers/postgres.suite";
 import { Notification, Preference, Message } from "~context/domain/entities";
 import { CoreFixture } from "~testing/integration/repositories/core.fixture";
@@ -285,5 +285,148 @@ describe("[DomainService] - Notification", () => {
                 messages: 1,
             });
         });
+    });
+});
+
+describe("[Behavior] - HR notification delivery", () => {
+    const suite = postgresSuite({
+        repository: (context) => helpers.service(context),
+        fixture: (manager) => new CoreFixture(manager),
+    });
+
+    async function recipient(): Promise<Entities.Recipient> {
+        const entity = await suite.fixtures().createRecipient();
+        await suite.fixtures().createChannel({ recipient: entity, type: ChannelType.IN_APP, isVerified: true });
+        await suite.fixtures().createChannel({
+            recipient: entity,
+            type: ChannelType.EMAIL,
+            address: "hr@example.test",
+            sourceIdentifier: randomUUID(),
+            isVerified: true,
+        });
+        await suite.fixtures().createPreference({
+            recipient: entity,
+            category: NotificationCategory.SYSTEM,
+            channelType: ChannelType.EMAIL,
+            isDuplicationEnabled: true,
+        });
+        return entity;
+    }
+
+    function input(account: string): Services.Notification.Create.Props["input"] {
+        return createInput(account, {
+            realm: randomUUID(),
+            sourceService: PlatformService.HR_SERVICE,
+            category: NotificationCategory.SYSTEM,
+            template: MessageTemplate.HR_APPROVAL_REQUIRED,
+            dedupKey: `hr:${randomUUID()}:${randomUUID()}:ABSENCE:1:step:${randomUUID()}:1`,
+        });
+    }
+
+    async function create(value: Services.Notification.Create.Props["input"]): Services.Notification.Create.Result {
+        return await suite.transaction((transaction) =>
+            suite.repository().notificationService.create({ transaction, input: value }),
+        );
+    }
+
+    async function cancel(value: Services.Notification.Create.Props["input"]): Services.Notification.Cancel.Result {
+        return await suite.transaction((transaction) =>
+            suite.repository().notificationService.cancel({
+                transaction,
+                input: {
+                    invalidate: true,
+                    realm: value.realm!,
+                    dedupKey: value.dedupKey!,
+                    sourceService: PlatformService.HR_SERVICE,
+                    recipient: value.account,
+                },
+            }),
+        );
+    }
+
+    it("[case] - concurrent redeliveries create exactly one in-app message despite enabled email duplication", async () => {
+        // Arrange
+        const value = input((await recipient()).account);
+
+        // Act
+        const results = await Promise.all([create(value), create(value), create(value)]);
+        const messages = await loadMessages(suite, results[0].notification.id);
+
+        // Assert
+        expect(results.flatMap((result) => result.messages)).toHaveLength(1);
+        expect(messages).toEqual([
+            expect.objectContaining({ channelType: ChannelType.IN_APP, status: MessageStatus.DELIVERED }),
+        ]);
+    });
+
+    it.each(["before", "after", "concurrent"])(
+        "[case] - cancellation %s creation cannot be undone by delayed delivery",
+        async (order) => {
+            // Arrange
+            const value = input((await recipient()).account);
+
+            // Act
+            if (order === "before") {
+                await cancel(value);
+                await create(value);
+            } else if (order === "after") {
+                await create(value);
+                await cancel(value);
+            } else {
+                await Promise.all([create(value), cancel(value)]);
+            }
+            await cancel(value);
+            const repeated = await create(value);
+            const messages = await loadMessages(suite, repeated.notification.id);
+
+            // Assert
+            expect(repeated.messages).toEqual([]);
+            expect(messages.filter((message) => message.status === MessageStatus.DELIVERED)).toEqual([]);
+            expect(
+                await suite.transaction((transaction) =>
+                    transaction.count(Notification, { recipient: { account: value.account }, dedupKey: value.dedupKey }),
+                ),
+            ).toBe(1);
+        },
+    );
+
+    it("[case] - rejects conflicting source identities and explicit external delivery", async () => {
+        // Arrange
+        const value = input((await recipient()).account);
+        const created = await create(value);
+
+        // Act / Assert
+        await expect(create({ ...value, realm: randomUUID() })).rejects.toThrow();
+        await expect(
+            create({ ...value, delivery: { channelType: ChannelType.EMAIL, address: "hr@example.test" } }),
+        ).rejects.toThrow();
+        await expect(cancel({ ...value, realm: randomUUID() })).rejects.toThrow();
+        expect((await loadMessages(suite, created.notification.id))[0].status).toBe(MessageStatus.DELIVERED);
+    });
+
+    it("[case] - rolls back cancellation together with its transaction", async () => {
+        // Arrange
+        const value = input((await recipient()).account);
+
+        // Act
+        await expect(
+            suite.transaction(async (transaction) => {
+                await suite.repository().notificationService.cancel({
+                    transaction,
+                    input: {
+                        invalidate: true,
+                        realm: value.realm!,
+                        dedupKey: value.dedupKey!,
+                        sourceService: PlatformService.HR_SERVICE,
+                        recipient: value.account,
+                    },
+                });
+                await transaction.flush();
+                throw new Error("rollback");
+            }),
+        ).rejects.toThrow("rollback");
+
+        // Assert
+        expect((await create(value)).messages).toHaveLength(1);
     });
 });

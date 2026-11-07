@@ -61,10 +61,12 @@ declare global {
                 context: Extract.Meta;
                 actor?: string;
                 realm?: string;
-                input: {
-                    override: Services.Notification.Create.Props["input"];
-                    dedupKey: string;
-                };
+                input:
+                    | {
+                          override: Services.Notification.Create.Props["input"];
+                          dedupKey: string;
+                      }
+                    | (Topics.Notification.InvalidateInput & { realm: string });
             };
 
             type Result = Promise<void>;
