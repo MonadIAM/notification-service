@@ -46,10 +46,12 @@ declare global {
         namespace Cancel {
             type Props = {
                 transaction: ORM.EntityManager;
-                input: {
-                    override: Create.Props["input"];
-                    dedupKey: string;
-                };
+                input:
+                    | {
+                          override: Create.Props["input"];
+                          dedupKey: string;
+                      }
+                    | (Topics.Notification.InvalidateInput & { realm: string });
             };
 
             type Result = Promise<{ messages: Entities.Message[] }>;

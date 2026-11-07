@@ -5,6 +5,8 @@ declare global {
         type Data = Entities.Notification & {
             message: Nullable<Entities.Message>;
             duplicatedTo: ChannelType[];
+            organizationId?: string;
+            requestId?: string;
         };
 
         interface Contract extends InternalContract, ControllerContract {}

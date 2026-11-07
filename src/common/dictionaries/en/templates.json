@@ -74,5 +74,44 @@
   "REAUTHENTICATION_OTP": {
     "subject": "Confirm a sensitive account action",
     "body": "Your confirmation code: {otp}. Do not share it. If you did not request this code, ignore this message."
+  },
+  "HR_APPROVAL_REQUIRED": {
+    "subject": "Approval required",
+    "body": "Request “{requestType}” {requestId} is awaiting your approval."
+  },
+  "HR_APPROVAL_REASSIGNED": {
+    "subject": "Approval reassigned to you",
+    "body": "Approval of request “{requestType}” {requestId} has been reassigned to you."
+  },
+  "HR_REQUEST_RETURNED": {
+    "subject": "Request returned for revision",
+    "body": "Request “{requestType}” {requestId} has been returned for revision."
+  },
+  "HR_REQUEST_REJECTED": {
+    "subject": "Request rejected",
+    "body": "Request “{requestType}” {requestId} has been rejected."
+  },
+  "HR_REQUEST_APPROVED": {
+    "subject": "Request approved",
+    "body": "Request “{requestType}” {requestId} has been fully approved. The execution result will follow separately."
+  },
+  "HR_REQUEST_APPLIED": {
+    "subject": "Request executed",
+    "body": "Approved request “{requestType}” {requestId} has been successfully executed."
+  },
+  "HR_REQUEST_FAILED": {
+    "subject": "Request execution failed",
+    "body": "Approved request “{requestType}” {requestId} could not be executed. See the request for details."
+  },
+  "HR_REQUEST_TYPES": {
+    "HIRE": "Hire",
+    "REHIRE": "Rehire",
+    "TRANSFER": "Transfer",
+    "CHANGE_TERMS": "Change of employment terms",
+    "TERMINATE": "Termination",
+    "ABSENCE": "Absence",
+    "OVERTIME": "Overtime",
+    "LEAVE_ADJUSTMENT": "Leave adjustment",
+    "CANCEL_REQUEST": "Request cancellation"
   }
 }

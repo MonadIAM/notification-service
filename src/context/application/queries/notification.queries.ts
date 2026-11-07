@@ -1,8 +1,8 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
 import { LoadStrategy } from "@mikro-orm/core";
 
+import { ChannelType, MessageStatus, QueryMode, PlatformService } from "~context/enums";
 import { NOTIFICATION_REPOSITORY } from "~context/infrastructure/repositories";
-import { ChannelType, MessageStatus, QueryMode } from "~context/enums";
 import { OTP_MESSAGE_TEMPLATES } from "~context/constants";
 
 @Injectable({ scope: Scope.DEFAULT })
@@ -72,6 +72,12 @@ export class NotificationQueries implements Queries.Notification.Contract {
         notification,
     }: Queries.Notification.MapNotification.Props): Queries.Notification.MapNotification.Result {
         const result: Queries.Notification.Data = { ...notification, message: null, duplicatedTo: [] };
+
+        if (notification.sourceService === PlatformService.HR_SERVICE && notification.dedupKey?.startsWith("hr:")) {
+            const [, organizationId, requestId] = notification.dedupKey.split(":");
+            result.organizationId = organizationId;
+            result.requestId = requestId;
+        }
 
         for (const message of notification.messages.getItems()) {
             if (message.channelType === ChannelType.IN_APP) {

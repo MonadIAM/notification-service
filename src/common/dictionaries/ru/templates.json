@@ -74,5 +74,44 @@
   "REAUTHENTICATION_OTP": {
     "subject": "Подтвердите действие с учётной записью",
     "body": "Код подтверждения: {otp}. Никому не сообщайте его. Если вы не запрашивали код, проигнорируйте это сообщение."
+  },
+  "HR_APPROVAL_REQUIRED": {
+    "subject": "Требуется согласование",
+    "body": "Заявление «{requestType}» {requestId} ожидает вашего согласования."
+  },
+  "HR_APPROVAL_REASSIGNED": {
+    "subject": "Вам переназначено согласование",
+    "body": "Вам переназначено согласование заявления «{requestType}» {requestId}."
+  },
+  "HR_REQUEST_RETURNED": {
+    "subject": "Заявление возвращено на доработку",
+    "body": "Заявление «{requestType}» {requestId} возвращено на доработку."
+  },
+  "HR_REQUEST_REJECTED": {
+    "subject": "Заявление отклонено",
+    "body": "Заявление «{requestType}» {requestId} отклонено."
+  },
+  "HR_REQUEST_APPROVED": {
+    "subject": "Заявление согласовано",
+    "body": "Заявление «{requestType}» {requestId} окончательно согласовано. Результат исполнения поступит отдельно."
+  },
+  "HR_REQUEST_APPLIED": {
+    "subject": "Заявление исполнено",
+    "body": "Согласованное заявление «{requestType}» {requestId} успешно исполнено."
+  },
+  "HR_REQUEST_FAILED": {
+    "subject": "Ошибка исполнения заявления",
+    "body": "Не удалось исполнить согласованное заявление «{requestType}» {requestId}. Подробности доступны в заявлении."
+  },
+  "HR_REQUEST_TYPES": {
+    "HIRE": "Приём на работу",
+    "REHIRE": "Повторный приём",
+    "TRANSFER": "Перевод",
+    "CHANGE_TERMS": "Изменение условий труда",
+    "TERMINATE": "Увольнение",
+    "ABSENCE": "Отсутствие",
+    "OVERTIME": "Сверхурочная работа",
+    "LEAVE_ADJUSTMENT": "Корректировка отпуска",
+    "CANCEL_REQUEST": "Отмена заявления"
   }
 }

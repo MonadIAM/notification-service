@@ -135,6 +135,9 @@ export class NotificationCommands implements Commands.Notification.Contract {
             await this.notificationStream.publishMessages(result.value);
         }
 
-        await this.notificationStream.publish({ account: input.override.account, message: null });
+        await this.notificationStream.publish({
+            account: "invalidate" in input ? input.recipient : input.override.account,
+            message: null,
+        });
     }
 }

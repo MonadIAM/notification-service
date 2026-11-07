@@ -7,11 +7,11 @@ import { escapeUTF8 } from "entities";
 import { lastValueFrom } from "rxjs";
 
 import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE, KafkaIncomingMapper } from "~infrastructure/kafka";
+import { KafkaTopic, QueryMode, PlatformService } from "~context/enums";
 import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { NOTIFICATION_COMMANDS } from "~context/application/commands";
-import { RECIPIENT_QUERIES } from "~context/application/queries";
 import { CONSUMER_META, CUSTOM_TEMPLATE } from "~context/constants";
-import { KafkaTopic, QueryMode } from "~context/enums";
+import { RECIPIENT_QUERIES } from "~context/application/queries";
 
 @Controller()
 export class NotificationConsumer implements Consumers.Notification.Contract, OnModuleInit {
@@ -71,10 +71,13 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         this.schemaRegistry.validate({ topic: KafkaTopic.NOTIFICATION, value: message });
         if (message.actionType === NotificationTopicAction.CANCEL) {
             await this.notificationCommands.cancel({
-                input: {
-                    dedupKey: message.payload.input.dedupKey,
-                    override: await this.render({ payload: message.payload.input.override }),
-                },
+                input:
+                    "invalidate" in message.payload.input
+                        ? { ...message.payload.input, realm: message.payload.realm! }
+                        : {
+                              dedupKey: message.payload.input.dedupKey,
+                              override: await this.render({ payload: message.payload.input.override }),
+                          },
                 actor: message.payload.actor,
                 realm: message.payload.realm,
                 context: CONSUMER_META,
@@ -146,6 +149,12 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
             const args = input.params
                 ? Object.fromEntries(Object.entries(input.params).map(([key, value]) => [key, escapeUTF8(value)]))
                 : undefined;
+            if (args && input.sourceService === PlatformService.HR_SERVICE && input.template.startsWith("HR_")) {
+                args.requestType = await this.i18nService.translate(
+                    `templates.HR_REQUEST_TYPES.${input.params?.requestType}`,
+                    { lang: locale },
+                );
+            }
             [title, body] = await Promise.all<[string, string]>([
                 this.i18nService.translate(`templates.${input.template}.subject`, {
                     lang: locale,
