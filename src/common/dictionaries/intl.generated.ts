@@ -109,6 +109,10 @@ export type I18nTranslations = {
             "REQUEST_FAILED": string;
             "INVALID_SIGNATURE": string;
         };
+        "access-cache": {
+            "UNAVAILABLE": string;
+            "REALM_MISMATCH": string;
+        };
     };
     "templates": {
         "IDENTIFIER_VERIFICATION_OTP": {
