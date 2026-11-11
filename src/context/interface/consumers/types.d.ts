@@ -1,6 +1,5 @@
-import { KafkaContext } from "@nestjs/microservices";
-
 import { MessageDispatchAction } from "~context/enums";
+import { KafkaContext } from "~infrastructure/kafka";
 
 declare global {
     namespace Consumers {

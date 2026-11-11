@@ -1,4 +1,4 @@
-import { KafkaRetriableException, EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/microservices";
+import { KafkaRetriableException, EventPattern, Payload, Ctx } from "@nestjs/microservices";
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
 import { lastValueFrom } from "rxjs";
 
@@ -16,6 +16,8 @@ import {
     KafkaIncomingMapper,
     KAFKA_RETRY_SERVICE,
     KAFKA_SERVICE,
+    KafkaClient,
+    KafkaContext,
 } from "~infrastructure/kafka";
 
 @Controller()
@@ -42,7 +44,7 @@ export class DispatchConsumer implements Consumers.MessageDispatch.Contract, OnM
         @Inject(KAFKA_RETRY_SERVICE)
         private readonly kafkaRetry: Kafka.Retry.Contract,
         @Inject(KAFKA_SERVICE)
-        private readonly kafkaClient: ClientKafka,
+        private readonly kafkaClient: KafkaClient,
     ) {}
 
     public async onModuleInit(): Promise<void> {

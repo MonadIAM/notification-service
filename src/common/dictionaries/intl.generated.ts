@@ -115,6 +115,10 @@ export type I18nTranslations = {
             "UNAVAILABLE": string;
             "REALM_MISMATCH": string;
         };
+        "kafka-transport": {
+            "UNSUPPORTED_OPERATION": string;
+            "HANDLER_MISSING": string;
+        };
     };
     "templates": {
         "IDENTIFIER_VERIFICATION_OTP": {
