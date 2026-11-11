@@ -1,6 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Processor, WorkerHost } from "@nestjs/bullmq";
-import { ClientKafka } from "@nestjs/microservices";
 import { lastValueFrom } from "rxjs";
 import { Job } from "bullmq";
 
@@ -9,7 +8,7 @@ import { MESSAGE_REPOSITORY } from "~context/infrastructure/repositories";
 import { MESSAGE_COMMANDS } from "~context/application/commands/tokens";
 import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { DISPATCH_SERVICE } from "~context/domain/services";
-import { KAFKA_SERVICE } from "~infrastructure/kafka";
+import { KAFKA_SERVICE, KafkaClient } from "~infrastructure/kafka";
 import { CONSUMER_META } from "~context/constants";
 import { Exception } from "~common/exceptions";
 
@@ -30,7 +29,7 @@ export class DispatchDelayProcessor extends WorkerHost {
         @Inject(DISPATCH_SERVICE)
         private readonly dispatchService: Services.Dispatch.Contract,
         @Inject(KAFKA_SERVICE)
-        private readonly kafkaClient: ClientKafka,
+        private readonly kafkaClient: KafkaClient,
     ) {
         super();
     }

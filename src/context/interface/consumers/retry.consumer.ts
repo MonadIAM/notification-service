@@ -1,8 +1,15 @@
-import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/microservices";
+import { EventPattern, Payload, Ctx } from "@nestjs/microservices";
 import { Controller, Inject, Logger } from "@nestjs/common";
 import { lastValueFrom } from "rxjs";
 
-import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE, KafkaIncomingMapper } from "~infrastructure/kafka";
+import {
+    KAFKA_RETRY_SERVICE,
+    KAFKA_SCHEMA_REGISTRY,
+    KAFKA_SERVICE,
+    KafkaIncomingMapper,
+    KafkaClient,
+    KafkaContext,
+} from "~infrastructure/kafka";
 import { KAFKA_RETRY_QUEUE } from "~context/infrastructure/queues";
 import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { Exception } from "~common/exceptions";
@@ -25,7 +32,7 @@ export class RetryConsumer implements Consumers.Retry.Contract {
         @Inject(KAFKA_RETRY_SERVICE)
         private readonly kafkaRetry: Kafka.Retry.Contract,
         @Inject(KAFKA_SERVICE)
-        private readonly kafkaClient: ClientKafka,
+        private readonly kafkaClient: KafkaClient,
     ) {}
 
     @EventPattern(RETRY_TOPICS)

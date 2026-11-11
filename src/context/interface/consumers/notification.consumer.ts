@@ -1,4 +1,4 @@
-import { EventPattern, Payload, ClientKafka, Ctx, KafkaContext } from "@nestjs/microservices";
+import { EventPattern, Payload, Ctx } from "@nestjs/microservices";
 import { NotificationTopicAction, NotificationContentKind } from "@monadiam/shared";
 import { I18nService, I18N_OPTIONS, type I18nOptions } from "nestjs-i18n";
 import { Controller, Inject, Logger, OnModuleInit } from "@nestjs/common";
@@ -6,7 +6,14 @@ import { match } from "@formatjs/intl-localematcher";
 import { escapeUTF8 } from "entities";
 import { lastValueFrom } from "rxjs";
 
-import { KAFKA_RETRY_SERVICE, KAFKA_SCHEMA_REGISTRY, KAFKA_SERVICE, KafkaIncomingMapper } from "~infrastructure/kafka";
+import {
+    KAFKA_RETRY_SERVICE,
+    KAFKA_SCHEMA_REGISTRY,
+    KAFKA_SERVICE,
+    KafkaIncomingMapper,
+    KafkaClient,
+    KafkaContext,
+} from "~infrastructure/kafka";
 import { KafkaTopic, QueryMode, PlatformService } from "~context/enums";
 import { KAFKA_METRICS_RECORDER } from "~observability/metrics/tokens";
 import { NOTIFICATION_COMMANDS } from "~context/application/commands";
@@ -34,7 +41,7 @@ export class NotificationConsumer implements Consumers.Notification.Contract, On
         @Inject(KAFKA_RETRY_SERVICE)
         private readonly kafkaRetry: Kafka.Retry.Contract,
         @Inject(KAFKA_SERVICE)
-        private readonly kafkaClient: ClientKafka,
+        private readonly kafkaClient: KafkaClient,
     ) {}
 
     public async onModuleInit(): Promise<void> {
