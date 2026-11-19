@@ -1,6 +1,12 @@
 #!/bin/sh
 set -eu
 
+export POSTGRES_USER
+export POSTGRES_PASSWORD
+export REDIS_PASSWORD
+export AWS_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY
+
 wait_for_secret() {
     path="$1"
     i=0
@@ -35,11 +41,11 @@ wait_for_secret /vault/secrets/redis_password
 wait_for_secret /vault/secrets/aws_access_key_id
 wait_for_secret /vault/secrets/aws_secret_access_key
 
-export POSTGRES_USER="$(cat /vault/secrets/postgresql_username)"
-export POSTGRES_PASSWORD="$(cat /vault/secrets/postgresql_password)"
-export REDIS_PASSWORD="$(cat /vault/secrets/redis_password)"
-export AWS_ACCESS_KEY_ID="$(cat /vault/secrets/aws_access_key_id)"
-export AWS_SECRET_ACCESS_KEY="$(cat /vault/secrets/aws_secret_access_key)"
+POSTGRES_USER="$(cat /vault/secrets/postgresql_username)"
+POSTGRES_PASSWORD="$(cat /vault/secrets/postgresql_password)"
+REDIS_PASSWORD="$(cat /vault/secrets/redis_password)"
+AWS_ACCESS_KEY_ID="$(cat /vault/secrets/aws_access_key_id)"
+AWS_SECRET_ACCESS_KEY="$(cat /vault/secrets/aws_secret_access_key)"
 
 wait_for_tcp "$POSTGRES_WRITE_HOST" "$POSTGRES_WRITE_PORT" "PostgreSQL write upstream"
 wait_for_tcp "$POSTGRES_READ_HOST" "$POSTGRES_READ_PORT" "PostgreSQL read upstream"
